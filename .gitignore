@@ -1,32 +1,101 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+# ==========================================
+# Operating System
+# ==========================================
 
-# Test binary, built with `go test -c`
-*.test
+.DS_Store
+Thumbs.db
+Desktop.ini
 
-# Code coverage profiles and other test artifacts
-*.out
-coverage.*
-*.coverprofile
-profile.cov
+# ==========================================
+# IDEs
+# ==========================================
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+.vscode/
+.idea/
 
-# Go workspace file
-go.work
-go.work.sum
+# Ignore local VS Code settings but keep shared configs if desired
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
 
-# env file
+# ==========================================
+# Environment variables
+# ==========================================
+
 .env
+.env.*
+!.env.example
 
-# Editor/IDE
-# .idea/
-# .vscode/
+# ==========================================
+# Logs
+# ==========================================
+
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================================
+# Go
+# ==========================================
+
+backend/bin/
+backend/dist/
+backend/coverage.out
+backend/*.exe
+backend/*.test
+backend/*.prof
+
+# ==========================================
+# SQLite
+# ==========================================
+
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+
+# ==========================================
+# React / Vite
+# ==========================================
+
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ==========================================
+# TypeScript
+# ==========================================
+
+*.tsbuildinfo
+
+# ==========================================
+# Coverage
+# ==========================================
+
+coverage/
+.coverage/
+coverage.out
+
+# ==========================================
+# Temporary files
+# ==========================================
+
+tmp/
+temp/
+*.tmp
+
+# ==========================================
+# Archives
+# ==========================================
+
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
