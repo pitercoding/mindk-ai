@@ -11,12 +11,13 @@ import (
 )
 
 func main() {
-	// 1. Database Conectivity
+	// 1. Database
 	err := database.Connect()
 	if err != nil {
 		log.Fatal("failed to connect database:", err)
 	}
 
+	// 2. Migrations
 	err = migrations.Run(database.DB)
 	if err != nil {
 		log.Fatal("failed to run migrations:", err)
@@ -26,10 +27,10 @@ func main() {
 	fmt.Println("Database connected successfully")
 	fmt.Println("Server running on http://localhost:8080")
 
-	// 2. Register Routes
+	// 3. Routes
 	routes.RegisterRoutes()
 
-	// 3. Start Server
+	// 4. Server
 	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal(err)
