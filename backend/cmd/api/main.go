@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/pitercoding/mindk-ai/backend/internal/database"
+	"github.com/pitercoding/mindk-ai/backend/internal/migrations"
 	"github.com/pitercoding/mindk-ai/backend/internal/routes"
 )
 
@@ -14,6 +15,11 @@ func main() {
 	err := database.Connect()
 	if err != nil {
 		log.Fatal("failed to connect database:", err)
+	}
+
+	err = migrations.Run(database.DB)
+	if err != nil {
+		log.Fatal("failed to run migrations:", err)
 	}
 
 	fmt.Println("\n============== Mindk AI ==============")
