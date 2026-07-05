@@ -45,3 +45,29 @@ func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(note)
 }
+
+func (h *NoteHandler) HandleNotes(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+
+	case http.MethodGet:
+		h.GetNotes(w, r)
+
+	case http.MethodPost:
+		h.CreateNote(w, r)
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
+	notes, err := h.Repo.GetAll()
+	if err != nil {
+		http.Error(w, "failed to fetch notes", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	json.NewEncoder(w).Encode(notes)
+}

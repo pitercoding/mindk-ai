@@ -10,5 +10,5 @@ import (
 func RegisterRoutes(app *app.App) {
 	// Routes
 	http.HandleFunc("/health", handlers.HealthHandler)
-	http.HandleFunc("/notes", app.NoteHandler.CreateNote)
+	http.HandleFunc("/notes", app.NoteHandler.HandleNotes)
 }

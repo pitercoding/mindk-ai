@@ -45,3 +45,47 @@ func (r *NoteRepository) Create(note *models.Note) error {
 
 	return nil
 }
+
+func (r *NoteRepository) GetAll() ([]models.Note, error) {
+	query := `
+		SELECT
+			id,
+			title,
+			content,
+			created_at,
+			updated_at
+		FROM notes
+		ORDER BY created_at DESC
+	`
+
+	rows, err := r.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var notes []models.Note
+
+	for rows.Next() {
+		var note models.Note
+
+		err := rows.Scan(
+			&note.ID,
+			&note.Title,
+			&note.Content,
+			&note.CreatedAt,
+			&note.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		notes = append(notes, note)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return notes, nil
+}
