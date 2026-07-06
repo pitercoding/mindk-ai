@@ -118,3 +118,25 @@ func (r *NoteRepository) GetByID(id int) (*models.Note, error) {
 
 	return &note, nil
 }
+
+func (r *NoteRepository) Update(note *models.Note) error {
+	query := `
+		UPDATE notes
+		SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?
+	`
+
+	_, err := r.DB.Exec(query, note.Title, note.Content, note.ID)
+	return err
+}
+
+func (r *NoteRepository) Delete(id int) error {
+	query := `
+		DELETE FROM notes
+		WHERE id = ?
+	`
+
+	_, err := r.DB.Exec(query, id)
+	return err
+}
+

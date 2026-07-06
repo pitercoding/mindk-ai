@@ -96,3 +96,63 @@ func (h *NoteHandler) GetNoteByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(note)
 }
+
+func (h *NoteHandler) HandleNote(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+
+	case http.MethodGet:
+		h.GetNoteByID(w, r)
+
+	case http.MethodPut:
+		h.UpdateNote(w, r)
+
+	case http.MethodDelete:
+		h.DeleteNote(w, r)
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
+	id, err := httputil.GetIDFromPath(r)
+	if err != nil {
+		http.Error(w, "invalid note id", http.StatusBadRequest)
+		return
+	}
+
+	var note models.Note
+
+	err = json.NewDecoder(r.Body).Decode(&note)
+	if err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	note.ID = id
+
+	err = h.Repo.Update(&note)
+	if err != nil {
+		http.Error(w, "failed to update note", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(note)
+}
+
+func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
+	id, err := httputil.GetIDFromPath(r)
+	if err != nil {
+		http.Error(w, "invalid note id", http.StatusBadRequest)
+		return
+	}
+
+	err = h.Repo.Delete(id)
+	if err != nil {
+		http.Error(w, "failed to delete note", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
