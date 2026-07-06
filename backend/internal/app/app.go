@@ -10,16 +10,20 @@ import (
 
 type App struct {
 	NoteHandler *handlers.NoteHandler
+	ChatHandler *handlers.ChatHandler
 }
 
 func New(db *sql.DB) *App {
 	noteRepo := repository.NewNoteRepository(db)
 
 	noteService := services.NewNoteService(noteRepo)
+	chatService := services.NewChatService(noteService)
 
 	noteHandler := handlers.NewNoteHandler(noteService)
+	chatHandler := handlers.NewChatHandler(chatService)
 
 	return &App{
 		NoteHandler: noteHandler,
+		ChatHandler: chatHandler,
 	}
 }
