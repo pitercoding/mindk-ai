@@ -5,6 +5,7 @@ import (
 
 	"github.com/pitercoding/mindk-ai/backend/internal/handlers"
 	"github.com/pitercoding/mindk-ai/backend/internal/repository"
+	"github.com/pitercoding/mindk-ai/backend/internal/services"
 )
 
 type App struct {
@@ -14,7 +15,9 @@ type App struct {
 func New(db *sql.DB) *App {
 	noteRepo := repository.NewNoteRepository(db)
 
-	noteHandler := handlers.NewNoteHandler(noteRepo)
+	noteService := services.NewNoteService(noteRepo)
+
+	noteHandler := handlers.NewNoteHandler(noteService)
 
 	return &App{
 		NoteHandler: noteHandler,

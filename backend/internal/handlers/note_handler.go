@@ -8,15 +8,15 @@ import (
 
 	"github.com/pitercoding/mindk-ai/backend/internal/httputil"
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
-	"github.com/pitercoding/mindk-ai/backend/internal/repository"
+	"github.com/pitercoding/mindk-ai/backend/internal/services"
 )
 
 type NoteHandler struct {
-	Repo *repository.NoteRepository
+	Service *services.NoteService
 }
 
-func NewNoteHandler(repo *repository.NoteRepository) *NoteHandler {
-	return &NoteHandler{Repo: repo}
+func NewNoteHandler(service *services.NoteService) *NoteHandler {
+	return &NoteHandler{Service: service}
 }
 
 func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +36,7 @@ func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. DB Saving
-	err = h.Repo.Create(&note)
+	err = h.Service.Create(&note)
 	if err != nil {
 		http.Error(w, "failed to create note", http.StatusInternalServerError)
 		return
@@ -64,7 +64,7 @@ func (h *NoteHandler) HandleNotes(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
-	notes, err := h.Repo.GetAll()
+	notes, err := h.Service.GetAll()
 	if err != nil {
 		http.Error(w, "failed to fetch notes", http.StatusInternalServerError)
 		return
@@ -82,7 +82,7 @@ func (h *NoteHandler) GetNoteByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	note, err := h.Repo.GetByID(id)
+	note, err := h.Service.GetByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "note not found", http.StatusNotFound)
@@ -131,7 +131,7 @@ func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 
 	note.ID = id
 
-	err = h.Repo.Update(&note)
+	err = h.Service.Update(&note)
 	if err != nil {
 		http.Error(w, "failed to update note", http.StatusInternalServerError)
 		return
@@ -148,7 +148,7 @@ func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.Repo.Delete(id)
+	err = h.Service.Delete(id)
 	if err != nil {
 		http.Error(w, "failed to delete note", http.StatusInternalServerError)
 		return
