@@ -89,3 +89,32 @@ func (r *NoteRepository) GetAll() ([]models.Note, error) {
 
 	return notes, nil
 }
+
+func (r *NoteRepository) GetByID(id int) (*models.Note, error) {
+	query := `
+		SELECT
+			id,
+			title,
+			content,
+			created_at,
+			updated_at
+		FROM notes
+		WHERE id = ?
+	`
+
+	var note models.Note
+
+	err := r.DB.QueryRow(query, id).Scan(
+		&note.ID,
+		&note.Title,
+		&note.Content,
+		&note.CreatedAt,
+		&note.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &note, nil
+}

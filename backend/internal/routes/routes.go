@@ -11,4 +11,5 @@ func RegisterRoutes(app *app.App) {
 	// Routes
 	http.HandleFunc("/health", handlers.HealthHandler)
 	http.HandleFunc("/notes", app.NoteHandler.HandleNotes)
+	http.HandleFunc("/notes/", app.NoteHandler.GetNoteByID)
 }
