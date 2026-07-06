@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
-	"strings"
 
+	"github.com/pitercoding/mindk-ai/backend/internal/httputil"
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
 	"github.com/pitercoding/mindk-ai/backend/internal/repository"
 )
@@ -77,11 +76,7 @@ func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *NoteHandler) GetNoteByID(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
-
-	idStr := parts[len(parts)-1]
-
-	id, err := strconv.Atoi(idStr)
+	id, err := httputil.GetIDFromPath(r)
 	if err != nil {
 		http.Error(w, "invalid note id", http.StatusBadRequest)
 		return
@@ -99,6 +94,5 @@ func (h *NoteHandler) GetNoteByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-
 	json.NewEncoder(w).Encode(note)
 }
