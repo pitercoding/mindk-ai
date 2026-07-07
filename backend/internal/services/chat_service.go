@@ -6,21 +6,34 @@ import (
 
 type ChatService struct {
 	noteService *NoteService
+	llmClient   llm.Client
 }
 
-func NewChatService(noteService *NoteService) *ChatService {
+func NewChatService(
+	noteService *NoteService,
+	llmClient llm.Client,
+) *ChatService {
+
 	return &ChatService{
 		noteService: noteService,
+		llmClient:   llmClient,
 	}
 }
 
 func (s *ChatService) Ask(message string) (string, error) {
 	notes, err := s.noteService.GetAll()
+
 	if err != nil {
 		return "", err
 	}
 
 	prompt := llm.BuildPrompt(message, notes)
 
-	return prompt, nil
+	answer, err := s.llmClient.Chat(prompt)
+
+	if err != nil {
+		return "", err
+	}
+
+	return answer, nil
 }

@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
@@ -27,7 +29,8 @@ func (h *ChatHandler) Ask(w http.ResponseWriter, r *http.Request) {
 
 	answer, err := h.service.Ask(req.Message)
 	if err != nil {
-		http.Error(w, "failed to process chat", http.StatusInternalServerError)
+		log.Printf("chat request failed: %v", err)
+		http.Error(w, fmt.Sprintf("failed to process chat: %v", err), http.StatusInternalServerError)
 		return
 	}
 
