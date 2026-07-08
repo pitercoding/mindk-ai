@@ -5,18 +5,21 @@ import (
 )
 
 type ChatService struct {
-	noteService *NoteService
-	llmClient   llm.Client
+	noteService        *NoteService
+	chatHistoryService *ChatHistoryService
+	llmClient          llm.Client
 }
 
 func NewChatService(
 	noteService *NoteService,
+	chatHistoryService *ChatHistoryService,
 	llmClient llm.Client,
 ) *ChatService {
 
 	return &ChatService{
-		noteService: noteService,
-		llmClient:   llmClient,
+		noteService:        noteService,
+		chatHistoryService: chatHistoryService,
+		llmClient:          llmClient,
 	}
 }
 
@@ -30,7 +33,11 @@ func (s *ChatService) Ask(message string) (string, error) {
 	prompt := llm.BuildPrompt(message, notes)
 
 	answer, err := s.llmClient.Chat(prompt)
+	if err != nil {
+		return "", err
+	}
 
+	err = s.chatHistoryService.Save(message, answer)
 	if err != nil {
 		return "", err
 	}

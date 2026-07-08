@@ -13,6 +13,7 @@ import (
 type App struct {
 	NoteHandler *handlers.NoteHandler
 	ChatHandler *handlers.ChatHandler
+	ChatHistoryHandler *handlers.ChatHistoryHandler
 }
 
 func New(
@@ -22,9 +23,11 @@ func New(
 
 	// Repository
 	noteRepo := repository.NewNoteRepository(db)
+	chatRepo := repository.NewChatRepository(db)
 
 	// Services
 	noteService := services.NewNoteService(noteRepo)
+	chatHistoryService := services.NewChatHistoryService(chatRepo)
 
 	// LLM Client
 	openAIClient := llm.NewOpenAIClient(
@@ -34,15 +37,18 @@ func New(
 	// Chat Service
 	chatService := services.NewChatService(
 		noteService,
+		chatHistoryService,
 		openAIClient,
 	)
 
 	// Handlers
 	noteHandler := handlers.NewNoteHandler(noteService)
 	chatHandler := handlers.NewChatHandler(chatService)
+	chatHistoryHandler := handlers.NewChatHistoryHandler(chatHistoryService,)
 
 	return &App{
 		NoteHandler: noteHandler,
 		ChatHandler: chatHandler,
+		ChatHistoryHandler: chatHistoryHandler,
 	}
 }
