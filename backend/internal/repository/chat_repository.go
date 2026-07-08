@@ -46,9 +46,10 @@ func (r *ChatRepository) Create(history *models.ChatHistory) error {
 	return nil
 }
 
-func (r *ChatRepository) GetAll() ([]models.ChatHistory, error) {
+func (r *ChatRepository) GetAll(limit, offset int) ([]models.ChatHistory, error) {
 
-	rows, err := r.db.Query(`
+	rows, err := r.db.Query(
+		`
 		SELECT
 			id,
 			question,
@@ -56,7 +57,11 @@ func (r *ChatRepository) GetAll() ([]models.ChatHistory, error) {
 			created_at
 		FROM chat_history
 		ORDER BY created_at DESC
-	`)
+		LIMIT ? OFFSET ?
+		`,
+		limit,
+		offset,
+	)
 
 	if err != nil {
 		return nil, err
@@ -84,7 +89,7 @@ func (r *ChatRepository) GetAll() ([]models.ChatHistory, error) {
 		history = append(history, item)
 	}
 
-	return history, rows.Err()
+	return history, nil
 }
 
 func (r *ChatRepository) DeleteAll() error {
@@ -96,3 +101,16 @@ func (r *ChatRepository) DeleteAll() error {
 	return err
 }
 
+func (r *ChatRepository) Count() (int, error) {
+
+	var total int
+
+	err := r.db.QueryRow(
+		`
+		SELECT COUNT(*)
+		FROM chat_history
+		`,
+	).Scan(&total)
+
+	return total, err
+}

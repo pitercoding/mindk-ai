@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/pitercoding/mindk-ai/backend/internal/services"
 )
@@ -20,26 +21,34 @@ func NewChatHistoryHandler(
 	}
 }
 
-func (h *ChatHistoryHandler) GetAll(
-	w http.ResponseWriter,
-	r *http.Request,
-) {
+func (h *ChatHistoryHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
-	history, err := h.service.GetAll()
+	page := 1
+	limit := 10
+
+	if value := r.URL.Query().Get("page"); value != "" {
+		page, _ = strconv.Atoi(value)
+	}
+
+	if value := r.URL.Query().Get("limit"); value != "" {
+		limit, _ = strconv.Atoi(value)
+	}
+
+	history, total, err := h.service.GetAll(page, limit)
 
 	if err != nil {
-		http.Error(
-			w,
-			"failed to fetch chat history",
-			http.StatusInternalServerError,
-		)
+		http.Error(w, "failed to fetch chat history", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set(
-		"Content-Type",
-		"application/json",
-	)
+	response := map[string]interface{}{
+		"data":  history,
+		"page":  page,
+		"limit": limit,
+		"total": total,
+	}
 
-	json.NewEncoder(w).Encode(history)
+	w.Header().Set("Content-Type", "application/json")
+
+	json.NewEncoder(w).Encode(response)
 }

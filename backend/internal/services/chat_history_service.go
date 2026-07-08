@@ -26,8 +26,23 @@ func (s *ChatHistoryService) Save(question, answer string) error {
 	return s.repo.Create(history)
 }
 
-func (s *ChatHistoryService) GetAll() ([]models.ChatHistory, error) {
-	return s.repo.GetAll()
+func (s *ChatHistoryService) GetAll(page, limit int) ([]models.ChatHistory, int, error) {
+
+	offset := (page - 1) * limit
+
+	history, err := s.repo.GetAll(limit, offset)
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	total, err := s.repo.Count()
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return history, total, nil
 }
 
 func (s *ChatHistoryService) Clear() error {
