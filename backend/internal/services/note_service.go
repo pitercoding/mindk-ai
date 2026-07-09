@@ -2,15 +2,24 @@ package services
 
 import (
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
-	"github.com/pitercoding/mindk-ai/backend/internal/repository"
 )
 
-type NoteService struct {
-	repo *repository.NoteRepository
+type NoteRepository interface {
+	Create(note *models.Note) error
+	GetAll() ([]models.Note, error)
+	GetByID(id int) (*models.Note, error)
+	Update(note *models.Note) error
+	Delete(id int) error
 }
 
-func NewNoteService(repo *repository.NoteRepository) *NoteService {
-	return &NoteService{repo: repo}
+type NoteService struct {
+	repo NoteRepository
+}
+
+func NewNoteService(repo NoteRepository) *NoteService {
+	return &NoteService{
+		repo: repo,
+	}
 }
 
 func (s *NoteService) Create(note *models.Note) error {
