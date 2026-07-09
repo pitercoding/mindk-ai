@@ -5,42 +5,10 @@ import (
 	"testing"
 
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
+	"github.com/pitercoding/mindk-ai/backend/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-type fakeNoteRepository struct {
-	notes []models.Note
-	note  *models.Note
-	err   error
-
-	createdNote *models.Note
-	updatedNote *models.Note
-	deletedID   int
-}
-
-func (r *fakeNoteRepository) GetAll() ([]models.Note, error) {
-	return r.notes, r.err
-}
-
-func (r *fakeNoteRepository) GetByID(id int) (*models.Note, error) {
-	return r.note, r.err
-}
-
-func (r *fakeNoteRepository) Create(note *models.Note) error {
-	r.createdNote = note
-	return r.err
-}
-
-func (r *fakeNoteRepository) Update(note *models.Note) error {
-	r.updatedNote = note
-	return r.err
-}
-
-func (r *fakeNoteRepository) Delete(id int) error {
-	r.deletedID = id
-	return r.err
-}
 
 func TestNoteServiceGetAll(t *testing.T) {
 
@@ -98,9 +66,9 @@ func TestNoteServiceGetAll(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			repo := &fakeNoteRepository{
-				notes: tt.repoNotes,
-				err:   tt.repoErr,
+			repo := &mocks.FakeNoteRepository{
+				Notes: tt.repoNotes,
+				Err:   tt.repoErr,
 			}
 
 			service := NewNoteService(repo)
@@ -151,9 +119,9 @@ func TestNoteServiceGetByID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			repo := &fakeNoteRepository{
-				note: tt.repoNote,
-				err:  tt.repoErr,
+			repo := &mocks.FakeNoteRepository{
+				Note: tt.repoNote,
+				Err:  tt.repoErr,
 			}
 
 			service := NewNoteService(repo)
@@ -209,8 +177,8 @@ func TestNoteServiceCreate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			repo := &fakeNoteRepository{
-				err: tt.repoErr,
+			repo := &mocks.FakeNoteRepository{
+				Err: tt.repoErr,
 			}
 
 			service := NewNoteService(repo)
@@ -224,7 +192,7 @@ func TestNoteServiceCreate(t *testing.T) {
 
 			require.NoError(t, err)
 
-			assert.Equal(t, tt.note, repo.createdNote)
+			assert.Equal(t, tt.note, repo.CreatedNote)
 		})
 	}
 }
@@ -260,8 +228,8 @@ func TestNoteServiceUpdate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			repo := &fakeNoteRepository{
-				err: tt.repoErr,
+			repo := &mocks.FakeNoteRepository{
+				Err: tt.repoErr,
 			}
 
 			service := NewNoteService(repo)
@@ -275,7 +243,7 @@ func TestNoteServiceUpdate(t *testing.T) {
 
 			require.NoError(t, err)
 
-			assert.Equal(t, tt.note, repo.updatedNote)
+			assert.Equal(t, tt.note, repo.UpdatedNote)
 		})
 	}
 }
@@ -303,8 +271,8 @@ func TestNoteServiceDelete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			repo := &fakeNoteRepository{
-				err: tt.repoErr,
+			repo := &mocks.FakeNoteRepository{
+				Err: tt.repoErr,
 			}
 
 			service := NewNoteService(repo)
@@ -318,7 +286,7 @@ func TestNoteServiceDelete(t *testing.T) {
 
 			require.NoError(t, err)
 
-			assert.Equal(t, tt.id, repo.deletedID)
+			assert.Equal(t, tt.id, repo.DeletedID)
 		})
 	}
 }
