@@ -2,17 +2,26 @@ package services
 
 import (
 	"github.com/pitercoding/mindk-ai/backend/internal/llm"
+	"github.com/pitercoding/mindk-ai/backend/internal/models"
 )
 
+type NoteProvider interface {
+	GetAll() ([]models.Note, error)
+}
+
+type ChatHistorySaver interface {
+	Save(question, answer string) error
+}
+
 type ChatService struct {
-	noteService        *NoteService
-	chatHistoryService *ChatHistoryService
+	noteService        NoteProvider
+	chatHistoryService ChatHistorySaver
 	llmClient          llm.Client
 }
 
 func NewChatService(
-	noteService *NoteService,
-	chatHistoryService *ChatHistoryService,
+	noteService NoteProvider,
+	chatHistoryService ChatHistorySaver,
 	llmClient llm.Client,
 ) *ChatService {
 
