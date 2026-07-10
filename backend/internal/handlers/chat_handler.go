@@ -7,15 +7,20 @@ import (
 	"net/http"
 
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
-	"github.com/pitercoding/mindk-ai/backend/internal/services"
 )
 
-type ChatHandler struct {
-	service *services.ChatService
+type ChatService interface {
+	Ask(message string) (string, error)
 }
 
-func NewChatHandler(service *services.ChatService) *ChatHandler {
-	return &ChatHandler{service: service}
+type ChatHandler struct {
+	service ChatService
+}
+
+func NewChatHandler(service ChatService) *ChatHandler {
+	return &ChatHandler{
+		service: service,
+	}
 }
 
 func (h *ChatHandler) Ask(w http.ResponseWriter, r *http.Request) {
@@ -28,9 +33,14 @@ func (h *ChatHandler) Ask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	answer, err := h.service.Ask(req.Message)
+
 	if err != nil {
 		log.Printf("chat request failed: %v", err)
-		http.Error(w, fmt.Sprintf("failed to process chat: %v", err), http.StatusInternalServerError)
+		http.Error(
+			w,
+			fmt.Sprintf("failed to process chat: %v", err),
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
@@ -39,6 +49,6 @@ func (h *ChatHandler) Ask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+
 	json.NewEncoder(w).Encode(resp)
 }
-
