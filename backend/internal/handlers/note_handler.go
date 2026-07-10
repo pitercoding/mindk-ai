@@ -8,15 +8,24 @@ import (
 
 	"github.com/pitercoding/mindk-ai/backend/internal/httputil"
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
-	"github.com/pitercoding/mindk-ai/backend/internal/services"
 )
 
-type NoteHandler struct {
-	Service *services.NoteService
+type NoteService interface {
+	Create(note *models.Note) error
+	GetAll() ([]models.Note, error)
+	GetByID(id int) (*models.Note, error)
+	Update(note *models.Note) error
+	Delete(id int) error
 }
 
-func NewNoteHandler(service *services.NoteService) *NoteHandler {
-	return &NoteHandler{Service: service}
+type NoteHandler struct {
+	Service NoteService
+}
+
+func NewNoteHandler(service NoteService) *NoteHandler {
+	return &NoteHandler{
+		Service: service,
+	}
 }
 
 func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
