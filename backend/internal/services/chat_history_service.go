@@ -2,14 +2,21 @@ package services
 
 import (
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
-	"github.com/pitercoding/mindk-ai/backend/internal/repository"
 )
 
-type ChatHistoryService struct {
-	repo *repository.ChatRepository
+type ChatHistoryRepository interface {
+	Create(history *models.ChatHistory) error
+	GetAll(limit, offset int) ([]models.ChatHistory, error)
+	GetRecent(limit int) ([]models.ChatHistory, error)
+	Count() (int, error)
+	DeleteAll() error
 }
 
-func NewChatHistoryService(repo *repository.ChatRepository) *ChatHistoryService {
+type ChatHistoryService struct {
+	repo ChatHistoryRepository
+}
+
+func NewChatHistoryService(repo ChatHistoryRepository) *ChatHistoryService {
 
 	return &ChatHistoryService{
 		repo: repo,
@@ -43,6 +50,10 @@ func (s *ChatHistoryService) GetAll(page, limit int) ([]models.ChatHistory, int,
 	}
 
 	return history, total, nil
+}
+
+func (s *ChatHistoryService) GetRecent(limit int) ([]models.ChatHistory, error) {
+	return s.repo.GetRecent(limit)
 }
 
 func (s *ChatHistoryService) Clear() error {

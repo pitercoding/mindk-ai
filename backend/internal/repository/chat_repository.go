@@ -114,3 +114,48 @@ func (r *ChatRepository) Count() (int, error) {
 
 	return total, err
 }
+
+func (r *ChatRepository) GetRecent(limit int) ([]models.ChatHistory, error) {
+
+	rows, err := r.db.Query(
+		`
+		SELECT
+			id,
+			question,
+			answer,
+			created_at
+		FROM chat_history
+		ORDER BY created_at DESC
+		LIMIT ?
+		`,
+		limit,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var history []models.ChatHistory
+
+	for rows.Next() {
+
+		var item models.ChatHistory
+
+		err := rows.Scan(
+			&item.ID,
+			&item.Question,
+			&item.Answer,
+			&item.CreatedAt,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		history = append(history, item)
+	}
+
+	return history, nil
+}
