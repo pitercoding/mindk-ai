@@ -96,8 +96,9 @@ func TestBuildPrompt(t *testing.T) {
 	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+			history := []models.ChatHistory{}
 
-			prompt := BuildPrompt(tt.question, tt.notes)
+			prompt := BuildPrompt(tt.question, tt.notes, history)
 
 			for _, expected := range tt.expectedContains {
 				assert.Contains(t, prompt, expected)

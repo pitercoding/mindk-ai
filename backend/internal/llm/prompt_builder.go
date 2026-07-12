@@ -7,7 +7,10 @@ import (
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
 )
 
-func BuildPrompt(question string, notes []models.Note) string {
+func BuildPrompt(question string, notes []models.Note, history []models.ChatHistory) string {
+
+	_ = history
+	
 	var builder strings.Builder
 
 	builder.WriteString("You are an AI assistant.\n\n")

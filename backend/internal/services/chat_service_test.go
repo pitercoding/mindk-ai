@@ -109,6 +109,12 @@ func TestChatServiceAsk(t *testing.T) {
 				historyService.SavedAnswer,
 			)
 
+			assert.Equal(
+				t,
+				5,
+				historyService.LastLimit,
+			)
+
 			assert.NotEmpty(t, llmClient.LastPrompt)
 		})
 	}

@@ -9,19 +9,20 @@ type NoteProvider interface {
 	GetAll() ([]models.Note, error)
 }
 
-type ChatHistorySaver interface {
+type ChatHistoryProvider interface {
 	Save(question, answer string) error
+	GetRecent(limit int) ([]models.ChatHistory, error)
 }
 
 type ChatService struct {
 	noteService        NoteProvider
-	chatHistoryService ChatHistorySaver
+	chatHistoryService ChatHistoryProvider
 	llmClient          llm.Client
 }
 
 func NewChatService(
 	noteService NoteProvider,
-	chatHistoryService ChatHistorySaver,
+	chatHistoryService ChatHistoryProvider,
 	llmClient llm.Client,
 ) *ChatService {
 
@@ -33,13 +34,18 @@ func NewChatService(
 }
 
 func (s *ChatService) Ask(message string) (string, error) {
-	notes, err := s.noteService.GetAll()
 
+	history, err := s.chatHistoryService.GetRecent(5)
 	if err != nil {
 		return "", err
 	}
 
-	prompt := llm.BuildPrompt(message, notes)
+	notes, err := s.noteService.GetAll()
+	if err != nil {
+		return "", err
+	}
+
+	prompt := llm.BuildPrompt(message, notes, history)
 
 	answer, err := s.llmClient.Chat(prompt)
 	if err != nil {
