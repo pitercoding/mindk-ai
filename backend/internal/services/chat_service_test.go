@@ -77,6 +77,12 @@ func TestChatServiceAsk(t *testing.T) {
 			}
 
 			historyService := &mocks.FakeChatHistoryService{
+				Recent: []models.ChatHistory{
+					{
+						Question: "Previous question",
+						Answer:   "Previous answer",
+					},
+				},
 				Err: tt.historyErr,
 			}
 

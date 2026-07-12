@@ -9,13 +9,13 @@ import (
 )
 
 func TestBuildPrompt(t *testing.T) {
-
 	longContent := strings.Repeat("Go is awesome. ", 50)
 
 	tests := []struct {
 		name             string
 		question         string
 		notes            []models.Note
+		history          []models.ChatHistory
 		expectedContains []string
 	}{
 		{
@@ -91,14 +91,27 @@ func TestBuildPrompt(t *testing.T) {
 				longContent,
 			},
 		},
+		{
+			name:     "with conversation history",
+			question: "Tell me more",
+			history: []models.ChatHistory{
+				{
+					Question: "What is Go?",
+					Answer:   "Go is a programming language.",
+				},
+			},
+			expectedContains: []string{
+				"CONVERSATION HISTORY:",
+				"User: What is Go?",
+				"Assistant: Go is a programming language.",
+			},
+		},
 	}
 
 	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
-			history := []models.ChatHistory{}
-
-			prompt := BuildPrompt(tt.question, tt.notes, history)
+			prompt := BuildPrompt(tt.question, tt.notes, tt.history)
 
 			for _, expected := range tt.expectedContains {
 				assert.Contains(t, prompt, expected)
