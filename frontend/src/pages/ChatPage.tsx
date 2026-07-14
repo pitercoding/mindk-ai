@@ -16,6 +16,8 @@ export default function ChatPage() {
         },
     ]);
 
+    const [isLoading, setIsLoading] = useState(false);
+
     async function handleSend(message: string) {
         const userMessage: Message = {
             id: crypto.randomUUID(),
@@ -28,10 +30,32 @@ export default function ChatPage() {
             userMessage,
         ]);
 
+        setIsLoading(true);
+
         try {
+
+            const loadingId = crypto.randomUUID();
+
+            const loadingMessage: Message = {
+                id: loadingId,
+                role: "assistant",
+                content: "Thinking...",
+            };
+
+            setMessages((previousMessages) => [
+                ...previousMessages,
+                loadingMessage
+            ]);
+
             const response = await sendMessage({
                 message,
             });
+
+            setMessages((previousMessages) =>
+                previousMessages.filter(
+                    (message) => message.id !== loadingId
+                )
+            );
 
             const assistantMessage: Message = {
                 id: crypto.randomUUID(),
@@ -43,6 +67,7 @@ export default function ChatPage() {
                 ...previousMessages,
                 assistantMessage,
             ]);
+
         } catch {
             const errorMessage: Message = {
                 id: crypto.randomUUID(),
@@ -54,6 +79,8 @@ export default function ChatPage() {
                 ...previousMessages,
                 errorMessage,
             ]);
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -63,7 +90,10 @@ export default function ChatPage() {
 
             <ChatMessageList messages={messages} />
 
-            <ChatInput onSend={handleSend} />
+            <ChatInput
+                onSend={handleSend}
+                disabled={isLoading}
+            />
         </main>
     );
 }

@@ -2,10 +2,12 @@ import { useState, type FormEvent } from "react";
 
 interface ChatInputProps {
     onSend: (message: string) => void;
+    disabled?: boolean;
 }
 
 export default function ChatInput({
-    onSend
+    onSend,
+    disabled,
 }: ChatInputProps) {
     const [message, setMessage] = useState("");
 
@@ -25,14 +27,18 @@ export default function ChatInput({
 
     return (
         <form onSubmit={handleSubmit}>
-            <input 
+            <input
                 type="text"
                 placeholder="Ask something..."
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
+                disabled={disabled}
             />
 
-            <button type="submit">
+            <button
+                type="submit"
+                disabled={disabled}
+            >
                 Send
             </button>
         </form>
