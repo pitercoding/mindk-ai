@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ChatPage from "@/pages/ChatPage";
 
 export const router = createBrowserRouter([
@@ -7,3 +7,7 @@ export const router = createBrowserRouter([
         element: <ChatPage />,
     },
 ]);
+
+export default function AppRouter() {
+    return <RouterProvider router={router} />;
+}

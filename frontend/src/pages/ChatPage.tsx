@@ -86,6 +86,7 @@ export default function ChatPage() {
 
     return (
         <main className="chat-page">
+
             <header className="chat-header">
                 <h1>MindK AI</h1>
             </header>
@@ -100,6 +101,7 @@ export default function ChatPage() {
                     disabled={isLoading}
                 />
             </footer>
+
         </main>
     );
 }
