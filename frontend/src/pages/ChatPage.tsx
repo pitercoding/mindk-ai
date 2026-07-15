@@ -85,15 +85,21 @@ export default function ChatPage() {
     }
 
     return (
-        <main>
-            <h1>MindK AI</h1>
+        <main className="chat-page">
+            <header className="chat-header">
+                <h1>MindK AI</h1>
+            </header>
 
-            <ChatMessageList messages={messages} />
+            <section className="chat-content">
+                <ChatMessageList messages={messages} />
+            </section>
 
-            <ChatInput
-                onSend={handleSend}
-                disabled={isLoading}
-            />
+            <footer className="chat-footer">
+                <ChatInput
+                    onSend={handleSend}
+                    disabled={isLoading}
+                />
+            </footer>
         </main>
     );
 }
