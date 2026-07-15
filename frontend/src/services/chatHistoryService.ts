@@ -10,9 +10,9 @@ interface ChatHistoryResponse {
 
 export async function getChatHistory(
     page = 1,
-    limit = 10
+    limit = 10,
 ): Promise<ChatHistoryResponse> {
     return apiClient<ChatHistoryResponse>(
-        `/chat-history?page=${page}&limit=${limit}`
+        `/chat/history?page=${page}&limit=${limit}`,
     );
 }

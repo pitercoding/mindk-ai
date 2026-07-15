@@ -2,5 +2,5 @@ export interface ChatHistory {
     id: number;
     question: string;
     answer: string;
-    createdAt: string;
+    created_at: string;
 }
