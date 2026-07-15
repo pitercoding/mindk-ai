@@ -1,22 +1,35 @@
+import { useEffect, useRef } from "react";
+
 import ChatMessage from "./ChatMessage";
 
 import type { Message } from "@/types/message";
 
 interface ChatMessageListProps {
-  messages: Message[];
+    messages: Message[];
 }
 
 export default function ChatMessageList({
-    messages
+    messages,
 }: ChatMessageListProps) {
+
+    const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({
+            behavior: "smooth",
+        });
+    }, [messages]);
+
     return (
         <div>
             {messages.map((message) => (
                 <ChatMessage
-                key={message.id}
-                message={message}
+                    key={message.id}
+                    message={message}
                 />
             ))}
+
+            <div ref={messagesEndRef} />
         </div>
     );
 }
