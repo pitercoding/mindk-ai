@@ -26,7 +26,9 @@ export default function ChatInput({
     }
 
     return (
-        <form onSubmit={handleSubmit}>
+        <form
+            className="chat-input"
+            onSubmit={handleSubmit}>
             <input
                 type="text"
                 placeholder="Ask something..."

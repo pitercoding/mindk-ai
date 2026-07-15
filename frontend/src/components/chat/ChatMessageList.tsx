@@ -21,7 +21,8 @@ export default function ChatMessageList({
     }, [messages]);
 
     return (
-        <div>
+        <div className="message-list">
+
             {messages.map((message) => (
                 <ChatMessage
                     key={message.id}
@@ -30,6 +31,7 @@ export default function ChatMessageList({
             ))}
 
             <div ref={messagesEndRef} />
+            
         </div>
     );
 }

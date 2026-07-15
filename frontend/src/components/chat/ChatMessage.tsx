@@ -5,13 +5,25 @@ interface ChatMessageProps {
 }
 
 export default function ChatMessage({
-        message
-    }: ChatMessageProps) {
-    return (
-        <div>
-            <strong>{message.role}</strong>
+    message,
+}: ChatMessageProps) {
 
-            <p>{message.content}</p>
+    const isUser = message.role === "user";
+
+    return (
+        <div
+            className={`message ${isUser
+                    ? "message-user"
+                    : "message-assistant"
+                }`}
+        >
+            <strong>
+                {isUser ? "You" : "AI"}
+            </strong>
+
+            <p>
+                {message.content}
+            </p>
         </div>
     );
 }
