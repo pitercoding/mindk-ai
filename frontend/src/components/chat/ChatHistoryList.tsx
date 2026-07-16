@@ -3,6 +3,7 @@ import type { ChatHistory } from "@/types/chat-history";
 interface ChatHistoryListProps {
     history: ChatHistory[];
     onSelect: (item: ChatHistory) => void;
+    onNewChat: () => void;
 }
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -23,7 +24,8 @@ function formatHistoryDate(value: string) {
 
 export default function ChatHistoryList({
     history,
-    onSelect
+    onSelect,
+    onNewChat,
 }: ChatHistoryListProps) {
 
     return (
@@ -32,6 +34,13 @@ export default function ChatHistoryList({
             <header className="history-header">
                 <h2>Conversation History</h2>
             </header>
+
+            <button
+                className="new-chat-button"
+                onClick={onNewChat}
+            >
+                New Chat
+            </button>
 
             {history.map((item) => (
                 <article

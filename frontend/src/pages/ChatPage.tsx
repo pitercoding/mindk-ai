@@ -11,12 +11,15 @@ import type { Message } from "@/types/message";
 import type { ChatHistory } from "@/types/chat-history";
 
 export default function ChatPage() {
+
+    const initialMessage: Message = {
+        id: "1",
+        role: "assistant",
+        content: "Hello! How can I help you today?",
+    };
+
     const [messages, setMessages] = useState<Message[]>([
-        {
-            id: "1",
-            role: "assistant",
-            content: "Hello! How can I help you today?",
-        },
+        initialMessage,
     ]);
 
     const [isLoading, setIsLoading] = useState(false);
@@ -28,6 +31,23 @@ export default function ChatPage() {
             const response = await getChatHistory();
 
             setHistory(response.data);
+
+            if (response.data.length > 0) {
+                const latest = response.data[0];
+
+                setMessages([
+                    {
+                        id: crypto.randomUUID(),
+                        role: "user",
+                        content: latest.question,
+                    },
+                    {
+                        id: crypto.randomUUID(),
+                        role: "assistant",
+                        content: latest.answer,
+                    },
+                ]);
+            }
 
         } catch (error) {
             console.error(
@@ -125,6 +145,15 @@ export default function ChatPage() {
         ]);
     }
 
+    function handleNewChat() {
+        setMessages([
+            {
+                ...initialMessage,
+                id: crypto.randomUUID(),
+            },
+        ]);
+    }
+
     return (
         <main className="chat-page">
 
@@ -132,6 +161,7 @@ export default function ChatPage() {
                 <ChatHistoryList
                     history={history}
                     onSelect={handleHistorySelect}
+                    onNewChat={handleNewChat}
                 />
             </aside>
 
