@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 
 import NoteList from "@/components/notes/NoteList";
+import NoteForm from "@/components/notes/NoteForm";
 
-import { getNotes } from "@/services/noteService";
+import { createNote, getNotes } from "@/services/noteService";
 
 import type { Note } from "@/types/note";
 
@@ -28,11 +29,57 @@ export default function NotesPage() {
         loadNotes();
     }, []);
 
-    return (
-        <main>
-            <h1>Notes</h1>
+    async function handleCreateNote(note: Omit<Note, "id">) {
 
-            <NoteList notes={notes} />
+        try {
+
+            const createdNote = await createNote({
+                title: note.title,
+                content: note.content,
+            });
+
+            setNotes((previousNotes) => [
+                ...previousNotes,
+                createdNote,
+            ]);
+
+        } catch (error) {
+            console.error(
+                "Failed to create note:",
+                error
+            );
+        }
+    }
+
+    return (
+        <main className="notes-page">
+
+            <header className="notes-header">
+                <h1>Notes</h1>
+            </header>
+
+
+            <section className="notes-form-section">
+
+                <NoteForm
+                    onCreated={handleCreateNote}
+                />
+
+            </section>
+
+
+            <section className="notes-list-section">
+
+                <h2>
+                    Your Notes
+                </h2>
+
+                <NoteList
+                    notes={notes}
+                />
+
+            </section>
+
         </main>
     );
 }

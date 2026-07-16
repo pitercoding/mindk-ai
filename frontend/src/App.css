@@ -173,3 +173,83 @@
 .new-chat-button:active {
     transform: scale(0.98);
 }
+
+.notes-page {
+    padding: 32px;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+
+.notes-header {
+    margin-bottom: 24px;
+}
+
+
+.notes-header h1 {
+    margin: 0;
+}
+
+
+.notes-form-section {
+    max-width: 600px;
+    margin-bottom: 40px;
+}
+
+
+.notes-form-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+
+.notes-form-section input,
+.notes-form-section textarea {
+
+    padding: 12px;
+
+    border: 1px solid #ccc;
+    border-radius: 8px;
+
+    font-size: 16px;
+
+}
+
+
+.notes-form-section textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+
+.notes-form-section button {
+
+    width: fit-content;
+
+    padding: 10px 20px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #111;
+    color: white;
+
+    cursor: pointer;
+
+}
+
+
+.notes-form-section button:hover {
+    opacity: 0.8;
+}
+
+
+.notes-list-section {
+    max-width: 800px;
+}
+
+
+.notes-list-section h2 {
+    margin-bottom: 16px;
+}
