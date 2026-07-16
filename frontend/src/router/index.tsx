@@ -1,16 +1,23 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import ChatPage from "@/pages/ChatPage";
+import DashboardPage from "@/pages/DashboardPage";
 import NotesPage from "@/pages/NotesPage";
+import DashboardLayout from "@/layouts/DashboardLayout";
 
 export const router = createBrowserRouter([
     {
         path: "/",
-        element: <ChatPage />,
+        element: <DashboardLayout />,
+        children: [
+            {
+                index: true,
+                element: <DashboardPage />,
+            },
+            {
+                path: "notes",
+                element: <NotesPage />,
+            },
+        ],
     },
-    {
-        path: "/notes",
-        element: <NotesPage />,
-    }
 ]);
 
 export default function AppRouter() {
