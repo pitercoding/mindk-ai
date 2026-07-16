@@ -2,6 +2,7 @@ import type { ChatHistory } from "@/types/chat-history";
 
 interface ChatHistoryListProps {
     history: ChatHistory[];
+    onSelect: (item: ChatHistory) => void;
 }
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -22,6 +23,7 @@ function formatHistoryDate(value: string) {
 
 export default function ChatHistoryList({
     history,
+    onSelect
 }: ChatHistoryListProps) {
 
     return (
@@ -35,6 +37,14 @@ export default function ChatHistoryList({
                 <article
                     key={item.id}
                     className="history-item"
+                    onClick={() => onSelect(item)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                            onSelect(item);
+                        }
+                    }}
                 >
                     <p className="history-question">
                         {item.question}

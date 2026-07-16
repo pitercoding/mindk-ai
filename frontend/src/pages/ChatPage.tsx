@@ -109,11 +109,30 @@ export default function ChatPage() {
         }
     }
 
+    function handleHistorySelect(item: ChatHistory) {
+
+        setMessages([
+            {
+                id: crypto.randomUUID(),
+                role: "user",
+                content: item.question,
+            },
+            {
+                id: crypto.randomUUID(),
+                role: "assistant",
+                content: item.answer,
+            },
+        ]);
+    }
+
     return (
         <main className="chat-page">
 
             <aside className="history-sidebar">
-                <ChatHistoryList history={history} />
+                <ChatHistoryList
+                    history={history}
+                    onSelect={handleHistorySelect}
+                />
             </aside>
 
             <section className="chat-container">
