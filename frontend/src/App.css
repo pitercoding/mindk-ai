@@ -296,7 +296,7 @@ button {
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15);
 }
 
-.dashboard-content > main {
+.dashboard-content>main {
     flex: 1;
     min-height: 0;
     padding: 0 16px 16px 14px;
@@ -359,7 +359,7 @@ button {
     cursor: pointer;
 }
 
-.dashboard-panel > div:not(.panel-header) {
+.dashboard-panel>div:not(.panel-header) {
     display: grid;
     min-height: 110px;
     place-items: center;
@@ -371,7 +371,7 @@ button {
     border-radius: 7px;
 }
 
-.dashboard-panel:first-child > div:not(.panel-header) {
+.dashboard-panel:first-child>div:not(.panel-header) {
     align-items: start;
     place-items: start stretch;
     padding: 14px;
@@ -381,16 +381,16 @@ button {
     box-shadow: 0 0 24px rgba(54, 229, 206, 0.08);
 }
 
-.dashboard-panel:first-child > div:not(.panel-header)::before {
-    content: "Docker Containerization Guide";
+.dashboard-panel:first-child>div:not(.panel-header)::before {
+    /*content: "Docker Containerization Guide";*/
     display: block;
     margin-bottom: 8px;
     color: var(--text);
     font-weight: 800;
 }
 
-.dashboard-panel:first-child > div:not(.panel-header)::after {
-    content: "#docker  #api  #frontend";
+.dashboard-panel:first-child>div:not(.panel-header)::after {
+    /*content: "#docker  #api  #frontend";*/
     display: block;
     width: fit-content;
     margin-top: 14px;
@@ -400,20 +400,20 @@ button {
     border-radius: 6px;
 }
 
-.dashboard-panel:nth-child(2) > div:not(.panel-header) {
+.dashboard-panel:nth-child(2)>div:not(.panel-header) {
     align-content: center;
     min-height: 220px;
     font-size: 16px;
 }
 
-.dashboard-panel:nth-child(3) > div:not(.panel-header) {
+.dashboard-panel:nth-child(3)>div:not(.panel-header) {
     position: relative;
     align-content: center;
     min-height: 190px;
     border-style: solid;
 }
 
-.dashboard-panel:nth-child(3) > div:not(.panel-header)::after {
+.dashboard-panel:nth-child(3)>div:not(.panel-header)::after {
     content: "";
     position: absolute;
     inset: auto 16px 16px;
@@ -696,4 +696,57 @@ button {
         border-right: 0;
         border-bottom: 1px solid var(--line);
     }
+}
+
+.knowledge-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.knowledge-item {
+    padding: 14px;
+
+    border: 1px solid var(--line);
+    border-radius: 8px;
+
+    background: rgba(20, 31, 48, 0.7);
+
+    cursor: pointer;
+
+    transition:
+        border-color .2s,
+        background .2s,
+        transform .2s;
+}
+
+.knowledge-item:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.knowledge-item-active {
+    border-color: var(--accent);
+    box-shadow: 0 0 16px rgba(54, 229, 206, .18);
+}
+
+.knowledge-item h3 {
+    margin: 0 0 8px;
+    font-size: 15px;
+}
+
+.knowledge-item p {
+    margin: 0;
+
+    color: var(--muted);
+    line-height: 1.5;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
 }
