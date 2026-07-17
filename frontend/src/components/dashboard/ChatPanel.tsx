@@ -1,6 +1,6 @@
 export default function ChatPanel() {
     return (
-        <section className="dashboard-panel">
+        <section className="dashboard-panel chat-panel">
 
             <header className="panel-header">
 
@@ -18,7 +18,7 @@ export default function ChatPanel() {
             </header>
 
 
-            <div>
+            <div className="chat-empty-state">
                 Chat messages will appear here.
             </div>
 

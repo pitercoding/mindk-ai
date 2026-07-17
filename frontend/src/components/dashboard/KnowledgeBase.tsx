@@ -13,7 +13,7 @@ export default function KnowledgeBase({
 }: KnowledgeBaseProps) {
 
     return (
-        <section className="dashboard-panel">
+        <section className="dashboard-panel knowledge-panel">
 
             <header className="panel-header">
 

@@ -4,27 +4,33 @@ const menuItems = [
     {
         label: "Dashboard",
         path: "/",
+        icon: "⌂",
     },
     {
         label: "All Notes",
         path: "/notes",
+        icon: "▤",
     },
     {
         label: "Documents",
         path: "/documents",
+        icon: "□",
     },
     {
         label: "Links",
         path: "/links",
+        icon: "∞",
     },
     {
         label: "PDFs",
         path: "/pdfs",
+        icon: "⌑",
         badge: "Soon",
     },
     {
         label: "Settings",
         path: "/settings",
+        icon: "⚙",
     },
 ];
 
@@ -44,6 +50,7 @@ export default function Sidebar() {
                 {menuItems.map((item) => (
                     <NavLink
                         key={item.label}
+                        data-icon={item.icon}
                         to={item.path}
                         className={({ isActive }) =>
                             isActive

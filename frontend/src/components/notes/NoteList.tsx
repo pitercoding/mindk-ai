@@ -9,9 +9,9 @@ export default function NoteList({
 }: NoteListProps) {
 
     return (
-        <section>
+        <section className="notes-grid">
             {notes.map((note) => (
-                <article key={note.id}>
+                <article className="note-card" key={note.id}>
                     <h3>
                         {note.title}
                     </h3>

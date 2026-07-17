@@ -15,6 +15,7 @@ export default function Header() {
             <div className="header-actions">
 
                 <button
+                    className="notification-button"
                     type="button"
                     aria-label="Notifications"
                 >
@@ -23,6 +24,7 @@ export default function Header() {
 
 
                 <button
+                    className="profile-button"
                     type="button"
                     aria-label="Profile"
                 >
