@@ -1,4 +1,12 @@
-export default function ChatPanel() {
+import type { Note } from "@/types/note";
+
+interface ChatPanelProps {
+    selectedNote: Note | null;
+}
+
+export default function ChatPanel({
+    selectedNote,
+}: ChatPanelProps) {
     return (
         <section className="dashboard-panel chat-panel">
 
@@ -19,7 +27,23 @@ export default function ChatPanel() {
 
 
             <div className="chat-empty-state">
-                Chat messages will appear here.
+
+                {selectedNote && (
+                    <div className="chat-context">
+                        <span>
+                            Context:
+                        </span>
+
+                        <strong>
+                            {selectedNote.title}
+                        </strong>
+                    </div>
+                )}
+
+                <p>
+                    Chat messages will appear here.
+                </p>
+
             </div>
 
         </section>

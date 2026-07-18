@@ -51,7 +51,7 @@ export default function DashboardPage() {
                     note={selectedNote}
                 />
 
-                <ChatPanel />
+                <ChatPanel selectedNote={selectedNote} />
 
             </div>
 
