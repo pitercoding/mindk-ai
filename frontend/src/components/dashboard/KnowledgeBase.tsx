@@ -30,26 +30,42 @@ export default function KnowledgeBase({
 
             <div className="knowledge-list">
 
-                {notes.map((note) => (
+                {notes.map((note) => {
 
-                    <article
-                        key={note.id}
-                        className={`knowledge-item ${selectedNote?.id === note.id
-                                ? "knowledge-item-active"
-                                : ""
-                            }`}
-                        onClick={() => onSelect(note)}
-                    >
+                    function handleSelect() {
+                        onSelect(note);
+                    }
 
-                        <h3>{note.title}</h3>
+                    return (
+                        <article
+                            key={note.id}
+                            className={`knowledge-item ${selectedNote?.id === note.id
+                                    ? "knowledge-item-active"
+                                    : ""
+                                }`}
+                            role="button"
+                            tabIndex={0}
+                            onClick={handleSelect}
+                            onKeyDown={(event) => {
+                                if (
+                                    event.key === "Enter" ||
+                                    event.key === " "
+                                ) {
+                                    event.preventDefault();
+                                    handleSelect();
+                                }
+                            }}
+                        >
 
-                        <p>
-                            {note.content}
-                        </p>
+                            <h3>{note.title}</h3>
 
-                    </article>
+                            <p>
+                                {note.content}
+                            </p>
 
-                ))}
+                        </article>
+                    );
+                })}
 
             </div>
 

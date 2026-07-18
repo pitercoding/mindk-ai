@@ -526,6 +526,7 @@ button {
     margin: 0;
     overflow: hidden;
     -webkit-box-orient: vertical;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
 }
 
@@ -676,13 +677,21 @@ button {
 }
 
 .knowledge-item:hover {
-    border-color: var(--accent);
-    transform: translateY(-1px);
+    background: rgba(54, 229, 206, 0.04);
 }
 
 .knowledge-item-active {
+    background: rgba(54, 229, 206, 0.08);
+
     border-color: var(--accent);
-    box-shadow: 0 0 16px rgba(54, 229, 206, .18);
+
+    box-shadow:
+        inset 3px 0 0 var(--accent),
+        0 0 16px rgba(54, 229, 206, .18);
+}
+
+.knowledge-item-active h3 {
+    color: var(--accent);
 }
 
 .knowledge-item h3 {
@@ -697,6 +706,7 @@ button {
     line-height: 1.5;
 
     display: -webkit-box;
+    line-clamp: 3;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
 
