@@ -1,17 +1,29 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import type { Note } from "@/types/note";
 
 interface NoteFormProps {
+    selectedNote?: Note | null;
     onCreated: (note: Omit<Note, "id">) => void;
+    onUpdated: (id: number, note: Omit<Note, "id">) => void;
 }
 
 export default function NoteForm({
+    selectedNote,
     onCreated,
+    onUpdated,
 }: NoteFormProps) {
 
-    const [title, setTitle] = useState("");
-    const [content, setContent] = useState("");
+    const [title, setTitle] = useState(selectedNote?.title ?? "");
+    const [content, setContent] = useState(selectedNote?.content ?? "");
+
+    useEffect(() => {
+
+        setTitle(selectedNote?.title ?? "");
+
+        setContent(selectedNote?.content ?? "");
+
+    }, [selectedNote]);
 
     async function handleSubmit(
         event: FormEvent<HTMLFormElement>
@@ -25,10 +37,24 @@ export default function NoteForm({
             return;
         }
 
-        onCreated({
-            title: trimmedTitle,
-            content: trimmedContent,
-        });
+        if (selectedNote) {
+
+            onUpdated(
+                selectedNote.id,
+                {
+                    title: trimmedTitle,
+                    content: trimmedContent,
+                }
+            );
+
+        } else {
+
+            onCreated({
+                title: trimmedTitle,
+                content: trimmedContent,
+            });
+
+        }
 
         setTitle("");
         setContent("");
@@ -55,7 +81,13 @@ export default function NoteForm({
             />
 
             <button type="submit">
-                Save Note
+
+                {
+                    selectedNote
+                        ? "Update Note"
+                        : "Save Note"
+                }
+
             </button>
 
         </form>
