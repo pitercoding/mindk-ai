@@ -1,49 +1,32 @@
-import type { Note } from "@/types/note";
+import { useSelectedNote } from "@/context/SelectedNoteContext";
 
-interface ChatPanelProps {
-    selectedNote: Note | null;
-}
+export default function ChatPanel() {
 
-export default function ChatPanel({
-    selectedNote,
-}: ChatPanelProps) {
+    const {selectedNote,} = useSelectedNote();
+
     return (
         <section className="dashboard-panel chat-panel">
 
             <header className="panel-header">
-
                 <div>
                     <h2>MINDK CHAT</h2>
-                    <span>
-                        Ask MindK anything about your data
-                    </span>
+                    <span>Ask MindK anything about your data</span>
                 </div>
 
-                <button>
-                    ...
-                </button>
-
+                <button>...</button>
             </header>
-
 
             <div className="chat-empty-state">
 
                 {selectedNote && (
                     <div className="chat-context">
-                        <span>
-                            Context:
-                        </span>
+                        <span>Context:</span>
 
-                        <strong>
-                            {selectedNote.title}
-                        </strong>
+                        <strong>{selectedNote.title}</strong>
                     </div>
                 )}
 
-                <p>
-                    Chat messages will appear here.
-                </p>
-
+                <p>Chat messages will appear here.</p>
             </div>
 
         </section>
