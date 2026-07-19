@@ -19,11 +19,13 @@ export default function DashboardPage() {
         setSelectedNote,
     } = useSelectedNote();
 
+
     async function loadNotes() {
 
         try {
 
             const response = await getNotes();
+
             setNotes(response);
 
             if (response.length > 0) {
@@ -31,23 +33,35 @@ export default function DashboardPage() {
             }
 
         } catch (error) {
-            console.error("Failed to load notes:", error,);
+
+            console.error(
+                "Failed to load notes:",
+                error,
+            );
         }
     }
 
-    useEffect(() => { loadNotes(); }, []);
+
+    useEffect(() => {
+        loadNotes();
+    }, []);
+
 
     return (
         <section className="dashboard-page">
 
             <div className="dashboard-grid">
-                
-                <KnowledgeBase notes={notes} />
 
-                <CurrentNote note={selectedNote} />
+                <KnowledgeBase
+                    notes={notes}
+                />
+
+                <CurrentNote
+                    note={selectedNote}
+                />
 
                 <ChatPanel />
-                
+
             </div>
 
         </section>

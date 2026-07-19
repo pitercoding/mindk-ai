@@ -1,4 +1,7 @@
-import type { ChatContext } from "./chat-context";
+export interface ChatContext {
+    title: string;
+    content: string;
+}
 
 export interface ChatRequest {
     message: string;

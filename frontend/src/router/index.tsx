@@ -1,6 +1,9 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+
 import DashboardPage from "@/pages/DashboardPage";
 import NotesPage from "@/pages/NotesPage";
+import ChatPage from "@/pages/ChatPage";
+
 import DashboardLayout from "@/layouts/DashboardLayout";
 
 export const router = createBrowserRouter([
@@ -15,6 +18,10 @@ export const router = createBrowserRouter([
             {
                 path: "notes",
                 element: <NotesPage />,
+            },
+            {
+                path: "chat",
+                element: <ChatPage />,
             },
         ],
     },

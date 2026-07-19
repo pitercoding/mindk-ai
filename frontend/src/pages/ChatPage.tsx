@@ -9,6 +9,7 @@ import { getChatHistory } from "@/services/chatHistoryService";
 
 import type { Message } from "@/types/message";
 import type { ChatHistory } from "@/types/chat-history";
+import { useSelectedNote } from "@/context/SelectedNoteContext";
 
 export default function ChatPage() {
 
@@ -25,6 +26,8 @@ export default function ChatPage() {
     const [isLoading, setIsLoading] = useState(false);
 
     const [history, setHistory] = useState<ChatHistory[]>([]);
+
+    const {selectedNote} = useSelectedNote();
 
     async function loadHistory() {
         try {
@@ -92,6 +95,13 @@ export default function ChatPage() {
 
             const response = await sendMessage({
                 message,
+
+                context: selectedNote
+                    ? {
+                        title: selectedNote.title,
+                        content: selectedNote.content,
+                    }
+                    : undefined,
             });
 
             setMessages((previousMessages) =>
