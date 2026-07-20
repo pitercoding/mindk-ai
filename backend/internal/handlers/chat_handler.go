@@ -10,7 +10,10 @@ import (
 )
 
 type ChatService interface {
-	Ask(message string) (string, error)
+	Ask(
+		message string,
+		context *models.ChatContext,
+	) (string, error)
 }
 
 type ChatHandler struct {
@@ -32,7 +35,10 @@ func (h *ChatHandler) Ask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	answer, err := h.service.Ask(req.Message)
+	answer, err := h.service.Ask(
+		req.Message,
+		req.Context,
+	)
 
 	if err != nil {
 		log.Printf("chat request failed: %v", err)

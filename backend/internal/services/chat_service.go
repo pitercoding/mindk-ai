@@ -33,19 +33,38 @@ func NewChatService(
 	}
 }
 
-func (s *ChatService) Ask(message string) (string, error) {
+func (s *ChatService) Ask(message string, context *models.ChatContext) (string, error) {
 
 	history, err := s.chatHistoryService.GetRecent(5)
 	if err != nil {
 		return "", err
 	}
 
-	notes, err := s.noteService.GetAll()
-	if err != nil {
-		return "", err
+	var notes []models.Note
+
+	if context != nil {
+
+		notes = []models.Note{
+			{
+				Title:   context.Title,
+				Content: context.Content,
+			},
+		}
+
+	} else {
+
+		notes, err = s.noteService.GetAll()
+
+		if err != nil {
+			return "", err
+		}
 	}
 
-	prompt := llm.BuildPrompt(message, notes, history)
+	prompt := llm.BuildPrompt(
+		message,
+		notes,
+		history,
+	)
 
 	answer, err := s.llmClient.Chat(prompt)
 	if err != nil {
