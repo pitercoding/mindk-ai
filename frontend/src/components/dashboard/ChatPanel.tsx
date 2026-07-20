@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Chat from "@/components/chat/Chat";
 
@@ -26,6 +26,23 @@ export default function ChatPanel() {
     const {
         selectedNote,
     } = useSelectedNote();
+
+    useEffect(() => {
+
+        if (!selectedNote) {
+            return;
+        }
+
+        setMessages([
+            {
+                id: crypto.randomUUID(),
+                role: "assistant",
+                content:
+                    `Olá! Estou analisando a nota "${selectedNote.title}". Como posso ajudar?`,
+            },
+        ]);
+
+    }, [selectedNote]);
 
     async function handleSend(message: string) {
 
@@ -106,7 +123,7 @@ export default function ChatPanel() {
     }
 
     return (
-        
+
         <section className="dashboard-panel chat-panel">
 
             <header className="panel-header">
