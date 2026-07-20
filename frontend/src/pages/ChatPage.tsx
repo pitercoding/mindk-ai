@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
 
-import ChatInput from "@/components/chat/ChatInput";
-import ChatMessageList from "@/components/chat/ChatMessageList";
 import ChatHistoryList from "@/components/chat/ChatHistoryList";
+import Chat from "@/components/chat/Chat";
 
 import { sendMessage } from "@/services/chatService";
 import { getChatHistory } from "@/services/chatHistoryService";
 
 import type { Message } from "@/types/message";
 import type { ChatHistory } from "@/types/chat-history";
-import { useSelectedNote } from "@/context/SelectedNoteContext";
 
 export default function ChatPage() {
 
@@ -27,44 +25,28 @@ export default function ChatPage() {
 
     const [history, setHistory] = useState<ChatHistory[]>([]);
 
-    const {selectedNote} = useSelectedNote();
-
     async function loadHistory() {
+
         try {
+
             const response = await getChatHistory();
 
             setHistory(response.data);
 
-            if (response.data.length > 0) {
-                const latest = response.data[0];
-
-                setMessages([
-                    {
-                        id: crypto.randomUUID(),
-                        role: "user",
-                        content: latest.question,
-                    },
-                    {
-                        id: crypto.randomUUID(),
-                        role: "assistant",
-                        content: latest.answer,
-                    },
-                ]);
-            }
-
         } catch (error) {
+
             console.error(
                 "Failed to load chat history:",
                 error
             );
+
         }
     }
 
-    useEffect(() => {
-        loadHistory();
-    }, []);
+    useEffect(() => { loadHistory(); }, []);
 
     async function handleSend(message: string) {
+
         const userMessage: Message = {
             id: crypto.randomUUID(),
             role: "user",
@@ -93,20 +75,12 @@ export default function ChatPage() {
                 loadingMessage,
             ]);
 
-            const response = await sendMessage({
-                message,
-
-                context: selectedNote
-                    ? {
-                        title: selectedNote.title,
-                        content: selectedNote.content,
-                    }
-                    : undefined,
-            });
+            const response = await sendMessage({ message, });
 
             setMessages((previousMessages) =>
                 previousMessages.filter(
-                    (message) => message.id !== loadingId
+                    (message) =>
+                        message.id !== loadingId
                 )
             );
 
@@ -123,7 +97,13 @@ export default function ChatPage() {
 
             await loadHistory();
 
-        } catch {
+        } catch (error) {
+
+            console.error(
+                "Failed to send message:",
+                error
+            );
+
             const errorMessage: Message = {
                 id: crypto.randomUUID(),
                 role: "assistant",
@@ -134,6 +114,7 @@ export default function ChatPage() {
                 ...previousMessages,
                 errorMessage,
             ]);
+
         } finally {
             setIsLoading(false);
         }
@@ -142,11 +123,13 @@ export default function ChatPage() {
     function handleHistorySelect(item: ChatHistory) {
 
         setMessages([
+
             {
                 id: crypto.randomUUID(),
                 role: "user",
                 content: item.question,
             },
+
             {
                 id: crypto.randomUUID(),
                 role: "assistant",
@@ -156,6 +139,7 @@ export default function ChatPage() {
     }
 
     function handleNewChat() {
+
         setMessages([
             {
                 ...initialMessage,
@@ -165,14 +149,17 @@ export default function ChatPage() {
     }
 
     return (
+
         <main className="chat-page">
 
             <aside className="history-sidebar">
+
                 <ChatHistoryList
                     history={history}
                     onSelect={handleHistorySelect}
                     onNewChat={handleNewChat}
                 />
+
             </aside>
 
             <section className="chat-container">
@@ -181,19 +168,13 @@ export default function ChatPage() {
                     <h1>MindK AI</h1>
                 </header>
 
-                <section className="chat-content">
-                    <ChatMessageList messages={messages} />
-                </section>
-
-                <footer className="chat-footer">
-                    <ChatInput
-                        onSend={handleSend}
-                        disabled={isLoading}
-                    />
-                </footer>
+                <Chat
+                    messages={messages}
+                    isLoading={isLoading}
+                    onSend={handleSend}
+                />
 
             </section>
-
         </main>
     );
 }
