@@ -17,9 +17,9 @@ export default function ChatPanel() {
         content: "Hello! How can I help you today?",
     };
 
-    const [messages, setMessages] = useState<Message[]>([
-        initialMessage,
-    ]);
+    const [chatSessions, setChatSessions] = useState<
+        Record<number, Message[]>
+    >({});
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -27,22 +27,60 @@ export default function ChatPanel() {
         selectedNote,
     } = useSelectedNote();
 
+    const messages =
+        selectedNote
+            ? chatSessions[selectedNote.id] ?? []
+            : [];
+
     useEffect(() => {
 
         if (!selectedNote) {
             return;
         }
 
-        setMessages([
-            {
-                id: crypto.randomUUID(),
-                role: "assistant",
-                content:
-                    `Olá! Estou analisando a nota "${selectedNote.title}". Como posso ajudar?`,
-            },
-        ]);
+        setChatSessions((previousSessions) => {
+
+            if (previousSessions[selectedNote.id]) {
+                return previousSessions;
+            }
+
+            return {
+                ...previousSessions,
+                [selectedNote.id]: [
+                    {
+                        id: crypto.randomUUID(),
+                        role: "assistant",
+                        content:
+                            `Hello! I am analyzing the note "${selectedNote.title}". How can I help?`,
+                    },
+                ],
+            };
+
+        });
 
     }, [selectedNote]);
+
+    function updateCurrentMessages(
+        updater: (messages: Message[]) => Message[]
+    ) {
+
+        if (!selectedNote) {
+            return;
+        }
+
+        setChatSessions((previousSessions) => {
+
+            const currentMessages =
+                previousSessions[selectedNote.id] ??
+                [initialMessage];
+
+            return {
+                ...previousSessions,
+                [selectedNote.id]: updater(currentMessages),
+            };
+
+        });
+    }
 
     async function handleSend(message: string) {
 
@@ -52,7 +90,7 @@ export default function ChatPanel() {
             content: message,
         };
 
-        setMessages((previousMessages) => [
+        updateCurrentMessages((previousMessages) => [
             ...previousMessages,
             userMessage,
         ]);
@@ -68,7 +106,7 @@ export default function ChatPanel() {
                 content: "Thinking...",
             };
 
-            setMessages((previousMessages) => [
+            updateCurrentMessages((previousMessages) => [
                 ...previousMessages,
                 loadingMessage,
             ]);
@@ -83,7 +121,7 @@ export default function ChatPanel() {
                     : undefined,
             });
 
-            setMessages((previousMessages) =>
+            updateCurrentMessages((previousMessages) =>
                 previousMessages.filter(
                     (item) =>
                         item.id !== loadingId
@@ -96,7 +134,7 @@ export default function ChatPanel() {
                 content: response.answer,
             };
 
-            setMessages((previousMessages) => [
+            updateCurrentMessages((previousMessages) => [
                 ...previousMessages,
                 assistantMessage,
             ]);
@@ -108,7 +146,7 @@ export default function ChatPanel() {
                 error
             );
 
-            setMessages((previousMessages) => [
+            updateCurrentMessages((previousMessages) => [
                 ...previousMessages,
                 {
                     id: crypto.randomUUID(),
