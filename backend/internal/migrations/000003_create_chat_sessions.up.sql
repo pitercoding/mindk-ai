@@ -1,0 +1,8 @@
+CREATE TABLE chat_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    note_id INTEGER NOT NULL,
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (note_id) REFERENCES notes(id) ON DELETE CASCADE
+);
