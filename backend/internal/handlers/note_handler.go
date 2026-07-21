@@ -46,8 +46,15 @@ func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 
 	// 3. DB Saving
 	err = h.Service.Create(&note)
+
 	if err != nil {
-		http.Error(w, "failed to create note", http.StatusInternalServerError)
+
+		http.Error(
+			w,
+			"failed to create note",
+			http.StatusInternalServerError,
+		)
+
 		return
 	}
 

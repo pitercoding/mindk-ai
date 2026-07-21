@@ -92,7 +92,10 @@ func TestChatServiceAsk(t *testing.T) {
 				llmClient,
 			)
 
-			answer, err := service.Ask(tt.message)
+			answer, err := service.Ask(
+				tt.message,
+				nil,
+			)
 
 			if tt.expectError {
 				assert.Error(t, err)
