@@ -114,3 +114,25 @@ func (h *ChatMessageHandler) GetByNoteID(
 
 	json.NewEncoder(w).Encode(messages)
 }
+
+func (h *ChatMessageHandler) HandleMessages(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+
+	switch r.Method {
+
+	case http.MethodPost:
+		h.Save(w, r)
+
+	case http.MethodGet:
+		h.GetByNoteID(w, r)
+
+	default:
+		http.Error(
+			w,
+			"method not allowed",
+			http.StatusMethodNotAllowed,
+		)
+	}
+}

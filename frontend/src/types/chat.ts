@@ -1,4 +1,5 @@
 export interface ChatContext {
+    note_id: number;
     title: string;
     content: string;
 }

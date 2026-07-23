@@ -6,6 +6,7 @@ type ChatRequest struct {
 }
 
 type ChatContext struct {
+	NoteID  int    `json:"note_id"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
 }

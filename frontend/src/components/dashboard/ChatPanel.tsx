@@ -115,6 +115,7 @@ export default function ChatPanel() {
                 message,
                 context: selectedNote
                     ? {
+                        note_id: selectedNote.id,
                         title: selectedNote.title,
                         content: selectedNote.content,
                     }

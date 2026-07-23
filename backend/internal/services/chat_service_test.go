@@ -86,9 +86,12 @@ func TestChatServiceAsk(t *testing.T) {
 				Err: tt.historyErr,
 			}
 
+			chatMessageService := &mocks.FakeChatMessageService{}
+
 			service := NewChatService(
 				noteProvider,
 				historyService,
+				chatMessageService,
 				llmClient,
 			)
 
