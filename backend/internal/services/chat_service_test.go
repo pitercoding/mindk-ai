@@ -15,6 +15,7 @@ func TestChatServiceAsk(t *testing.T) {
 	tests := []struct {
 		name               string
 		message            string
+		context            *models.ChatContext
 		notes              []models.Note
 		noteErr            error
 		llmAnswer          string
@@ -60,6 +61,19 @@ func TestChatServiceAsk(t *testing.T) {
 			historyErr:  errors.New("history error"),
 			expectError: true,
 		},
+		{
+			name:    "saves chat messages when note context exists",
+			message: "Explain this note",
+			context: &models.ChatContext{
+				NoteID:  1,
+				Title:   "Go",
+				Content: "Go is a compiled language",
+			},
+			llmAnswer:          "Go is a compiled language",
+			expectedAnswer:     "Go is a compiled language",
+			expectedQuestion:   "Explain this note",
+			expectedSavedReply: "Go is a compiled language",
+		},
 	}
 
 	for _, tt := range tests {
@@ -97,7 +111,7 @@ func TestChatServiceAsk(t *testing.T) {
 
 			answer, err := service.Ask(
 				tt.message,
-				nil,
+				tt.context,
 			)
 
 			if tt.expectError {
@@ -127,7 +141,50 @@ func TestChatServiceAsk(t *testing.T) {
 				historyService.LastLimit,
 			)
 
-			assert.NotEmpty(t, llmClient.LastPrompt)
+			if tt.context != nil {
+
+				require.Len(
+					t,
+					chatMessageService.Saved,
+					2,
+				)
+
+				assert.Equal(
+					t,
+					tt.context.NoteID,
+					chatMessageService.Saved[0].NoteID,
+				)
+
+				assert.Equal(
+					t,
+					tt.context.NoteID,
+					chatMessageService.Saved[1].NoteID,
+				)
+
+				assert.Equal(
+					t,
+					"user",
+					chatMessageService.Saved[0].Role,
+				)
+
+				assert.Equal(
+					t,
+					tt.message,
+					chatMessageService.Saved[0].Content,
+				)
+
+				assert.Equal(
+					t,
+					"assistant",
+					chatMessageService.Saved[1].Role,
+				)
+
+				assert.Equal(
+					t,
+					tt.expectedAnswer,
+					chatMessageService.Saved[1].Content,
+				)
+			}
 		})
 	}
 }
