@@ -10,7 +10,7 @@ import (
 func BuildPrompt(
 	question string,
 	notes []models.Note,
-	history []models.ChatHistory,
+	messages []models.ChatMessage,
 ) string {
 
 	var builder strings.Builder
@@ -21,14 +21,24 @@ func BuildPrompt(
 
 	builder.WriteString("CONVERSATION HISTORY:\n\n")
 
-	for _, item := range history {
+	for _, message := range messages {
+
+		role := message.Role
+
+		if role == "user" {
+			role = "User"
+		} else if role == "assistant" {
+			role = "Assistant"
+		}
 
 		builder.WriteString(fmt.Sprintf(
-			"User: %s\nAssistant: %s\n\n",
-			item.Question,
-			item.Answer,
+			"%s: %s\n",
+			role,
+			message.Content,
 		))
 	}
+
+	builder.WriteString("\n")
 
 	builder.WriteString("NOTES:\n\n")
 

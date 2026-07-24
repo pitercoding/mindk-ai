@@ -168,3 +168,79 @@ func TestChatHandlerAsk_ServiceError(t *testing.T) {
 		service.LastMessage,
 	)
 }
+
+func TestChatHandlerAsk_WithContext(t *testing.T) {
+
+	service := &mocks.FakeChatService{
+		Answer: "Go is a compiled language.",
+	}
+
+	handler := NewChatHandler(service)
+
+	body := `{
+		"message":"Explain this note",
+		"context":{
+			"note_id":1,
+			"title":"Go",
+			"content":"Go is a compiled language"
+		}
+	}`
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/chat",
+		strings.NewReader(body),
+	)
+
+	req.Header.Set(
+		"Content-Type",
+		"application/json",
+	)
+
+	recorder := httptest.NewRecorder()
+
+	handler.Ask(
+		recorder,
+		req,
+	)
+
+	require.Equal(
+		t,
+		http.StatusOK,
+		recorder.Code,
+	)
+
+	assert.True(
+		t,
+		service.Called,
+	)
+
+	assert.Equal(
+		t,
+		"Explain this note",
+		service.LastMessage,
+	)
+
+	require.NotNil(
+		t,
+		service.LastContext,
+	)
+
+	assert.Equal(
+		t,
+		1,
+		service.LastContext.NoteID,
+	)
+
+	assert.Equal(
+		t,
+		"Go",
+		service.LastContext.Title,
+	)
+
+	assert.Equal(
+		t,
+		"Go is a compiled language",
+		service.LastContext.Content,
+	)
+}

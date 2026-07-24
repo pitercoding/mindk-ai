@@ -13,18 +13,15 @@ import (
 func TestChatServiceAsk(t *testing.T) {
 
 	tests := []struct {
-		name               string
-		message            string
-		context            *models.ChatContext
-		notes              []models.Note
-		noteErr            error
-		llmAnswer          string
-		llmErr             error
-		historyErr         error
-		expectedAnswer     string
-		expectError        bool
-		expectedQuestion   string
-		expectedSavedReply string
+		name           string
+		message        string
+		context        *models.ChatContext
+		notes          []models.Note
+		noteErr        error
+		llmAnswer      string
+		llmErr         error
+		expectedAnswer string
+		expectError    bool
 	}{
 		{
 			name:    "returns answer successfully",
@@ -35,10 +32,8 @@ func TestChatServiceAsk(t *testing.T) {
 					Content: "Go is awesome",
 				},
 			},
-			llmAnswer:          "Go is awesome",
-			expectedAnswer:     "Go is awesome",
-			expectedQuestion:   "What do my notes say about Go?",
-			expectedSavedReply: "Go is awesome",
+			llmAnswer:      "Go is awesome",
+			expectedAnswer: "Go is awesome",
 		},
 		{
 			name:        "note provider returns error",
@@ -54,14 +49,6 @@ func TestChatServiceAsk(t *testing.T) {
 			expectError: true,
 		},
 		{
-			name:        "history service returns error",
-			message:     "Go",
-			notes:       []models.Note{{Title: "Go", Content: "Go is awesome"}},
-			llmAnswer:   "Go is awesome",
-			historyErr:  errors.New("history error"),
-			expectError: true,
-		},
-		{
 			name:    "saves chat messages when note context exists",
 			message: "Explain this note",
 			context: &models.ChatContext{
@@ -69,10 +56,8 @@ func TestChatServiceAsk(t *testing.T) {
 				Title:   "Go",
 				Content: "Go is a compiled language",
 			},
-			llmAnswer:          "Go is a compiled language",
-			expectedAnswer:     "Go is a compiled language",
-			expectedQuestion:   "Explain this note",
-			expectedSavedReply: "Go is a compiled language",
+			llmAnswer:      "Go is a compiled language",
+			expectedAnswer: "Go is a compiled language",
 		},
 	}
 
@@ -90,21 +75,10 @@ func TestChatServiceAsk(t *testing.T) {
 				Err:      tt.llmErr,
 			}
 
-			historyService := &mocks.FakeChatHistoryService{
-				Recent: []models.ChatHistory{
-					{
-						Question: "Previous question",
-						Answer:   "Previous answer",
-					},
-				},
-				Err: tt.historyErr,
-			}
-
 			chatMessageService := &mocks.FakeChatMessageService{}
 
 			service := NewChatService(
 				noteProvider,
-				historyService,
 				chatMessageService,
 				llmClient,
 			)
@@ -122,24 +96,6 @@ func TestChatServiceAsk(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Equal(t, tt.expectedAnswer, answer)
-
-			assert.Equal(
-				t,
-				tt.expectedQuestion,
-				historyService.SavedQuestion,
-			)
-
-			assert.Equal(
-				t,
-				tt.expectedSavedReply,
-				historyService.SavedAnswer,
-			)
-
-			assert.Equal(
-				t,
-				5,
-				historyService.LastLimit,
-			)
 
 			if tt.context != nil {
 

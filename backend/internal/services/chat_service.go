@@ -9,11 +9,6 @@ type NoteProvider interface {
 	GetAll() ([]models.Note, error)
 }
 
-type ChatHistoryProvider interface {
-	Save(question, answer string) error
-	GetRecent(limit int) ([]models.ChatHistory, error)
-}
-
 type ChatMessageProvider interface {
 	Save(message *models.ChatMessage) error
 	GetByNoteID(noteID int) ([]models.ChatMessage, error)
@@ -21,49 +16,33 @@ type ChatMessageProvider interface {
 
 type ChatService struct {
 	noteService        NoteProvider
-	chatHistoryService ChatHistoryProvider
 	chatMessageService ChatMessageProvider
 	llmClient          llm.Client
 }
 
 func NewChatService(
 	noteService NoteProvider,
-	chatHistoryService ChatHistoryProvider,
 	chatMessageService ChatMessageProvider,
 	llmClient llm.Client,
 ) *ChatService {
 
 	return &ChatService{
 		noteService:        noteService,
-		chatHistoryService: chatHistoryService,
 		chatMessageService: chatMessageService,
 		llmClient:          llmClient,
 	}
 }
 
-func (s *ChatService) Ask(message string, context *models.ChatContext) (string, error) {
+func (s *ChatService) Ask(
+	message string,
+	context *models.ChatContext,
+) (string, error) {
 
-	if context != nil {
-
-		err := s.chatMessageService.Save(
-			&models.ChatMessage{
-				NoteID:  context.NoteID,
-				Role:    "user",
-				Content: message,
-			},
-		)
-
-		if err != nil {
-			return "", err
-		}
-	}
-
-	history, err := s.chatHistoryService.GetRecent(5)
-	if err != nil {
-		return "", err
-	}
-
-	var notes []models.Note
+	var (
+		err      error
+		notes    []models.Note
+		messages []models.ChatMessage
+	)
 
 	if context != nil {
 
@@ -72,6 +51,14 @@ func (s *ChatService) Ask(message string, context *models.ChatContext) (string, 
 				Title:   context.Title,
 				Content: context.Content,
 			},
+		}
+
+		messages, err = s.chatMessageService.GetByNoteID(
+			context.NoteID,
+		)
+
+		if err != nil {
+			return "", err
 		}
 
 	} else {
@@ -86,17 +73,30 @@ func (s *ChatService) Ask(message string, context *models.ChatContext) (string, 
 	prompt := llm.BuildPrompt(
 		message,
 		notes,
-		history,
+		messages,
 	)
 
 	answer, err := s.llmClient.Chat(prompt)
+
 	if err != nil {
 		return "", err
 	}
 
 	if context != nil {
 
-		err := s.chatMessageService.Save(
+		err = s.chatMessageService.Save(
+			&models.ChatMessage{
+				NoteID:  context.NoteID,
+				Role:    "user",
+				Content: message,
+			},
+		)
+
+		if err != nil {
+			return "", err
+		}
+
+		err = s.chatMessageService.Save(
 			&models.ChatMessage{
 				NoteID:  context.NoteID,
 				Role:    "assistant",
@@ -107,11 +107,6 @@ func (s *ChatService) Ask(message string, context *models.ChatContext) (string, 
 		if err != nil {
 			return "", err
 		}
-	}
-
-	err = s.chatHistoryService.Save(message, answer)
-	if err != nil {
-		return "", err
 	}
 
 	return answer, nil
