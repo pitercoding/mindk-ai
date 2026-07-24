@@ -69,7 +69,7 @@ func (r *ChatMessageRepository) GetByNoteID(
 	}
 	defer rows.Close()
 
-	var messages []models.ChatMessage
+	messages := []models.ChatMessage{}
 
 	for rows.Next() {
 
@@ -82,6 +82,7 @@ func (r *ChatMessageRepository) GetByNoteID(
 			&message.Content,
 			&message.CreatedAt,
 		)
+
 		if err != nil {
 			return nil, err
 		}
@@ -95,4 +96,3 @@ func (r *ChatMessageRepository) GetByNoteID(
 
 	return messages, nil
 }
-

@@ -5,6 +5,7 @@ import Chat from "@/components/chat/Chat";
 import { useSelectedNote } from "@/context/SelectedNoteContext";
 
 import { sendMessage } from "@/services/chatService";
+import { getMessagesByNote } from "@/services/chatMessageService";
 
 import type { Message } from "@/types/message";
 
@@ -38,26 +39,52 @@ export default function ChatPanel() {
             return;
         }
 
-        setChatSessions((previousSessions) => {
+        const note = selectedNote;
 
-            if (previousSessions[selectedNote.id]) {
-                return previousSessions;
+        async function loadMessages() {
+
+            try {
+
+                const history =
+                    (await getMessagesByNote(
+                        note.id,
+                    )) ?? [];
+
+                setChatSessions(
+                    (previousSessions) => ({
+
+                        ...previousSessions,
+
+                        [note.id]:
+
+                            history.length > 0
+
+                                ? history.map((message) => ({
+                                    id: message.id,
+                                    role: message.role,
+                                    content: message.content,
+                                }))
+
+                                : [
+                                    {
+                                        id: crypto.randomUUID(),
+                                        role: "assistant",
+                                        content:
+                                            `Hello! I am analyzing the note "${note.title}". How can I help?`,
+                                    },
+                                ],
+                    }),
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Failed to load chat messages:",
+                    error,
+                );
             }
-
-            return {
-                ...previousSessions,
-                [selectedNote.id]: [
-                    {
-                        id: crypto.randomUUID(),
-                        role: "assistant",
-                        content:
-                            `Hello! I am analyzing the note "${selectedNote.title}". How can I help?`,
-                    },
-                ],
-            };
-
-        });
-
+        }
+        loadMessages();
     }, [selectedNote]);
 
     function updateCurrentMessages(
