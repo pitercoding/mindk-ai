@@ -15,46 +15,101 @@ func BuildPrompt(
 
 	var builder strings.Builder
 
-	builder.WriteString("You are an AI assistant.\n\n")
+	builder.WriteString(
+		"SYSTEM INSTRUCTIONS:\n\n",
+	)
 
-	builder.WriteString("Use the conversation history and notes to answer.\n\n")
+	builder.WriteString(
+		"You are MindK AI, an assistant that answers questions using provided knowledge.\n\n",
+	)
 
-	builder.WriteString("CONVERSATION HISTORY:\n\n")
+	builder.WriteString(
+		"Rules:\n",
+	)
 
-	for _, message := range messages {
+	builder.WriteString(
+		"- Use the provided notes as the main source of information.\n",
+	)
 
-		role := message.Role
+	builder.WriteString(
+		"- Do not invent information that is not available in the context.\n",
+	)
 
-		if role == "user" {
-			role = "User"
-		} else if role == "assistant" {
-			role = "Assistant"
+	builder.WriteString(
+		"- If the answer is not available, explain that there is not enough information.\n",
+	)
+
+	builder.WriteString(
+		"- Format responses using Markdown when useful.\n\n",
+	)
+
+	builder.WriteString(
+		"CONVERSATION HISTORY:\n\n",
+	)
+
+	if len(messages) == 0 {
+
+		builder.WriteString(
+			"No previous conversation.\n\n",
+		)
+
+	} else {
+
+		for _, message := range messages {
+
+			role := message.Role
+
+			switch role {
+			case "user":
+				role = "User"
+
+			case "assistant":
+				role = "Assistant"
+			}
+
+			builder.WriteString(
+				fmt.Sprintf(
+					"%s:\n%s\n\n",
+					role,
+					message.Content,
+				),
+			)
 		}
-
-		builder.WriteString(fmt.Sprintf(
-			"%s: %s\n",
-			role,
-			message.Content,
-		))
 	}
 
-	builder.WriteString("\n")
+	builder.WriteString(
+		"KNOWLEDGE CONTEXT:\n\n",
+	)
 
-	builder.WriteString("NOTES:\n\n")
+	if len(notes) == 0 {
 
-	for _, note := range notes {
+		builder.WriteString(
+			"No notes available.\n\n",
+		)
 
-		builder.WriteString(fmt.Sprintf(
-			"Title: %s\nContent: %s\n\n",
-			note.Title,
-			note.Content,
-		))
+	} else {
+
+		for _, note := range notes {
+
+			builder.WriteString(
+				fmt.Sprintf(
+					"Title: %s\nContent:\n%s\n\n",
+					note.Title,
+					note.Content,
+				),
+			)
+		}
 	}
 
-	builder.WriteString(fmt.Sprintf(
-		"USER QUESTION:\n%s",
-		question,
-	))
+	builder.WriteString(
+		"USER QUESTION:\n\n",
+	)
+
+	builder.WriteString(question)
+
+	builder.WriteString(
+		"\n\nRESPONSE:\n",
+	)
 
 	return builder.String()
 }

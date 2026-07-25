@@ -24,8 +24,8 @@ func TestBuildPrompt(t *testing.T) {
 			question: "What is Go?",
 			notes:    []models.Note{},
 			expectedContains: []string{
-				"You are an AI assistant.",
-				"NOTES:",
+				"You are MindK AI",
+				"KNOWLEDGE CONTEXT:",
 				"USER QUESTION:",
 				"What is Go?",
 			},
@@ -41,7 +41,8 @@ func TestBuildPrompt(t *testing.T) {
 			},
 			expectedContains: []string{
 				"Title: Go",
-				"Content: Go is fast.",
+				"Content:",
+				"Go is fast.",
 				"Tell me about Go",
 			},
 		},
@@ -107,8 +108,10 @@ func TestBuildPrompt(t *testing.T) {
 			},
 			expectedContains: []string{
 				"CONVERSATION HISTORY:",
-				"User: What is Go?",
-				"Assistant: Go is a programming language.",
+				"User:",
+				"What is Go?",
+				"Assistant:",
+				"Go is a programming language.",
 			},
 		},
 	}
