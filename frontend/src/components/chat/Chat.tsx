@@ -22,9 +22,21 @@ export default function Chat({
         <>
             <section className="chat-content">
 
-                <ChatMessageList
-                    messages={messages}
-                />
+                {messages.length === 0 ? (
+
+                    <div className="chat-empty-state">
+
+                        <h3>Ask MindK about your knowledge</h3>
+
+                        <p>Select a note and start asking questions.</p>
+                    </div>
+
+                ) : (
+
+                    <ChatMessageList
+                        messages={messages}
+                    />
+                )}
 
             </section>
 

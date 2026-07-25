@@ -25,15 +25,38 @@ export default function ChatInput({
         setMessage("");
     }
 
+    function handleKeyDown(
+        event: React.KeyboardEvent<HTMLTextAreaElement>
+    ) {
+
+        if (
+            event.key === "Enter" &&
+            !event.shiftKey
+        ) {
+
+            event.preventDefault();
+
+            const trimmedMessage = message.trim();
+
+            if (!trimmedMessage) {
+                return;
+            }
+
+            onSend(trimmedMessage);
+
+            setMessage("");
+        }
+    }
+
     return (
         <form
             className="chat-input"
             onSubmit={handleSubmit}>
-            <input
-                type="text"
+            <textarea
                 placeholder="Ask something..."
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
+                onKeyDown={handleKeyDown}
                 disabled={disabled}
             />
 

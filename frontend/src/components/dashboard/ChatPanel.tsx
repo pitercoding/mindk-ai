@@ -70,7 +70,7 @@ export default function ChatPanel() {
                                         id: crypto.randomUUID(),
                                         role: "assistant",
                                         content:
-                                            `Hello! I am analyzing the note "${note.title}". How can I help?`,
+                                            `I am ready to answer questions about "${note.title}".\n\nYou can ask me to:\n\n- summarize this note\n- explain concepts\n- provide examples\n- clarify information`,
                                     },
                                 ],
                     }),
@@ -130,7 +130,7 @@ export default function ChatPanel() {
             const loadingMessage: Message = {
                 id: loadingId,
                 role: "assistant",
-                content: "Thinking...",
+                content: "MindK AI is analyzing your knowledge...",
             };
 
             updateCurrentMessages((previousMessages) => [

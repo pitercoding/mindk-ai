@@ -292,7 +292,10 @@ button {
 
 .dashboard-grid {
     display: grid;
-    grid-template-columns: minmax(270px, 335px) minmax(360px, 1fr) minmax(295px, 330px);
+    grid-template-columns: 
+        minmax(260px, 300px)
+        minmax(420px, 1fr)
+        minmax(420px, 520px);
     gap: 14px;
     height: 100%;
 }
@@ -427,9 +430,11 @@ button {
 .chat-input {
     display: flex;
     gap: 10px;
+    align-items: flex-end;
 }
 
 .chat-input input,
+.chat-input textarea,
 .notes-form-section input,
 .notes-form-section textarea {
     width: 100%;
@@ -465,6 +470,12 @@ button {
     opacity: 0.55;
 }
 
+.chat-input textarea {
+    min-height: 48px;
+    max-height: 140px;
+    resize: none;
+}
+
 .message-list,
 .chat-history {
     display: flex;
@@ -473,7 +484,7 @@ button {
 }
 
 .message {
-    max-width: min(70%, 640px);
+    max-width: min(85%, 760px);
     padding: 12px 14px;
     border-radius: 8px;
 }
