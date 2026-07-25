@@ -28,15 +28,15 @@ func BuildPrompt(
 	)
 
 	builder.WriteString(
-		"- Use the provided notes as the main source of information.\n",
+		"- Use only the provided notes and conversation history to answer.\n",
 	)
 
 	builder.WriteString(
-		"- Do not invent information that is not available in the context.\n",
+		"- Do not use external knowledge or assumptions.\n",
 	)
 
 	builder.WriteString(
-		"- If the answer is not available, explain that there is not enough information.\n",
+		"-  If the answer is not explicitly available in the context, say that there is not enough information.\n",
 	)
 
 	builder.WriteString(
