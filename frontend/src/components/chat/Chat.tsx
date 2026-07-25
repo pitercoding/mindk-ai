@@ -15,7 +15,6 @@ export default function Chat({
     messages,
     isLoading,
     onSend,
-    context,
 }: ChatProps) {
 
     return (

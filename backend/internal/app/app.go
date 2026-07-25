@@ -13,7 +13,6 @@ import (
 type App struct {
 	NoteHandler        *handlers.NoteHandler
 	ChatHandler        *handlers.ChatHandler
-	ChatHistoryHandler *handlers.ChatHistoryHandler
 	ChatMessageHandler *handlers.ChatMessageHandler
 }
 
