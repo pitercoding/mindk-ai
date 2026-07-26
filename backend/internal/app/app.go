@@ -14,6 +14,7 @@ type App struct {
 	NoteHandler        *handlers.NoteHandler
 	ChatHandler        *handlers.ChatHandler
 	ChatMessageHandler *handlers.ChatMessageHandler
+	DocumentHandler    *handlers.DocumentHandler
 }
 
 func New(
@@ -24,10 +25,12 @@ func New(
 	// Repository
 	noteRepo := repository.NewNoteRepository(db)
 	chatMessageRepo := repository.NewChatMessageRepository(db)
+	documentRepo := repository.NewDocumentRepository(db)
 
 	// Services
 	noteService := services.NewNoteService(noteRepo)
 	chatMessageService := services.NewChatMessageService(chatMessageRepo)
+	documentService := services.NewDocumentService(documentRepo)
 
 	// LLM Client
 	openAIClient := llm.NewOpenAIClient(
@@ -45,10 +48,12 @@ func New(
 	noteHandler := handlers.NewNoteHandler(noteService)
 	chatHandler := handlers.NewChatHandler(chatService)
 	chatMessageHandler := handlers.NewChatMessageHandler(chatMessageService)
+	documentHandler := handlers.NewDocumentHandler(documentService)
 
 	return &App{
 		NoteHandler:        noteHandler,
 		ChatHandler:        chatHandler,
 		ChatMessageHandler: chatMessageHandler,
+		DocumentHandler:    documentHandler,
 	}
 }

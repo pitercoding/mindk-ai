@@ -139,4 +139,3 @@ func (r *NoteRepository) Delete(id int) error {
 	_, err := r.DB.Exec(query, id)
 	return err
 }
-
