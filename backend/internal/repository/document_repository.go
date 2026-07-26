@@ -17,17 +17,15 @@ func NewDocumentRepository(db *sql.DB) *DocumentRepository {
 
 func (r *DocumentRepository) Create(document *models.Document) error {
 	query := `
-		INSERT INTO documents (name, type, content, created_at)
-		VALUES (?, ?, ?, ?)
+		INSERT INTO documents (name, type, content)
+		VALUES (?, ?, ?)
 	`
-	now := time.Now()
 
 	result, err := r.DB.Exec(
 		query,
 		document.Name,
 		document.Type,
 		document.Content,
-		now,
 	)
 
 	if err != nil {
@@ -40,7 +38,7 @@ func (r *DocumentRepository) Create(document *models.Document) error {
 	}
 
 	document.ID = int(id)
-	document.CreatedAt = now
+	document.CreatedAt = time.Now()
 
 	return nil
 }
