@@ -64,7 +64,7 @@ func (r *NoteRepository) GetAll() ([]models.Note, error) {
 	}
 	defer rows.Close()
 
-	var notes []models.Note
+	notes := make([]models.Note, 0)
 
 	for rows.Next() {
 		var note models.Note

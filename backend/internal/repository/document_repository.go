@@ -61,7 +61,7 @@ func (r *DocumentRepository) GetAll() ([]models.Document, error) {
 	}
 	defer rows.Close()
 
-	var documents []models.Document
+	documents := make([]models.Document, 0)
 
 	for rows.Next() {
 		var document models.Document
@@ -152,7 +152,7 @@ func (r *DocumentRepository) Search(term string) ([]models.Document, error) {
 	}
 	defer rows.Close()
 
-	var documents []models.Document
+	documents := make([]models.Document, 0)
 
 	for rows.Next() {
 		var document models.Document
@@ -164,6 +164,7 @@ func (r *DocumentRepository) Search(term string) ([]models.Document, error) {
 			&document.Content,
 			&document.CreatedAt,
 		)
+
 		if err != nil {
 			return nil, err
 		}
