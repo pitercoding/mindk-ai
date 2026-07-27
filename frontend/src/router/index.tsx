@@ -4,6 +4,7 @@ import DashboardPage from "@/pages/DashboardPage";
 import NotesPage from "@/pages/NotesPage";
 
 import DashboardLayout from "@/layouts/DashboardLayout";
+import DocumentsPage from "@/pages/DocumentsPage";
 
 export const router = createBrowserRouter([
     {
@@ -17,6 +18,10 @@ export const router = createBrowserRouter([
             {
                 path: "notes",
                 element: <NotesPage />,
+            },
+            {
+                path: "documents",
+                element: <DocumentsPage />,
             },
         ],
     },

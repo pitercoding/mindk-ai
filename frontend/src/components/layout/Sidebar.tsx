@@ -5,6 +5,7 @@ const menuItems = [
         label: "Dashboard",
         path: "/",
         icon: "⌂",
+        end: true,
     },
     {
         label: "All Notes",
@@ -52,6 +53,7 @@ export default function Sidebar() {
                         key={item.label}
                         data-icon={item.icon}
                         to={item.path}
+                        end={item.end}
                         className={({ isActive }) =>
                             isActive
                                 ? "sidebar-link active"
