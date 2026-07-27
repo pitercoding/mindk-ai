@@ -10,7 +10,11 @@ export async function createNote(note: Omit<Note, "id">): Promise<Note> {
 }
 
 export async function getNotes(): Promise<Note[]> {
-    return apiClient<Note[]>("/notes");
+
+    const response =
+        await apiClient<Note[]>("/notes");
+
+    return response ?? [];
 }
 
 export async function deleteNote(id: number): Promise<void> {

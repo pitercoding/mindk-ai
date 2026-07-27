@@ -29,5 +29,11 @@ export async function apiClient<T>(
     return undefined as T;
   }
 
-  return JSON.parse(text);
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(
+      "Invalid JSON response from API",
+    );
+  }
 }
