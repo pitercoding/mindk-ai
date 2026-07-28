@@ -61,38 +61,40 @@ export default function DocumentUpload({
             </h2>
 
 
-            <label className="file-upload-button">
+            <div className="document-upload-actions">
 
-                Choose file
+                <label className="file-upload-button">
 
-                <input
-                    type="file"
-                    onChange={handleFileChange}
+                    Choose file
+
+                    <input
+                        type="file"
+                        onChange={handleFileChange}
+                        disabled={uploading}
+                        hidden
+                    />
+
+                </label>
+
+
+                <button
+                    onClick={handleUpload}
                     disabled={uploading}
-                    hidden
-                />
+                >
+                    {
+                        uploading
+                            ? "Uploading..."
+                            : "Upload document"
+                    }
+                </button>
 
-            </label>
-
+            </div>
 
             {file && (
                 <p>
                     Selected file: {file.name}
                 </p>
             )}
-
-
-            <button
-                onClick={handleUpload}
-                disabled={uploading}
-            >
-                {
-                    uploading
-                        ? "Uploading..."
-                        : "Upload document"
-                }
-            </button>
-
 
             {message && (
                 <p>
