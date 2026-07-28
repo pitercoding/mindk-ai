@@ -218,3 +218,30 @@ func (h *DocumentHandler) DeleteDocument(w http.ResponseWriter, r *http.Request)
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (h *DocumentHandler) SearchDocuments(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+
+	query := r.URL.Query().Get("q")
+
+	documents, err := h.Service.Search(query)
+	if err != nil {
+
+		http.Error(
+			w,
+			"failed to search documents",
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
+
+	w.Header().Set(
+		"Content-Type",
+		"application/json",
+	)
+
+	json.NewEncoder(w).Encode(documents)
+}
