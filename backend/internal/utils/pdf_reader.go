@@ -5,6 +5,7 @@ import (
 	"io"
 	"mime/multipart"
 	"os"
+	"strings"
 
 	"github.com/ledongthuc/pdf"
 )
@@ -50,7 +51,7 @@ func ReadPDF(file multipart.File) (string, error) {
 
 	defer pdfFile.Close()
 
-	var content string
+	var content strings.Builder
 
 	totalPages := reader.NumPage()
 
@@ -71,8 +72,9 @@ func ReadPDF(file multipart.File) (string, error) {
 			)
 		}
 
-		content += text + "\n"
+		content.WriteString(text)
+		content.WriteString("\n")
 	}
 
-	return content, nil
+	return content.String(), nil
 }

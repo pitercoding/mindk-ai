@@ -22,9 +22,16 @@ export async function uploadDocument(
     );
 
     if (!response.ok) {
+
+        const errorMessage = await response.text();
+
         throw new Error(
-            `Upload failed (${response.status})`,
+            errorMessage,
         );
+
+        // throw new Error(
+        //     `Upload failed (${response.status})`,
+        // );
     }
 
     return response.json();

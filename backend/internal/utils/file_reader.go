@@ -11,13 +11,27 @@ func ReadFile(
 	extension string,
 ) (string, error) {
 
-	bytes, err := io.ReadAll(file)
-	if err != nil {
-		return "", fmt.Errorf(
-			"failed to read uploaded file: %w",
-			err,
-		)
-	}
+	switch extension {
 
-	return string(bytes), nil
+		case ".pdf":
+			return ReadPDF(file)
+
+		case ".md", ".txt":
+			bytes, err := io.ReadAll(file)
+
+			if err != nil {
+				return "", fmt.Errorf(
+					"failed to read uploaded file: %w",
+					err,
+				)
+			}
+
+			return string(bytes), nil
+
+		default:
+			return "", fmt.Errorf(
+				"unsupported file type: %s",
+				extension,
+			)
+	}
 }
