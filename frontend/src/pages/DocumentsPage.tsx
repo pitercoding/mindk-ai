@@ -3,7 +3,10 @@ import { useEffect, useState } from "react";
 import DocumentList from "@/components/documents/DocumentList";
 import DocumentUpload from "@/components/documents/DocumentUpload";
 
-import { getDocuments } from "@/services/documentService";
+import {
+    getDocuments,
+    searchDocuments,
+} from "@/services/documentService";
 
 import type { Document } from "@/types/document";
 
@@ -12,6 +15,7 @@ export default function DocumentsPage() {
 
     const [documents, setDocuments] = useState<Document[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [search, setSearch] = useState("");
 
 
     async function loadDocuments() {
@@ -36,6 +40,38 @@ export default function DocumentsPage() {
     }
 
 
+    async function handleSearch(
+        value: string,
+    ) {
+
+        setSearch(value);
+
+        if (!value.trim()) {
+
+            loadDocuments();
+
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await searchDocuments(value);
+
+            setDocuments(response);
+
+        } catch (error) {
+
+            console.error(
+                "Failed to search documents:",
+                error,
+            );
+
+        }
+    }
+
+
     useEffect(() => {
 
         loadDocuments();
@@ -49,7 +85,9 @@ export default function DocumentsPage() {
             <header className="page-header">
 
                 <div>
-                    <h1>Documents</h1>
+                    <h1>
+                        Documents
+                    </h1>
 
                     <p>
                         Manage your knowledge documents.
@@ -57,6 +95,20 @@ export default function DocumentsPage() {
                 </div>
 
             </header>
+
+
+            <div className="documents-search">
+
+                <input
+                    type="text"
+                    placeholder="Search documents..."
+                    value={search}
+                    onChange={(event) =>
+                        handleSearch(event.target.value)
+                    }
+                />
+
+            </div>
 
 
             <DocumentUpload
@@ -67,7 +119,9 @@ export default function DocumentsPage() {
             {
                 isLoading
                     ? (
-                        <p>Loading documents...</p>
+                        <p>
+                            Loading documents...
+                        </p>
                     )
                     : (
                         <DocumentList
