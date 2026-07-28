@@ -1,47 +1,24 @@
-import { useEffect, useState } from "react";
-
 import type { Document } from "@/types/document";
-
-import { getDocuments } from "@/services/documentService";
 
 import DocumentCard from "./DocumentCard";
 
 
-export default function DocumentList() {
-
-    const [documents, setDocuments] = useState<Document[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    async function loadDocuments() {
-
-        try {
-
-            const response = await getDocuments();
-
-            setDocuments(response);
-
-        } catch (error) {
-
-            console.error("Failed to load documents:", error,);
-
-        } finally {
-
-            setIsLoading(false);
-        }
-    }
+interface DocumentListProps {
+    documents: Document[];
+}
 
 
-    useEffect(() => {
-
-        loadDocuments();
-
-    }, []);
+export default function DocumentList({
+    documents,
+}: DocumentListProps) {
 
 
-    if (isLoading) {
+    if (documents.length === 0) {
 
         return (
-            <p>Loading documents...</p>
+            <p>
+                No documents yet.
+            </p>
         );
     }
 
@@ -51,19 +28,14 @@ export default function DocumentList() {
         <section className="document-list">
 
             {
-                documents.length === 0
-                    ? (
-                        <p>No documents yet.</p>
-                    )
-                    
-                    : documents.map((document) => (
+                documents.map((document) => (
 
-                        <DocumentCard
-                            key={document.id}
-                            document={document}
-                        />
+                    <DocumentCard
+                        key={document.id}
+                        document={document}
+                    />
 
-                    ))
+                ))
             }
 
         </section>

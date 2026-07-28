@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"path/filepath"
 
 	"github.com/pitercoding/mindk-ai/backend/internal/httputil"
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
+	"github.com/pitercoding/mindk-ai/backend/internal/utils"
 )
 
 type DocumentService interface {
@@ -58,6 +60,77 @@ func (h *DocumentHandler) CreateDocument(w http.ResponseWriter, r *http.Request)
 
 	// 4. Response to JSON
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+	json.NewEncoder(w).Encode(document)
+}
+
+func (h *DocumentHandler) UploadDocument(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+
+	err := r.ParseMultipartForm(10 << 20) // 10 MB
+	if err != nil {
+
+		http.Error(
+			w,
+			"invalid multipart form",
+			http.StatusBadRequest,
+		)
+
+		return
+	}
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+
+		http.Error(
+			w,
+			"file is required",
+			http.StatusBadRequest,
+		)
+
+		return
+	}
+
+	defer file.Close()
+
+	content, err := utils.ReadFile(file)
+	if err != nil {
+
+		http.Error(
+			w,
+			"failed to read file",
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
+
+	document := models.Document{
+		Name:    header.Filename,
+		Type:    filepath.Ext(header.Filename),
+		Content: content,
+	}
+
+	err = h.Service.Create(&document)
+	if err != nil {
+
+		http.Error(
+			w,
+			"failed to save document",
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
+
+	w.Header().Set(
+		"Content-Type",
+		"application/json",
+	)
+
 	w.WriteHeader(http.StatusCreated)
 
 	json.NewEncoder(w).Encode(document)
