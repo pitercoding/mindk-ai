@@ -96,7 +96,12 @@ func (h *DocumentHandler) UploadDocument(
 
 	defer file.Close()
 
-	content, err := utils.ReadFile(file)
+	extension := filepath.Ext(header.Filename)
+
+	content, err := utils.ReadFile(
+		file,
+		extension,
+	)
 	if err != nil {
 
 		http.Error(
@@ -110,7 +115,7 @@ func (h *DocumentHandler) UploadDocument(
 
 	document := models.Document{
 		Name:    header.Filename,
-		Type:    filepath.Ext(header.Filename),
+		Type:    extension,
 		Content: content,
 	}
 

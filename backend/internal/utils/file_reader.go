@@ -6,7 +6,10 @@ import (
 	"mime/multipart"
 )
 
-func ReadFile(file multipart.File) (string, error) {
+func ReadFile(
+	file multipart.File,
+	extension string,
+) (string, error) {
 
 	bytes, err := io.ReadAll(file)
 	if err != nil {
