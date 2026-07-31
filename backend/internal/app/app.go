@@ -26,11 +26,17 @@ func New(
 	noteRepo := repository.NewNoteRepository(db)
 	chatMessageRepo := repository.NewChatMessageRepository(db)
 	documentRepo := repository.NewDocumentRepository(db)
+	documentChunkRepo := repository.NewDocumentChunkRepository(db)
 
 	// Services
 	noteService := services.NewNoteService(noteRepo)
 	chatMessageService := services.NewChatMessageService(chatMessageRepo)
-	documentService := services.NewDocumentService(documentRepo)
+	documentChunkService := services.NewDocumentChunkService(documentChunkRepo)
+
+	documentService := services.NewDocumentService(
+		documentRepo, 
+		documentChunkService,
+	)
 
 	// LLM Client
 	openAIClient := llm.NewOpenAIClient(

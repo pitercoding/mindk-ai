@@ -68,3 +68,19 @@ func (s *DocumentService) Create(
 
 	return s.chunkService.CreateMany(documentChunks)
 }
+
+func (s *DocumentService) GetAll() ([]models.Document, error) {
+	return s.repo.GetAll()
+}
+
+func (s *DocumentService) GetByID(id int) (*models.Document, error) {
+	return s.repo.GetByID(id)
+}
+
+func (s *DocumentService) Delete(id int) error {
+	return s.repo.Delete(id)
+}
+
+func (s *DocumentService) Search(query string) ([]models.Document, error) {
+	return s.repo.Search(query)
+}
