@@ -45,7 +45,7 @@ func (s *DocumentService) Create(
 
 	chunks := utils.SplitIntoChunks(
 		document.Content,
-		5,
+		500,
 	)
 
 	documentChunks := make(

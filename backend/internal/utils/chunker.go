@@ -2,8 +2,12 @@ package utils
 
 import "strings"
 
-// SplitIntoChunks divides a text into chunks based on paragraphs.
-func SplitIntoChunks(text string, chunkSize int) []string {
+// SplitIntoChunks divides text into chunks based on character count
+// without breaking words.
+func SplitIntoChunks(
+	text string,
+	chunkSize int,
+) []string {
 
 	text = strings.TrimSpace(text)
 
@@ -12,24 +16,52 @@ func SplitIntoChunks(text string, chunkSize int) []string {
 	}
 
 	if chunkSize <= 0 {
-		chunkSize = 1
+		chunkSize = 500
 	}
 
-	paragraphs := strings.Split(text, "\n\n")
+	words := strings.Fields(text)
 
 	chunks := make([]string, 0)
 
-	for i := 0; i < len(paragraphs); i += chunkSize {
+	var builder strings.Builder
 
-		end := i + chunkSize
+	currentSize := 0
 
-		if end > len(paragraphs) {
-			end = len(paragraphs)
+	for _, word := range words {
+
+		wordSize := len(word)
+
+		additional := wordSize
+
+		if currentSize > 0 {
+			additional++
 		}
 
-		chunk := strings.Join(paragraphs[i:end], "\n\n")
+		if currentSize+additional > chunkSize {
 
-		chunks = append(chunks, chunk)
+			chunks = append(
+				chunks,
+				builder.String(),
+			)
+
+			builder.Reset()
+			currentSize = 0
+		}
+
+		if currentSize > 0 {
+			builder.WriteByte(' ')
+			currentSize++
+		}
+
+		builder.WriteString(word)
+		currentSize += wordSize
+	}
+
+	if builder.Len() > 0 {
+		chunks = append(
+			chunks,
+			builder.String(),
+		)
 	}
 
 	return chunks
