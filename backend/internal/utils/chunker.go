@@ -39,13 +39,15 @@ func SplitIntoChunks(
 
 		if currentSize+additional > chunkSize {
 
-			chunks = append(
-				chunks,
-				builder.String(),
-			)
+			if builder.Len() > 0 {
+				chunks = append(
+					chunks,
+					builder.String(),
+				)
 
-			builder.Reset()
-			currentSize = 0
+				builder.Reset()
+				currentSize = 0
+			}
 		}
 
 		if currentSize > 0 {
