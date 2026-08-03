@@ -135,3 +135,10 @@ func (c *OpenAIClient) Chat(prompt string) (string, error) {
 
 	return answer, nil
 }
+
+func (c *OpenAIClient) CreateEmbedding(
+	text string,
+) ([]float32, error) {
+
+	panic("not implemented")
+}

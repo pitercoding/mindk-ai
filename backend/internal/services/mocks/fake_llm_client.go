@@ -10,3 +10,10 @@ func (c *FakeLLMClient) Chat(prompt string) (string, error) {
 	c.LastPrompt = prompt
 	return c.Response, c.Err
 }
+
+func (f *FakeLLMClient) CreateEmbedding(
+	text string,
+) ([]float32, error) {
+
+	return nil, nil
+}
