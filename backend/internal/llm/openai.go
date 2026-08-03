@@ -39,6 +39,17 @@ type openAIResponse struct {
 	OutputText string `json:"output_text"`
 }
 
+type embeddingRequest struct {
+	Model string `json:"model"`
+	Input string `json:"input"`
+}
+
+type embeddingResponse struct {
+	Data []struct {
+		Embedding []float32 `json:"embedding"`
+	} `json:"data"`
+}
+
 func extractOpenAIText(result openAIResponse) string {
 	var builder strings.Builder
 
@@ -140,5 +151,81 @@ func (c *OpenAIClient) CreateEmbedding(
 	text string,
 ) ([]float32, error) {
 
-	panic("not implemented")
+	requestBody := embeddingRequest{
+		Model: "text-embedding-3-small",
+		Input: text,
+	}
+
+	jsonBody, err := json.Marshal(requestBody)
+
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(
+		http.MethodPost,
+		"https://api.openai.com/v1/embeddings",
+		bytes.NewBuffer(jsonBody),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set(
+		"Content-Type",
+		"application/json",
+	)
+
+	req.Header.Set(
+		"Authorization",
+		"Bearer "+c.APIKey,
+	)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to read embedding response: %w",
+			err,
+		)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+
+		return nil, fmt.Errorf(
+			"openai returned status %d: %s",
+			resp.StatusCode,
+			string(bytes.TrimSpace(body)),
+		)
+	}
+
+	var result embeddingResponse
+
+	err = json.Unmarshal(
+		body,
+		&result,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Data) == 0 {
+		return nil, fmt.Errorf(
+			"empty embedding response",
+		)
+	}
+
+	return result.Data[0].Embedding, nil
 }
