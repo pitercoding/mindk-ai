@@ -17,19 +17,26 @@ type ChunkCreator interface {
 	CreateMany(chunks []models.DocumentChunk) error
 }
 
+type EmbeddingCreator interface {
+	GenerateForChunks(chunks []models.DocumentChunk) error
+}
+
 type DocumentService struct {
-	repo         DocumentRepository
-	chunkService ChunkCreator
+	repo             DocumentRepository
+	chunkService     ChunkCreator
+	embeddingService EmbeddingCreator
 }
 
 func NewDocumentService(
 	repo DocumentRepository,
 	chunkService ChunkCreator,
+	embeddingService EmbeddingCreator,
 ) *DocumentService {
 
 	return &DocumentService{
-		repo:         repo,
-		chunkService: chunkService,
+		repo:             repo,
+		chunkService:     chunkService,
+		embeddingService: embeddingService,
 	}
 }
 
@@ -66,7 +73,13 @@ func (s *DocumentService) Create(
 		)
 	}
 
-	return s.chunkService.CreateMany(documentChunks)
+	err = s.chunkService.CreateMany(documentChunks)
+
+	if err != nil {
+		return err
+	}
+
+	return s.embeddingService.GenerateForChunks(documentChunks)
 }
 
 func (s *DocumentService) GetAll() ([]models.Document, error) {

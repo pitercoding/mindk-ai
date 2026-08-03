@@ -3,7 +3,6 @@ package services
 import (
 	"encoding/json"
 
-	"github.com/pitercoding/mindk-ai/backend/internal/llm"
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
 )
 
@@ -15,18 +14,18 @@ type DocumentEmbeddingRepository interface {
 }
 
 type DocumentEmbeddingService struct {
-	repo   DocumentEmbeddingRepository
-	client llm.Client
+	repo      DocumentEmbeddingRepository
+	generator EmbeddingGenerator
 }
 
 func NewDocumentEmbeddingService(
 	repo DocumentEmbeddingRepository,
-	client llm.Client,
+	generator EmbeddingGenerator,
 ) *DocumentEmbeddingService {
 
 	return &DocumentEmbeddingService{
-		repo:   repo,
-		client: client,
+		repo:      repo,
+		generator: generator,
 	}
 }
 
@@ -70,7 +69,7 @@ func (s *DocumentEmbeddingService) GenerateForChunks(
 
 	for _, chunk := range chunks {
 
-		vector, err := s.client.CreateEmbedding(
+		vector, err := s.generator.Generate(
 			chunk.Content,
 		)
 

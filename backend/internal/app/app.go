@@ -27,20 +27,32 @@ func New(
 	chatMessageRepo := repository.NewChatMessageRepository(db)
 	documentRepo := repository.NewDocumentRepository(db)
 	documentChunkRepo := repository.NewDocumentChunkRepository(db)
+	documentEmbeddingRepo := repository.NewDocumentEmbeddingRepository(db)
+
+	// LLM Client
+	openAIClient := llm.NewOpenAIClient(cfg.OpenAIAPIKey)
+	embeddingGenerator := llm.NewOpenAIEmbeddingGenerator(openAIClient)
 
 	// Services
 	noteService := services.NewNoteService(noteRepo)
-	chatMessageService := services.NewChatMessageService(chatMessageRepo)
-	documentChunkService := services.NewDocumentChunkService(documentChunkRepo)
 
-	documentService := services.NewDocumentService(
-		documentRepo, 
-		documentChunkService,
+	chatMessageService := services.NewChatMessageService(
+		chatMessageRepo,
 	)
 
-	// LLM Client
-	openAIClient := llm.NewOpenAIClient(
-		cfg.OpenAIAPIKey,
+	documentChunkService := services.NewDocumentChunkService(
+		documentChunkRepo,
+	)
+
+	documentEmbeddingService := services.NewDocumentEmbeddingService(
+		documentEmbeddingRepo,
+		embeddingGenerator,
+	)
+
+	documentService := services.NewDocumentService(
+		documentRepo,
+		documentChunkService,
+		documentEmbeddingService,
 	)
 
 	// Chat Service
