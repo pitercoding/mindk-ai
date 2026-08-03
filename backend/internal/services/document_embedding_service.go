@@ -1,6 +1,11 @@
 package services
 
-import "github.com/pitercoding/mindk-ai/backend/internal/models"
+import (
+	"encoding/json"
+
+	"github.com/pitercoding/mindk-ai/backend/internal/llm"
+	"github.com/pitercoding/mindk-ai/backend/internal/models"
+)
 
 type DocumentEmbeddingRepository interface {
 	Create(documentEmbedding *models.DocumentEmbedding) error
@@ -10,25 +15,83 @@ type DocumentEmbeddingRepository interface {
 }
 
 type DocumentEmbeddingService struct {
-	repo DocumentEmbeddingRepository
+	repo   DocumentEmbeddingRepository
+	client llm.Client
 }
 
-func NewDocumentEmbeddingService(repo DocumentEmbeddingRepository) *DocumentEmbeddingService {
-	return &DocumentEmbeddingService{repo: repo}
+func NewDocumentEmbeddingService(
+	repo DocumentEmbeddingRepository,
+	client llm.Client,
+) *DocumentEmbeddingService {
+
+	return &DocumentEmbeddingService{
+		repo:   repo,
+		client: client,
+	}
 }
 
-func (s *DocumentEmbeddingService) Create(documentEmbedding *models.DocumentEmbedding) error {
+func (s *DocumentEmbeddingService) Create(
+	documentEmbedding *models.DocumentEmbedding,
+) error {
+
 	return s.repo.Create(documentEmbedding)
 }
 
-func (s *DocumentEmbeddingService) CreateMany(embeddings []models.DocumentEmbedding) error {
+func (s *DocumentEmbeddingService) CreateMany(
+	embeddings []models.DocumentEmbedding,
+) error {
+
 	return s.repo.CreateMany(embeddings)
 }
 
-func (s *DocumentEmbeddingService) GetByChunkID(chunkID int) (*models.DocumentEmbedding, error) {
+func (s *DocumentEmbeddingService) GetByChunkID(
+	chunkID int,
+) (*models.DocumentEmbedding, error) {
+
 	return s.repo.GetByChunkID(chunkID)
 }
 
-func (s *DocumentEmbeddingService) DeleteByChunkID(chunkID int) error {
+func (s *DocumentEmbeddingService) DeleteByChunkID(
+	chunkID int,
+) error {
+
 	return s.repo.DeleteByChunkID(chunkID)
+}
+
+func (s *DocumentEmbeddingService) GenerateForChunks(
+	chunks []models.DocumentChunk,
+) error {
+
+	embeddings := make(
+		[]models.DocumentEmbedding,
+		0,
+		len(chunks),
+	)
+
+	for _, chunk := range chunks {
+
+		vector, err := s.client.CreateEmbedding(
+			chunk.Content,
+		)
+
+		if err != nil {
+			return err
+		}
+
+		jsonVector, err := json.Marshal(vector)
+
+		if err != nil {
+			return err
+		}
+
+		embeddings = append(
+			embeddings,
+			models.DocumentEmbedding{
+				ChunkID:   chunk.ID,
+				Embedding: string(jsonVector),
+			},
+		)
+	}
+
+	return s.repo.CreateMany(embeddings)
 }
