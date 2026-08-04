@@ -11,6 +11,7 @@ func BuildPrompt(
 	question string,
 	notes []models.Note,
 	messages []models.ChatMessage,
+	documentContext string,
 ) string {
 
 	var builder strings.Builder
@@ -28,7 +29,7 @@ func BuildPrompt(
 	)
 
 	builder.WriteString(
-		"- Use only the provided notes and conversation history to answer.\n",
+		"- Use only the provided notes, documents and conversation history to answer.\n",
 	)
 
 	builder.WriteString(
@@ -36,7 +37,7 @@ func BuildPrompt(
 	)
 
 	builder.WriteString(
-		"-  If the answer is not explicitly available in the context, say that there is not enough information.\n",
+		"- If the answer is not explicitly available in the context, say that there is not enough information.\n",
 	)
 
 	builder.WriteString(
@@ -99,6 +100,27 @@ func BuildPrompt(
 				),
 			)
 		}
+	}
+
+	builder.WriteString(
+		"DOCUMENT CONTEXT:\n\n",
+	)
+
+	if documentContext == "" {
+
+		builder.WriteString(
+			"No documents available.\n\n",
+		)
+
+	} else {
+
+		builder.WriteString(
+			documentContext,
+		)
+
+		builder.WriteString(
+			"\n\n",
+		)
 	}
 
 	builder.WriteString(

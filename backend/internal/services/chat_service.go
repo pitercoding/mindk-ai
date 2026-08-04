@@ -14,20 +14,30 @@ type ChatMessageProvider interface {
 	GetByNoteID(noteID int) ([]models.ChatMessage, error)
 }
 
+type DocumentContextProvider interface {
+	BuildContext(
+		query string,
+		limit int,
+	) (string, error)
+}
+
 type ChatService struct {
 	noteService        NoteProvider
+	documentContext    DocumentContextProvider
 	chatMessageService ChatMessageProvider
 	llmClient          llm.Client
 }
 
 func NewChatService(
 	noteService NoteProvider,
+	documentContext DocumentContextProvider,
 	chatMessageService ChatMessageProvider,
 	llmClient llm.Client,
 ) *ChatService {
 
 	return &ChatService{
 		noteService:        noteService,
+		documentContext:    documentContext,
 		chatMessageService: chatMessageService,
 		llmClient:          llmClient,
 	}
@@ -70,10 +80,25 @@ func (s *ChatService) Ask(
 		}
 	}
 
+	documentContext := ""
+
+	if s.documentContext != nil {
+
+		documentContext, err = s.documentContext.BuildContext(
+			message,
+			5,
+		)
+
+		if err != nil {
+			return "", err
+		}
+	}
+
 	prompt := llm.BuildPrompt(
 		message,
 		notes,
 		messages,
+		documentContext,
 	)
 
 	answer, err := s.llmClient.Chat(prompt)

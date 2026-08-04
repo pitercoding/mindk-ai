@@ -13,15 +13,17 @@ import (
 func TestChatServiceAsk(t *testing.T) {
 
 	tests := []struct {
-		name           string
-		message        string
-		context        *models.ChatContext
-		notes          []models.Note
-		noteErr        error
-		llmAnswer      string
-		llmErr         error
-		expectedAnswer string
-		expectError    bool
+		name            string
+		message         string
+		context         *models.ChatContext
+		notes           []models.Note
+		noteErr         error
+		llmAnswer       string
+		llmErr          error
+		expectedAnswer  string
+		expectError     bool
+		documentContext string
+		documentErr     error
 	}{
 		{
 			name:    "returns answer successfully",
@@ -59,6 +61,13 @@ func TestChatServiceAsk(t *testing.T) {
 			llmAnswer:      "Go is a compiled language",
 			expectedAnswer: "Go is a compiled language",
 		},
+		{
+			name:            "uses document context when available",
+			message:         "What is RAG?",
+			documentContext: "RAG combines retrieval and generation.",
+			llmAnswer:       "RAG is a technique.",
+			expectedAnswer:  "RAG is a technique.",
+		},
 	}
 
 	for _, tt := range tests {
@@ -77,8 +86,14 @@ func TestChatServiceAsk(t *testing.T) {
 
 			chatMessageService := &mocks.FakeChatMessageService{}
 
+			documentContextProvider := &mocks.FakeDocumentContextProvider{
+				Context: tt.documentContext,
+				Err:     tt.documentErr,
+			}
+
 			service := NewChatService(
 				noteProvider,
+				documentContextProvider,
 				chatMessageService,
 				llmClient,
 			)
@@ -96,6 +111,26 @@ func TestChatServiceAsk(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Equal(t, tt.expectedAnswer, answer)
+
+			if tt.documentContext != "" {
+
+				assert.True(
+					t,
+					documentContextProvider.Called,
+				)
+
+				assert.Equal(
+					t,
+					tt.message,
+					documentContextProvider.Query,
+				)
+
+				assert.Equal(
+					t,
+					5,
+					documentContextProvider.Limit,
+				)
+			}
 
 			if tt.context != nil {
 

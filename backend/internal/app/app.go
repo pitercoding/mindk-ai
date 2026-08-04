@@ -49,6 +49,13 @@ func New(
 		embeddingGenerator,
 	)
 
+	documentSearchService := services.NewDocumentSearchService(
+		documentEmbeddingRepo,
+		embeddingGenerator,
+	)
+
+	documentContextService := services.NewDocumentContextService(documentSearchService)
+
 	documentService := services.NewDocumentService(
 		documentRepo,
 		documentChunkService,
@@ -58,6 +65,7 @@ func New(
 	// Chat Service
 	chatService := services.NewChatService(
 		noteService,
+		documentContextService,
 		chatMessageService,
 		openAIClient,
 	)

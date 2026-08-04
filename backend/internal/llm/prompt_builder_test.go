@@ -17,6 +17,7 @@ func TestBuildPrompt(t *testing.T) {
 		question         string
 		notes            []models.Note
 		messages         []models.ChatMessage
+		documentContext  string
 		expectedContains []string
 	}{
 		{
@@ -114,6 +115,19 @@ func TestBuildPrompt(t *testing.T) {
 				"Go is a programming language.",
 			},
 		},
+		{
+			name:     "with document context",
+			question: "What is RAG?",
+			documentContext: `
+		Document chunk 0:
+		RAG combines retrieval and generation.
+		`,
+			expectedContains: []string{
+				"DOCUMENT CONTEXT:",
+				"RAG combines retrieval",
+				"USER QUESTION:",
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -124,6 +138,7 @@ func TestBuildPrompt(t *testing.T) {
 				tt.question,
 				tt.notes,
 				tt.messages,
+				tt.documentContext,
 			)
 
 			for _, expected := range tt.expectedContains {
