@@ -19,3 +19,10 @@ func (f *FakeChunkCreator) CreateMany(
 
 	return nil
 }
+
+func (f *FakeChunkCreator) DeleteByDocumentID(
+	documentID int,
+) error {
+
+	return f.Err
+}

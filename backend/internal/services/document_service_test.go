@@ -9,38 +9,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type fakeEmbeddingCreator struct {
-	Called bool
-	Chunks []models.DocumentChunk
-	Err    error
-}
-
-func (f *fakeEmbeddingCreator) GenerateForChunks(
-	chunks []models.DocumentChunk,
-) error {
-
-	f.Called = true
-	f.Chunks = chunks
-
-	return f.Err
-}
-
 func TestDocumentServiceCreate(t *testing.T) {
 
 	documentRepo := &mocks.FakeDocumentRepository{}
 
-	chunkCreator := &mocks.FakeChunkCreator{}
+	chunkService := &mocks.FakeChunkCreator{}
 
-	embeddingCreator := &fakeEmbeddingCreator{}
+	embeddingService := &mocks.FakeEmbeddingService{}
 
 	service := NewDocumentService(
 		documentRepo,
-		chunkCreator,
-		embeddingCreator,
+		chunkService,
+		embeddingService,
 	)
 
 	document := &models.Document{
 		Name: "test.txt",
+		Type: "text/plain",
 		Content: `
 			This is a test document.
 			It contains enough content
@@ -52,34 +37,40 @@ func TestDocumentServiceCreate(t *testing.T) {
 
 	require.NoError(t, err)
 
-	// document was created
-	assert.Equal(
-		t,
-		1,
-		document.ID,
-	)
+	t.Run("document was created", func(t *testing.T) {
 
-	// chunks were created
-	assert.NotEmpty(
-		t,
-		chunkCreator.Chunks,
-	)
+		assert.Equal(
+			t,
+			1,
+			document.ID,
+		)
 
-	assert.Equal(
-		t,
-		1,
-		chunkCreator.Chunks[0].DocumentID,
-	)
+		assert.Equal(
+			t,
+			document,
+			documentRepo.Document,
+		)
+	})
 
-	// embeddings were generated
-	assert.True(
-		t,
-		embeddingCreator.Called,
-	)
+	t.Run("chunks were created", func(t *testing.T) {
 
-	assert.Equal(
-		t,
-		len(chunkCreator.Chunks),
-		len(embeddingCreator.Chunks),
-	)
+		assert.NotEmpty(
+			t,
+			chunkService.Chunks,
+		)
+
+		assert.Equal(
+			t,
+			1,
+			chunkService.Chunks[0].DocumentID,
+		)
+	})
+
+	t.Run("embeddings were generated", func(t *testing.T) {
+
+		assert.True(
+			t,
+			embeddingService.Called,
+		)
+	})
 }

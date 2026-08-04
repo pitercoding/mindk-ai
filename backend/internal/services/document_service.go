@@ -13,8 +13,9 @@ type DocumentRepository interface {
 	Search(query string) ([]models.Document, error)
 }
 
-type ChunkCreator interface {
+type ChunkService interface {
 	CreateMany(chunks []models.DocumentChunk) error
+	DeleteByDocumentID(documentID int) error
 }
 
 type EmbeddingCreator interface {
@@ -23,13 +24,13 @@ type EmbeddingCreator interface {
 
 type DocumentService struct {
 	repo             DocumentRepository
-	chunkService     ChunkCreator
+	chunkService     ChunkService
 	embeddingService EmbeddingCreator
 }
 
 func NewDocumentService(
 	repo DocumentRepository,
-	chunkService ChunkCreator,
+	chunkService ChunkService,
 	embeddingService EmbeddingCreator,
 ) *DocumentService {
 
@@ -76,24 +77,48 @@ func (s *DocumentService) Create(
 	err = s.chunkService.CreateMany(documentChunks)
 
 	if err != nil {
+
+		// rollback document creation
+		s.repo.Delete(document.ID)
+
 		return err
 	}
 
-	return s.embeddingService.GenerateForChunks(documentChunks)
+	err = s.embeddingService.GenerateForChunks(documentChunks)
+
+	if err != nil {
+
+		// rollback document creation
+		// cascade deletes chunks and embeddings
+		s.repo.Delete(document.ID)
+
+		return err
+	}
+
+	return nil
 }
 
 func (s *DocumentService) GetAll() ([]models.Document, error) {
 	return s.repo.GetAll()
 }
 
-func (s *DocumentService) GetByID(id int) (*models.Document, error) {
+func (s *DocumentService) GetByID(
+	id int,
+) (*models.Document, error) {
+
 	return s.repo.GetByID(id)
 }
 
-func (s *DocumentService) Delete(id int) error {
+func (s *DocumentService) Delete(
+	id int,
+) error {
+
 	return s.repo.Delete(id)
 }
 
-func (s *DocumentService) Search(query string) ([]models.Document, error) {
+func (s *DocumentService) Search(
+	query string,
+) ([]models.Document, error) {
+
 	return s.repo.Search(query)
 }
