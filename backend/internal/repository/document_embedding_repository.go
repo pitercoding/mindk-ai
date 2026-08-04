@@ -111,3 +111,65 @@ func (r *DocumentEmbeddingRepository) DeleteByChunkID(
 
 	return err
 }
+
+func (r *DocumentEmbeddingRepository) GetAll() (
+	[]models.DocumentEmbedding,
+	error,
+) {
+
+	query := `
+		SELECT
+			de.id,
+			de.chunk_id,
+			de.embedding,
+			de.created_at,
+
+			dc.document_id,
+			dc.chunk_index,
+			dc.content
+
+		FROM document_embeddings de
+		INNER JOIN document_chunks dc
+			ON dc.id = de.chunk_id
+		ORDER BY dc.document_id, dc.chunk_index
+	`
+
+	rows, err := r.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	embeddings := make([]models.DocumentEmbedding, 0)
+
+	for rows.Next() {
+
+		var embedding models.DocumentEmbedding
+
+		err := rows.Scan(
+			&embedding.ID,
+			&embedding.ChunkID,
+			&embedding.Embedding,
+			&embedding.CreatedAt,
+
+			&embedding.DocumentID,
+			&embedding.ChunkIndex,
+			&embedding.Content,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		embeddings = append(
+			embeddings,
+			embedding,
+		)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return embeddings, nil
+}
