@@ -62,3 +62,10 @@ func (f *FakeDocumentEmbeddingRepository) DeleteByChunkID(
 
 	return f.Err
 }
+
+func (f *FakeDocumentEmbeddingRepository) GetAll() (
+	[]models.DocumentEmbedding,
+	error,
+) {
+	return f.Embeddings, f.Err
+}
