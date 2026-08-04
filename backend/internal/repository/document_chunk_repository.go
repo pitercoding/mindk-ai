@@ -56,9 +56,9 @@ func (r *DocumentChunkRepository) CreateMany(
 	chunks []models.DocumentChunk,
 ) error {
 
-	for _, chunk := range chunks {
+	for i := range chunks {
 
-		err := r.Create(&chunk)
+		err := r.Create(&chunks[i])
 
 		if err != nil {
 			return err
