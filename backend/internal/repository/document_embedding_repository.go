@@ -53,9 +53,9 @@ func (r *DocumentEmbeddingRepository) CreateMany(
 	embeddings []models.DocumentEmbedding,
 ) error {
 
-	for _, embedding := range embeddings {
+	for i := range embeddings {
 
-		err := r.Create(&embedding)
+		err := r.Create(&embeddings[i])
 
 		if err != nil {
 			return err
