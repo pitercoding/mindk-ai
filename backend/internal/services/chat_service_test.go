@@ -68,6 +68,12 @@ func TestChatServiceAsk(t *testing.T) {
 			llmAnswer:       "RAG is a technique.",
 			expectedAnswer:  "RAG is a technique.",
 		},
+		{
+			name:        "document context returns error",
+			message:     "What is RAG?",
+			documentErr: errors.New("search failed"),
+			expectError: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -112,7 +118,7 @@ func TestChatServiceAsk(t *testing.T) {
 
 			assert.Equal(t, tt.expectedAnswer, answer)
 
-			if tt.documentContext != "" {
+			if tt.documentContext != "" || tt.documentErr != nil {
 
 				assert.True(
 					t,
