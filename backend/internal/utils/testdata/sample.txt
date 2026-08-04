@@ -1,0 +1,7 @@
+MindK AI is a personal knowledge management system.
+
+This document is used to test file upload,
+text extraction and embedding generation.
+
+The system will split this content into chunks
+and generate vector embeddings.

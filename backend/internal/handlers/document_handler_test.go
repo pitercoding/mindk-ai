@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -204,5 +205,89 @@ func TestDocumentHandlerDeleteDocument(t *testing.T) {
 	assert.True(
 		t,
 		service.Deleted,
+	)
+}
+
+func TestDocumentHandlerUploadDocument(t *testing.T) {
+
+	service := &mocks.FakeDocumentService{}
+
+	handler := NewDocumentHandler(service)
+
+	var body bytes.Buffer
+
+	writer := multipart.NewWriter(&body)
+
+	fileWriter, err := writer.CreateFormFile(
+		"file",
+		"test.txt",
+	)
+
+	require.NoError(
+		t,
+		err,
+	)
+
+	_, err = fileWriter.Write(
+		[]byte("This is a test document content."),
+	)
+
+	require.NoError(
+		t,
+		err,
+	)
+
+	err = writer.Close()
+
+	require.NoError(
+		t,
+		err,
+	)
+
+	request := httptest.NewRequest(
+		http.MethodPost,
+		"/documents/upload",
+		&body,
+	)
+
+	request.Header.Set(
+		"Content-Type",
+		writer.FormDataContentType(),
+	)
+
+	response := httptest.NewRecorder()
+
+	handler.UploadDocument(
+		response,
+		request,
+	)
+
+	require.Equal(
+		t,
+		http.StatusCreated,
+		response.Code,
+	)
+
+	assert.True(
+		t,
+		service.Created,
+	)
+
+	assert.Equal(
+		t,
+		"test.txt",
+		service.Document.Name,
+	)
+
+	assert.Equal(
+		t,
+		".txt",
+		service.Document.Type,
+	)
+
+	assert.Equal(
+		t,
+		"This is a test document content.",
+		service.Document.Content,
 	)
 }
