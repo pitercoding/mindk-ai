@@ -82,7 +82,7 @@ func (s *ChatService) Ask(
 
 	documentContext := ""
 
-	if s.documentContext != nil {
+	if context == nil && s.documentContext != nil {
 
 		documentContext, err = s.documentContext.BuildContext(
 			message,
