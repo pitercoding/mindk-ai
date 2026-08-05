@@ -1084,3 +1084,59 @@ button {
     border-color:rgba(54, 229, 206, 0.68);
     box-shadow: 0 0 0 3px rgba(54, 229, 206, 0.1);
 }
+
+.chat-mode-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.chat-mode-button {
+    padding: 6px 14px;
+    color: var(--muted);
+    background: rgba(20, 31, 48, 0.8);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 12px;
+    transition:
+        background .18s ease,
+        border-color .18s ease,
+        color .18s ease;
+}
+
+.chat-mode-button:hover {
+    border-color:
+        rgba(54, 229, 206, 0.45);
+}
+
+.chat-mode-button.active {
+    color: var(--accent);
+    background:
+        rgba(54, 229, 206, 0.12);
+    border-color:
+        var(--accent);
+}
+
+.chat-mode-button:disabled {
+    cursor: not-allowed;
+    opacity: .45;
+}
+
+.chat-context {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    color: var(--muted);
+    background: rgba(54, 229, 206, 0.06);
+    border: 1px solid rgba(54, 229, 206, 0.18);
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.chat-context strong {
+    color: var(--accent);
+    font-weight: 700;
+}

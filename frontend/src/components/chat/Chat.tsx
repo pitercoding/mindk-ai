@@ -1,6 +1,5 @@
 import ChatInput from "@/components/chat/ChatInput";
 import ChatMessageList from "@/components/chat/ChatMessageList";
-import type { ChatContext } from "@/types/chat";
 
 import type { Message } from "@/types/message";
 
@@ -8,17 +7,27 @@ interface ChatProps {
     messages: Message[];
     isLoading: boolean;
     onSend: (message: string) => Promise<void>;
-    context?: ChatContext;
+    mode: "knowledge" | "note";
 }
 
 export default function Chat({
     messages,
     isLoading,
     onSend,
+    mode,
 }: ChatProps) {
 
-    return (
+    const emptyTitle =
+        mode === "knowledge"
+            ? "Ask anything about your knowledge base"
+            : "Ask MindK about this note";
 
+    const emptyDescription =
+        mode === "knowledge"
+            ? "Search across your notes and documents using AI."
+            : "Ask questions about the selected note.";
+
+    return (
         <>
             <section className="chat-content">
 
@@ -26,9 +35,10 @@ export default function Chat({
 
                     <div className="chat-empty-state">
 
-                        <h3>Ask MindK about your knowledge</h3>
+                        <h3>{emptyTitle}</h3>
 
-                        <p>Select a note and start asking questions.</p>
+                        <p>{emptyDescription}</p>
+
                     </div>
 
                 ) : (
@@ -36,6 +46,7 @@ export default function Chat({
                     <ChatMessageList
                         messages={messages}
                     />
+
                 )}
 
             </section>
