@@ -21,11 +21,21 @@ type DocumentContextProvider interface {
 	) (string, error)
 }
 
+type PromptBuilder interface {
+	Build(
+		question string,
+		notes []models.Note,
+		messages []models.ChatMessage,
+		documentContext string,
+	) string
+}
+
 type ChatService struct {
 	noteService        NoteProvider
 	documentContext    DocumentContextProvider
 	chatMessageService ChatMessageProvider
 	llmClient          llm.Client
+	promptBuilder      PromptBuilder
 }
 
 func NewChatService(
@@ -40,6 +50,7 @@ func NewChatService(
 		documentContext:    documentContext,
 		chatMessageService: chatMessageService,
 		llmClient:          llmClient,
+		promptBuilder: llm.NewContextBuilder(),
 	}
 }
 
@@ -94,7 +105,7 @@ func (s *ChatService) Ask(
 		}
 	}
 
-	prompt := llm.BuildPrompt(
+	prompt := s.promptBuilder.Build(
 		message,
 		notes,
 		messages,
