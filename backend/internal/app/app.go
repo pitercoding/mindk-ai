@@ -14,6 +14,7 @@ type App struct {
 	NoteHandler        *handlers.NoteHandler
 	ChatHandler        *handlers.ChatHandler
 	ChatMessageHandler *handlers.ChatMessageHandler
+	ChatSessionHandler *handlers.ChatSessionHandler
 	DocumentHandler    *handlers.DocumentHandler
 }
 
@@ -25,6 +26,7 @@ func New(
 	// Repository
 	noteRepo := repository.NewNoteRepository(db)
 	chatMessageRepo := repository.NewChatMessageRepository(db)
+	chatSessionRepo := repository.NewChatSessionRepository(db)
 	documentRepo := repository.NewDocumentRepository(db)
 	documentChunkRepo := repository.NewDocumentChunkRepository(db)
 	documentEmbeddingRepo := repository.NewDocumentEmbeddingRepository(db)
@@ -38,6 +40,10 @@ func New(
 
 	chatMessageService := services.NewChatMessageService(
 		chatMessageRepo,
+	)
+
+	chatSessionService := services.NewChatSessionService(
+		chatSessionRepo,
 	)
 
 	documentChunkService := services.NewDocumentChunkService(
@@ -74,12 +80,14 @@ func New(
 	noteHandler := handlers.NewNoteHandler(noteService)
 	chatHandler := handlers.NewChatHandler(chatService)
 	chatMessageHandler := handlers.NewChatMessageHandler(chatMessageService)
+	chatSessionHandler := handlers.NewChatSessionHandler(chatSessionService)
 	documentHandler := handlers.NewDocumentHandler(documentService)
 
 	return &App{
 		NoteHandler:        noteHandler,
 		ChatHandler:        chatHandler,
 		ChatMessageHandler: chatMessageHandler,
+		ChatSessionHandler: chatSessionHandler,
 		DocumentHandler:    documentHandler,
 	}
 }

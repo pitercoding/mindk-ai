@@ -23,4 +23,7 @@ func RegisterRoutes(app *app.App) {
 	http.HandleFunc("/documents/upload", app.DocumentHandler.UploadDocument)
 	http.HandleFunc("/documents/search", app.DocumentHandler.SearchDocuments)
 	http.HandleFunc("/documents/", app.DocumentHandler.HandleDocument)
+
+	http.HandleFunc("/chat/sessions", app.ChatSessionHandler.HandleSessions)
+	http.HandleFunc("/chat/sessions/", app.ChatSessionHandler.HandleSession)
 }
