@@ -1,17 +1,24 @@
 package services
 
 import (
+	"errors"
+
 	"github.com/pitercoding/mindk-ai/backend/internal/llm"
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
 )
 
 type NoteProvider interface {
 	GetAll() ([]models.Note, error)
+	GetByID(id int) (*models.Note, error)
+}
+
+type ChatSessionProvider interface {
+	GetByID(id int) (*models.ChatSession, error)
 }
 
 type ChatMessageProvider interface {
 	Save(message *models.ChatMessage) error
-	GetByNoteID(noteID int) ([]models.ChatMessage, error)
+	GetBySessionID(sessionID int) ([]models.ChatMessage, error)
 }
 
 type DocumentContextProvider interface {
@@ -32,6 +39,7 @@ type PromptBuilder interface {
 
 type ChatService struct {
 	noteService        NoteProvider
+	chatSessionService ChatSessionProvider
 	documentContext    DocumentContextProvider
 	chatMessageService ChatMessageProvider
 	llmClient          llm.Client
@@ -40,6 +48,7 @@ type ChatService struct {
 
 func NewChatService(
 	noteService NoteProvider,
+	chatSessionService ChatSessionProvider,
 	documentContext DocumentContextProvider,
 	chatMessageService ChatMessageProvider,
 	llmClient llm.Client,
@@ -47,58 +56,90 @@ func NewChatService(
 
 	return &ChatService{
 		noteService:        noteService,
+		chatSessionService: chatSessionService,
 		documentContext:    documentContext,
 		chatMessageService: chatMessageService,
 		llmClient:          llmClient,
-		promptBuilder: llm.NewContextBuilder(),
+		promptBuilder:      llm.NewContextBuilder(),
 	}
 }
 
 func (s *ChatService) Ask(
+	sessionID int,
 	message string,
-	context *models.ChatContext,
 ) (string, error) {
 
-	var (
-		err      error
-		notes    []models.Note
-		messages []models.ChatMessage
+	session, err := s.chatSessionService.GetByID(sessionID)
+
+	if err != nil {
+		return "", err
+	}
+
+	if session == nil {
+		return "", errors.New("chat session not found")
+	}
+
+	messages, err := s.chatMessageService.GetBySessionID(
+		sessionID,
 	)
 
-	if context != nil {
+	if err != nil {
+		return "", err
+	}
 
-		notes = []models.Note{
-			{
-				Title:   context.Title,
-				Content: context.Content,
-			},
-		}
+	var notes []models.Note
 
-		messages, err = s.chatMessageService.GetByNoteID(
-			context.NoteID,
-		)
+	switch session.Mode {
 
-		if err != nil {
-			return "", err
-		}
-
-	} else {
+	case "knowledge":
 
 		notes, err = s.noteService.GetAll()
 
 		if err != nil {
 			return "", err
 		}
+
+	case "note":
+
+		if session.NoteID == nil {
+			return "", errors.New(
+				"note session has no note",
+			)
+		}
+
+		note, err := s.noteService.GetByID(
+			*session.NoteID,
+		)
+
+		if err != nil {
+			return "", err
+		}
+
+		if note == nil {
+			return "", errors.New("note not found")
+		}
+
+		notes = []models.Note{
+			*note,
+		}
+
+	default:
+
+		return "", errors.New(
+			"invalid chat session mode",
+		)
 	}
 
 	documentContext := ""
 
-	if context == nil && s.documentContext != nil {
+	if session.Mode == "knowledge" &&
+		s.documentContext != nil {
 
-		documentContext, err = s.documentContext.BuildContext(
-			message,
-			5,
-		)
+		documentContext, err =
+			s.documentContext.BuildContext(
+				message,
+				5,
+			)
 
 		if err != nil {
 			return "", err
@@ -118,31 +159,28 @@ func (s *ChatService) Ask(
 		return "", err
 	}
 
-	if context != nil {
+	err = s.chatMessageService.Save(
+		&models.ChatMessage{
+			SessionID: sessionID,
+			Role:      "user",
+			Content:   message,
+		},
+	)
 
-		err = s.chatMessageService.Save(
-			&models.ChatMessage{
-				NoteID:  context.NoteID,
-				Role:    "user",
-				Content: message,
-			},
-		)
+	if err != nil {
+		return "", err
+	}
 
-		if err != nil {
-			return "", err
-		}
+	err = s.chatMessageService.Save(
+		&models.ChatMessage{
+			SessionID: sessionID,
+			Role:      "assistant",
+			Content:   answer,
+		},
+	)
 
-		err = s.chatMessageService.Save(
-			&models.ChatMessage{
-				NoteID:  context.NoteID,
-				Role:    "assistant",
-				Content: answer,
-			},
-		)
-
-		if err != nil {
-			return "", err
-		}
+	if err != nil {
+		return "", err
 	}
 
 	return answer, nil

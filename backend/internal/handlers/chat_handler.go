@@ -11,8 +11,8 @@ import (
 
 type ChatService interface {
 	Ask(
+		sessionID int,
 		message string,
-		context *models.ChatContext,
 	) (string, error)
 }
 
@@ -31,22 +31,28 @@ func (h *ChatHandler) Ask(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		http.Error(
+			w,
+			"invalid request",
+			http.StatusBadRequest,
+		)
 		return
 	}
 
 	answer, err := h.service.Ask(
+		req.SessionID,
 		req.Message,
-		req.Context,
 	)
 
 	if err != nil {
 		log.Printf("chat request failed: %v", err)
+
 		http.Error(
 			w,
 			fmt.Sprintf("failed to process chat: %v", err),
 			http.StatusInternalServerError,
 		)
+
 		return
 	}
 
@@ -54,7 +60,11 @@ func (h *ChatHandler) Ask(w http.ResponseWriter, r *http.Request) {
 		Answer: answer,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(
+		"Content-Type",
+		"application/json",
+	)
 
 	json.NewEncoder(w).Encode(resp)
+
 }

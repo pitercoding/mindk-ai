@@ -71,6 +71,7 @@ func New(
 	// Chat Service
 	chatService := services.NewChatService(
 		noteService,
+		chatSessionService,
 		documentContextService,
 		chatMessageService,
 		openAIClient,

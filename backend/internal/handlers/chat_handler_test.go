@@ -15,7 +15,6 @@ import (
 )
 
 func TestChatHandlerAsk(t *testing.T) {
-
 	service := &mocks.FakeChatService{
 		Answer: "Docker is a container platform.",
 	}
@@ -23,8 +22,9 @@ func TestChatHandlerAsk(t *testing.T) {
 	handler := NewChatHandler(service)
 
 	body := `{
-		"message":"What do my notes say about Docker?"
-	}`
+	"session_id": 1,
+	"message": "What do my notes say about Docker?"
+}`
 
 	req := httptest.NewRequest(
 		http.MethodPost,
@@ -52,7 +52,9 @@ func TestChatHandlerAsk(t *testing.T) {
 
 	var response models.ChatResponse
 
-	err := json.NewDecoder(recorder.Body).Decode(&response)
+	err := json.NewDecoder(
+		recorder.Body,
+	).Decode(&response)
 
 	require.NoError(t, err)
 
@@ -62,22 +64,34 @@ func TestChatHandlerAsk(t *testing.T) {
 		response.Answer,
 	)
 
+	assert.True(
+		t,
+		service.Called,
+	)
+
+	assert.Equal(
+		t,
+		1,
+		service.LastSessionID,
+	)
+
 	assert.Equal(
 		t,
 		"What do my notes say about Docker?",
 		service.LastMessage,
 	)
+
 }
 
 func TestChatHandlerAsk_InvalidJSON(t *testing.T) {
-
 	service := &mocks.FakeChatService{}
 
 	handler := NewChatHandler(service)
 
 	body := `{
-		"message":"What do my notes say about Docker?"
-	`
+	"session_id": 1,
+	"message": "What do my notes say about Docker?"
+`
 
 	req := httptest.NewRequest(
 		http.MethodPost,
@@ -113,10 +127,10 @@ func TestChatHandlerAsk_InvalidJSON(t *testing.T) {
 		t,
 		service.Called,
 	)
+
 }
 
 func TestChatHandlerAsk_ServiceError(t *testing.T) {
-
 	service := &mocks.FakeChatService{
 		Err: errors.New("openai unavailable"),
 	}
@@ -124,8 +138,9 @@ func TestChatHandlerAsk_ServiceError(t *testing.T) {
 	handler := NewChatHandler(service)
 
 	body := `{
-		"message":"What do my notes say about Docker?"
-	}`
+	"session_id": 1,
+	"message": "What do my notes say about Docker?"
+}`
 
 	req := httptest.NewRequest(
 		http.MethodPost,
@@ -164,13 +179,19 @@ func TestChatHandlerAsk_ServiceError(t *testing.T) {
 
 	assert.Equal(
 		t,
+		1,
+		service.LastSessionID,
+	)
+
+	assert.Equal(
+		t,
 		"What do my notes say about Docker?",
 		service.LastMessage,
 	)
+
 }
 
-func TestChatHandlerAsk_WithContext(t *testing.T) {
-
+func TestChatHandlerAsk_NoteSession(t *testing.T) {
 	service := &mocks.FakeChatService{
 		Answer: "Go is a compiled language.",
 	}
@@ -178,13 +199,9 @@ func TestChatHandlerAsk_WithContext(t *testing.T) {
 	handler := NewChatHandler(service)
 
 	body := `{
-		"message":"Explain this note",
-		"context":{
-			"note_id":1,
-			"title":"Go",
-			"content":"Go is a compiled language"
-		}
-	}`
+	"session_id": 10,
+	"message": "Explain this note"
+}`
 
 	req := httptest.NewRequest(
 		http.MethodPost,
@@ -210,9 +227,29 @@ func TestChatHandlerAsk_WithContext(t *testing.T) {
 		recorder.Code,
 	)
 
+	var response models.ChatResponse
+
+	err := json.NewDecoder(
+		recorder.Body,
+	).Decode(&response)
+
+	require.NoError(t, err)
+
+	assert.Equal(
+		t,
+		"Go is a compiled language.",
+		response.Answer,
+	)
+
 	assert.True(
 		t,
 		service.Called,
+	)
+
+	assert.Equal(
+		t,
+		10,
+		service.LastSessionID,
 	)
 
 	assert.Equal(
@@ -221,26 +258,4 @@ func TestChatHandlerAsk_WithContext(t *testing.T) {
 		service.LastMessage,
 	)
 
-	require.NotNil(
-		t,
-		service.LastContext,
-	)
-
-	assert.Equal(
-		t,
-		1,
-		service.LastContext.NoteID,
-	)
-
-	assert.Equal(
-		t,
-		"Go",
-		service.LastContext.Title,
-	)
-
-	assert.Equal(
-		t,
-		"Go is a compiled language",
-		service.LastContext.Content,
-	)
 }

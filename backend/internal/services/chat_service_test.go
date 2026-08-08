@@ -14,64 +14,168 @@ func TestChatServiceAsk(t *testing.T) {
 
 	tests := []struct {
 		name            string
+		session         *models.ChatSession
+		sessionErr      error
 		message         string
-		context         *models.ChatContext
 		notes           []models.Note
+		note            *models.Note
 		noteErr         error
+		messages        []models.ChatMessage
 		llmAnswer       string
 		llmErr          error
-		expectedAnswer  string
-		expectError     bool
 		documentContext string
 		documentErr     error
+		expectedAnswer  string
+		expectError     bool
 	}{
 		{
-			name:    "returns answer successfully",
+			name: "knowledge session returns answer successfully",
+
+			session: &models.ChatSession{
+				ID:   1,
+				Mode: "knowledge",
+			},
+
 			message: "What do my notes say about Go?",
+
 			notes: []models.Note{
 				{
 					Title:   "Go",
 					Content: "Go is awesome",
 				},
 			},
+
 			llmAnswer:      "Go is awesome",
 			expectedAnswer: "Go is awesome",
 		},
+
 		{
-			name:        "note provider returns error",
-			message:     "Go",
-			noteErr:     errors.New("database error"),
-			expectError: true,
-		},
-		{
-			name:        "llm returns error",
-			message:     "Go",
-			notes:       []models.Note{{Title: "Go", Content: "Go is awesome"}},
-			llmErr:      errors.New("openai error"),
-			expectError: true,
-		},
-		{
-			name:    "saves chat messages when note context exists",
+			name: "note session returns answer successfully",
+
+			session: &models.ChatSession{
+				ID:     1,
+				Mode:   "note",
+				NoteID: intPtr(10),
+			},
+
 			message: "Explain this note",
-			context: &models.ChatContext{
-				NoteID:  1,
+
+			note: &models.Note{
+				ID:      10,
 				Title:   "Go",
 				Content: "Go is a compiled language",
 			},
+
 			llmAnswer:      "Go is a compiled language",
 			expectedAnswer: "Go is a compiled language",
 		},
+
 		{
-			name:            "uses document context when available",
-			message:         "What is RAG?",
-			documentContext: "RAG combines retrieval and generation.",
-			llmAnswer:       "RAG is a technique.",
-			expectedAnswer:  "RAG is a technique.",
+			name: "session provider returns error",
+
+			sessionErr: errors.New("database error"),
+
+			message:     "Hello",
+			expectError: true,
 		},
+
 		{
-			name:        "document context returns error",
-			message:     "What is RAG?",
+			name: "session does not exist",
+
+			session: nil,
+
+			message:     "Hello",
+			expectError: true,
+		},
+
+		{
+			name: "note session without note returns error",
+
+			session: &models.ChatSession{
+				ID:   1,
+				Mode: "note",
+			},
+
+			message:     "Explain this",
+			expectError: true,
+		},
+
+		{
+			name: "note provider returns error",
+
+			session: &models.ChatSession{
+				ID:     1,
+				Mode:   "note",
+				NoteID: intPtr(10),
+			},
+
+			message: "Explain this",
+
+			noteErr:     errors.New("note database error"),
+			expectError: true,
+		},
+
+		{
+			name: "llm returns error",
+
+			session: &models.ChatSession{
+				ID:   1,
+				Mode: "knowledge",
+			},
+
+			message: "What is Go?",
+
+			notes: []models.Note{
+				{
+					Title:   "Go",
+					Content: "Go is awesome",
+				},
+			},
+
+			llmErr:      errors.New("openai error"),
+			expectError: true,
+		},
+
+		{
+			name: "uses document context in knowledge mode",
+
+			session: &models.ChatSession{
+				ID:   1,
+				Mode: "knowledge",
+			},
+
+			message: "What is RAG?",
+
+			documentContext: "RAG combines retrieval and generation.",
+
+			llmAnswer:      "RAG is a technique.",
+			expectedAnswer: "RAG is a technique.",
+		},
+
+		{
+			name: "document context returns error",
+
+			session: &models.ChatSession{
+				ID:   1,
+				Mode: "knowledge",
+			},
+
+			message: "What is RAG?",
+
 			documentErr: errors.New("search failed"),
+
+			expectError: true,
+		},
+
+		{
+			name: "invalid session mode returns error",
+
+			session: &models.ChatSession{
+				ID:   1,
+				Mode: "invalid",
+			},
+
+			message:     "Hello",
 			expectError: true,
 		},
 	}
@@ -82,15 +186,23 @@ func TestChatServiceAsk(t *testing.T) {
 
 			noteProvider := &mocks.FakeNoteProvider{
 				Notes: tt.notes,
+				Note:  tt.note,
 				Err:   tt.noteErr,
+			}
+
+			chatSessionService := &mocks.FakeChatSessionService{
+				Session: tt.session,
+				Err:     tt.sessionErr,
+			}
+
+			chatMessageService := &mocks.FakeChatMessageService{
+				Messages: tt.messages,
 			}
 
 			llmClient := &mocks.FakeLLMClient{
 				Response: tt.llmAnswer,
 				Err:      tt.llmErr,
 			}
-
-			chatMessageService := &mocks.FakeChatMessageService{}
 
 			documentContextProvider := &mocks.FakeDocumentContextProvider{
 				Context: tt.documentContext,
@@ -99,14 +211,15 @@ func TestChatServiceAsk(t *testing.T) {
 
 			service := NewChatService(
 				noteProvider,
+				chatSessionService,
 				documentContextProvider,
 				chatMessageService,
 				llmClient,
 			)
 
 			answer, err := service.Ask(
+				1,
 				tt.message,
-				tt.context,
 			)
 
 			if tt.expectError {
@@ -116,72 +229,57 @@ func TestChatServiceAsk(t *testing.T) {
 
 			require.NoError(t, err)
 
-			assert.Equal(t, tt.expectedAnswer, answer)
+			assert.Equal(
+				t,
+				tt.expectedAnswer,
+				answer,
+			)
 
-			if tt.documentContext != "" || tt.documentErr != nil {
+			require.Len(
+				t,
+				chatMessageService.Saved,
+				2,
+			)
 
-				assert.True(
-					t,
-					documentContextProvider.Called,
-				)
+			assert.Equal(
+				t,
+				1,
+				chatMessageService.Saved[0].SessionID,
+			)
 
-				assert.Equal(
-					t,
-					tt.message,
-					documentContextProvider.Query,
-				)
+			assert.Equal(
+				t,
+				1,
+				chatMessageService.Saved[1].SessionID,
+			)
 
-				assert.Equal(
-					t,
-					5,
-					documentContextProvider.Limit,
-				)
-			}
+			assert.Equal(
+				t,
+				"user",
+				chatMessageService.Saved[0].Role,
+			)
 
-			if tt.context != nil {
+			assert.Equal(
+				t,
+				tt.message,
+				chatMessageService.Saved[0].Content,
+			)
 
-				require.Len(
-					t,
-					chatMessageService.Saved,
-					2,
-				)
+			assert.Equal(
+				t,
+				"assistant",
+				chatMessageService.Saved[1].Role,
+			)
 
-				assert.Equal(
-					t,
-					tt.context.NoteID,
-					chatMessageService.Saved[0].NoteID,
-				)
-
-				assert.Equal(
-					t,
-					tt.context.NoteID,
-					chatMessageService.Saved[1].NoteID,
-				)
-
-				assert.Equal(
-					t,
-					"user",
-					chatMessageService.Saved[0].Role,
-				)
-
-				assert.Equal(
-					t,
-					tt.message,
-					chatMessageService.Saved[0].Content,
-				)
-
-				assert.Equal(
-					t,
-					"assistant",
-					chatMessageService.Saved[1].Role,
-				)
-
-				assert.Equal(
-					t,
-					tt.expectedAnswer,
-					chatMessageService.Saved[1].Content,
-				)
-			}
+			assert.Equal(
+				t,
+				tt.expectedAnswer,
+				chatMessageService.Saved[1].Content,
+			)
 		})
 	}
+}
+
+func intPtr(value int) *int {
+	return &value
 }
