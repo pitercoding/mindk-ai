@@ -10,7 +10,7 @@ import (
 
 type ChatMessageService interface {
 	Save(message *models.ChatMessage) error
-	GetByNoteID(noteID int) ([]models.ChatMessage, error)
+	GetBySessionID(sessionID int) ([]models.ChatMessage, error)
 }
 
 type ChatMessageHandler struct {
@@ -36,20 +36,24 @@ func (h *ChatMessageHandler) Save(
 	err := json.NewDecoder(r.Body).Decode(&message)
 
 	if err != nil {
+
 		http.Error(
 			w,
 			"invalid request body",
 			http.StatusBadRequest,
 		)
+
 		return
 	}
 
 	if message.Content == "" {
+
 		http.Error(
 			w,
 			"content is required",
 			http.StatusBadRequest,
 		)
+
 		return
 	}
 
@@ -76,25 +80,25 @@ func (h *ChatMessageHandler) Save(
 	json.NewEncoder(w).Encode(message)
 }
 
-func (h *ChatMessageHandler) GetByNoteID(
+func (h *ChatMessageHandler) GetBySessionID(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
 
-	noteID, err := httputil.GetIDFromPath(r)
+	sessionID, err := httputil.GetIDFromPath(r)
 
 	if err != nil {
 
 		http.Error(
 			w,
-			"invalid note id",
+			"invalid session id",
 			http.StatusBadRequest,
 		)
 
 		return
 	}
 
-	messages, err := h.Service.GetByNoteID(noteID)
+	messages, err := h.Service.GetBySessionID(sessionID)
 
 	if err != nil {
 
@@ -126,7 +130,7 @@ func (h *ChatMessageHandler) HandleMessages(
 		h.Save(w, r)
 
 	case http.MethodGet:
-		h.GetByNoteID(w, r)
+		h.GetBySessionID(w, r)
 
 	default:
 		http.Error(

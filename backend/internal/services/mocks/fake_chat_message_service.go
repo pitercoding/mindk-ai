@@ -11,7 +11,6 @@ type FakeChatMessageService struct {
 func (f *FakeChatMessageService) Save(
 	message *models.ChatMessage,
 ) error {
-
 	f.Saved = append(
 		f.Saved,
 		*message,
@@ -20,9 +19,8 @@ func (f *FakeChatMessageService) Save(
 	return f.Err
 }
 
-func (f *FakeChatMessageService) GetByNoteID(
-	noteID int,
+func (f *FakeChatMessageService) GetBySessionID(
+	sessionID int,
 ) ([]models.ChatMessage, error) {
-
 	return f.Messages, f.Err
 }

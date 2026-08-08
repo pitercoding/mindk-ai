@@ -16,11 +16,13 @@ func NewChatMessageRepository(db *sql.DB) *ChatMessageRepository {
 	}
 }
 
-func (r *ChatMessageRepository) Save(message *models.ChatMessage) error {
+func (r *ChatMessageRepository) Save(
+	message *models.ChatMessage,
+) error {
 
 	query := `
 		INSERT INTO chat_messages (
-			note_id,
+			session_id,
 			role,
 			content
 		)
@@ -29,15 +31,17 @@ func (r *ChatMessageRepository) Save(message *models.ChatMessage) error {
 
 	result, err := r.DB.Exec(
 		query,
-		message.NoteID,
+		message.SessionID,
 		message.Role,
 		message.Content,
 	)
+
 	if err != nil {
 		return err
 	}
 
 	id, err := result.LastInsertId()
+
 	if err != nil {
 		return err
 	}
@@ -47,29 +51,34 @@ func (r *ChatMessageRepository) Save(message *models.ChatMessage) error {
 	return nil
 }
 
-func (r *ChatMessageRepository) GetByNoteID(
-	noteID int,
+func (r *ChatMessageRepository) GetBySessionID(
+	sessionID int,
 ) ([]models.ChatMessage, error) {
 
 	query := `
 		SELECT
 			id,
-			note_id,
+			session_id,
 			role,
 			content,
 			created_at
 		FROM chat_messages
-		WHERE note_id = ?
+		WHERE session_id = ?
 		ORDER BY created_at ASC
 	`
 
-	rows, err := r.DB.Query(query, noteID)
+	rows, err := r.DB.Query(
+		query,
+		sessionID,
+	)
+
 	if err != nil {
 		return nil, err
 	}
+
 	defer rows.Close()
 
-	messages := []models.ChatMessage{}
+	messages := make([]models.ChatMessage, 0)
 
 	for rows.Next() {
 
@@ -77,7 +86,7 @@ func (r *ChatMessageRepository) GetByNoteID(
 
 		err := rows.Scan(
 			&message.ID,
-			&message.NoteID,
+			&message.SessionID,
 			&message.Role,
 			&message.Content,
 			&message.CreatedAt,
@@ -87,7 +96,10 @@ func (r *ChatMessageRepository) GetByNoteID(
 			return nil, err
 		}
 
-		messages = append(messages, message)
+		messages = append(
+			messages,
+			message,
+		)
 	}
 
 	if err := rows.Err(); err != nil {

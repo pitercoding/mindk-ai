@@ -6,7 +6,7 @@ import (
 
 type ChatMessageRepository interface {
 	Save(message *models.ChatMessage) error
-	GetByNoteID(noteID int) ([]models.ChatMessage, error)
+	GetBySessionID(sessionID int) ([]models.ChatMessage, error)
 }
 
 type ChatMessageService struct {
@@ -16,7 +16,6 @@ type ChatMessageService struct {
 func NewChatMessageService(
 	repo ChatMessageRepository,
 ) *ChatMessageService {
-
 	return &ChatMessageService{
 		repo: repo,
 	}
@@ -25,13 +24,11 @@ func NewChatMessageService(
 func (s *ChatMessageService) Save(
 	message *models.ChatMessage,
 ) error {
-
 	return s.repo.Save(message)
 }
 
-func (s *ChatMessageService) GetByNoteID(
-	noteID int,
+func (s *ChatMessageService) GetBySessionID(
+	sessionID int,
 ) ([]models.ChatMessage, error) {
-
-	return s.repo.GetByNoteID(noteID)
+	return s.repo.GetBySessionID(sessionID)
 }
