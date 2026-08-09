@@ -6,6 +6,7 @@ type FakeChatMessageService struct {
 	Messages []models.ChatMessage
 	Saved    []models.ChatMessage
 	Err      error
+	LastSessionID int
 }
 
 func (f *FakeChatMessageService) Save(
@@ -22,5 +23,8 @@ func (f *FakeChatMessageService) Save(
 func (f *FakeChatMessageService) GetBySessionID(
 	sessionID int,
 ) ([]models.ChatMessage, error) {
+
+	f.LastSessionID = sessionID
+	
 	return f.Messages, f.Err
 }
