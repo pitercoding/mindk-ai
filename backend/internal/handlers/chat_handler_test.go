@@ -10,13 +10,15 @@ import (
 
 	"github.com/pitercoding/mindk-ai/backend/internal/handlers/mocks"
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
+	"github.com/pitercoding/mindk-ai/backend/internal/repository"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestChatHandlerAsk(t *testing.T) {
 	service := &mocks.FakeChatService{
-		Answer: "Docker is a container platform.",
+		Answer:          "Docker is a container platform.",
+		ResponseSession: 1,
 	}
 
 	handler := NewChatHandler(service)
@@ -64,6 +66,12 @@ func TestChatHandlerAsk(t *testing.T) {
 		response.Answer,
 	)
 
+	assert.Equal(
+		t,
+		1,
+		response.SessionID,
+	)
+
 	assert.True(
 		t,
 		service.Called,
@@ -81,6 +89,77 @@ func TestChatHandlerAsk(t *testing.T) {
 		service.LastMessage,
 	)
 
+}
+
+func TestChatHandlerAsk_AutoCreatesSession(t *testing.T) {
+	service := &mocks.FakeChatService{
+		Answer:          "Go is awesome.",
+		ResponseSession: 42,
+	}
+
+	handler := NewChatHandler(service)
+
+	body := `{
+	"message": "What do my notes say about Go?",
+	"mode": "knowledge",
+	"title": "My chat"
+}`
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/chat",
+		strings.NewReader(body),
+	)
+
+	req.Header.Set(
+		"Content-Type",
+		"application/json",
+	)
+
+	recorder := httptest.NewRecorder()
+
+	handler.Ask(
+		recorder,
+		req,
+	)
+
+	require.Equal(
+		t,
+		http.StatusOK,
+		recorder.Code,
+	)
+
+	var response models.ChatResponse
+
+	err := json.NewDecoder(
+		recorder.Body,
+	).Decode(&response)
+
+	require.NoError(t, err)
+
+	assert.Equal(
+		t,
+		42,
+		response.SessionID,
+	)
+
+	assert.Equal(
+		t,
+		0,
+		service.LastSessionID,
+	)
+
+	assert.Equal(
+		t,
+		"knowledge",
+		service.LastMode,
+	)
+
+	assert.Equal(
+		t,
+		"My chat",
+		service.LastTitle,
+	)
 }
 
 func TestChatHandlerAsk_InvalidJSON(t *testing.T) {
@@ -128,6 +207,52 @@ func TestChatHandlerAsk_InvalidJSON(t *testing.T) {
 		service.Called,
 	)
 
+}
+
+func TestChatHandlerAsk_EmptyMessage(t *testing.T) {
+	service := &mocks.FakeChatService{}
+
+	handler := NewChatHandler(service)
+
+	body := `{
+	"session_id": 1,
+	"message": ""
+}`
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/chat",
+		strings.NewReader(body),
+	)
+
+	req.Header.Set(
+		"Content-Type",
+		"application/json",
+	)
+
+	recorder := httptest.NewRecorder()
+
+	handler.Ask(
+		recorder,
+		req,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusBadRequest,
+		recorder.Code,
+	)
+
+	assert.Contains(
+		t,
+		recorder.Body.String(),
+		"message is required",
+	)
+
+	assert.False(
+		t,
+		service.Called,
+	)
 }
 
 func TestChatHandlerAsk_ServiceError(t *testing.T) {
@@ -191,9 +316,53 @@ func TestChatHandlerAsk_ServiceError(t *testing.T) {
 
 }
 
+func TestChatHandlerAsk_SessionNotFound(t *testing.T) {
+	service := &mocks.FakeChatService{
+		Err: repository.ErrChatSessionNotFound,
+	}
+
+	handler := NewChatHandler(service)
+
+	body := `{
+	"session_id": 999,
+	"message": "Hello"
+}`
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/chat",
+		strings.NewReader(body),
+	)
+
+	req.Header.Set(
+		"Content-Type",
+		"application/json",
+	)
+
+	recorder := httptest.NewRecorder()
+
+	handler.Ask(
+		recorder,
+		req,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		recorder.Code,
+	)
+
+	assert.Contains(
+		t,
+		recorder.Body.String(),
+		"session not found",
+	)
+}
+
 func TestChatHandlerAsk_NoteSession(t *testing.T) {
 	service := &mocks.FakeChatService{
-		Answer: "Go is a compiled language.",
+		Answer:          "Go is a compiled language.",
+		ResponseSession: 10,
 	}
 
 	handler := NewChatHandler(service)

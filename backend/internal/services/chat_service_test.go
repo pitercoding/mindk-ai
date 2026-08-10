@@ -13,25 +13,40 @@ import (
 func TestChatServiceAsk(t *testing.T) {
 
 	tests := []struct {
-		name            string
-		session         *models.ChatSession
-		sessionErr      error
-		message         string
-		notes           []models.Note
-		note            *models.Note
-		noteErr         error
-		messages        []models.ChatMessage
-		llmAnswer       string
-		llmErr          error
+		name string
+
+		// resolveSession inputs
+		sessionID   int
+		mockSession *models.ChatSession
+		sessionErr  error
+		mode        string
+		noteIDInput *int
+		title       string
+
+		message string
+
+		notes   []models.Note
+		note    *models.Note
+		noteErr error
+
+		messages []models.ChatMessage
+
+		llmAnswer string
+		llmErr    error
+
 		documentContext string
 		documentErr     error
-		expectedAnswer  string
-		expectError     bool
+
+		expectedAnswer    string
+		expectedSessionID int
+		expectCreated     bool
+		expectError       bool
 	}{
 		{
-			name: "knowledge session returns answer successfully",
+			name:      "existing session, knowledge mode returns answer",
+			sessionID: 1,
 
-			session: &models.ChatSession{
+			mockSession: &models.ChatSession{
 				ID:   1,
 				Mode: "knowledge",
 			},
@@ -45,14 +60,16 @@ func TestChatServiceAsk(t *testing.T) {
 				},
 			},
 
-			llmAnswer:      "Go is awesome",
-			expectedAnswer: "Go is awesome",
+			llmAnswer:         "Go is awesome",
+			expectedAnswer:    "Go is awesome",
+			expectedSessionID: 1,
 		},
 
 		{
-			name: "note session returns answer successfully",
+			name:      "existing session, note mode returns answer",
+			sessionID: 1,
 
-			session: &models.ChatSession{
+			mockSession: &models.ChatSession{
 				ID:     1,
 				Mode:   "note",
 				NoteID: intPtr(10),
@@ -66,12 +83,14 @@ func TestChatServiceAsk(t *testing.T) {
 				Content: "Go is a compiled language",
 			},
 
-			llmAnswer:      "Go is a compiled language",
-			expectedAnswer: "Go is a compiled language",
+			llmAnswer:         "Go is a compiled language",
+			expectedAnswer:    "Go is a compiled language",
+			expectedSessionID: 1,
 		},
 
 		{
-			name: "session provider returns error",
+			name:      "session provider returns error",
+			sessionID: 1,
 
 			sessionErr: errors.New("database error"),
 
@@ -80,18 +99,20 @@ func TestChatServiceAsk(t *testing.T) {
 		},
 
 		{
-			name: "session does not exist",
+			name:      "session does not exist",
+			sessionID: 1,
 
-			session: nil,
+			mockSession: nil,
 
 			message:     "Hello",
 			expectError: true,
 		},
 
 		{
-			name: "note session without note returns error",
+			name:      "note session without note_id returns error",
+			sessionID: 1,
 
-			session: &models.ChatSession{
+			mockSession: &models.ChatSession{
 				ID:   1,
 				Mode: "note",
 			},
@@ -101,9 +122,10 @@ func TestChatServiceAsk(t *testing.T) {
 		},
 
 		{
-			name: "note provider returns error",
+			name:      "note provider returns error",
+			sessionID: 1,
 
-			session: &models.ChatSession{
+			mockSession: &models.ChatSession{
 				ID:     1,
 				Mode:   "note",
 				NoteID: intPtr(10),
@@ -116,9 +138,10 @@ func TestChatServiceAsk(t *testing.T) {
 		},
 
 		{
-			name: "llm returns error",
+			name:      "llm returns error",
+			sessionID: 1,
 
-			session: &models.ChatSession{
+			mockSession: &models.ChatSession{
 				ID:   1,
 				Mode: "knowledge",
 			},
@@ -137,9 +160,10 @@ func TestChatServiceAsk(t *testing.T) {
 		},
 
 		{
-			name: "uses document context in knowledge mode",
+			name:      "uses document context in knowledge mode",
+			sessionID: 1,
 
-			session: &models.ChatSession{
+			mockSession: &models.ChatSession{
 				ID:   1,
 				Mode: "knowledge",
 			},
@@ -148,14 +172,16 @@ func TestChatServiceAsk(t *testing.T) {
 
 			documentContext: "RAG combines retrieval and generation.",
 
-			llmAnswer:      "RAG is a technique.",
-			expectedAnswer: "RAG is a technique.",
+			llmAnswer:         "RAG is a technique.",
+			expectedAnswer:    "RAG is a technique.",
+			expectedSessionID: 1,
 		},
 
 		{
-			name: "document context returns error",
+			name:      "document context returns error",
+			sessionID: 1,
 
-			session: &models.ChatSession{
+			mockSession: &models.ChatSession{
 				ID:   1,
 				Mode: "knowledge",
 			},
@@ -168,15 +194,86 @@ func TestChatServiceAsk(t *testing.T) {
 		},
 
 		{
-			name: "invalid session mode returns error",
+			name:      "invalid session mode returns error",
+			sessionID: 1,
 
-			session: &models.ChatSession{
+			mockSession: &models.ChatSession{
 				ID:   1,
 				Mode: "invalid",
 			},
 
 			message:     "Hello",
 			expectError: true,
+		},
+
+		{
+			name:      "auto-creates a session when session_id is not provided",
+			sessionID: 0,
+			mode:      "knowledge",
+			title:     "My chat",
+
+			mockSession: &models.ChatSession{
+				ID: 42,
+			},
+
+			message: "What do my notes say about Go?",
+
+			notes: []models.Note{
+				{
+					Title:   "Go",
+					Content: "Go is awesome",
+				},
+			},
+
+			llmAnswer:         "Go is awesome",
+			expectedAnswer:    "Go is awesome",
+			expectedSessionID: 42,
+			expectCreated:     true,
+		},
+
+		{
+			name:        "auto-create note session forwards note_id",
+			sessionID:   0,
+			mode:        "note",
+			noteIDInput: intPtr(10),
+
+			mockSession: &models.ChatSession{
+				ID: 43,
+			},
+
+			message: "Explain this note",
+
+			note: &models.Note{
+				ID:      10,
+				Title:   "Go",
+				Content: "Go is a compiled language",
+			},
+
+			llmAnswer:         "Go is a compiled language",
+			expectedAnswer:    "Go is a compiled language",
+			expectedSessionID: 43,
+			expectCreated:     true,
+		},
+
+		{
+			name:      "auto-create without mode returns error",
+			sessionID: 0,
+			mode:      "",
+
+			message:     "Hello",
+			expectError: true,
+		},
+
+		{
+			name:      "auto-create session creation fails",
+			sessionID: 0,
+			mode:      "knowledge",
+
+			sessionErr: errors.New("insert failed"),
+
+			message:       "Hello",
+			expectError:   true,
+			expectCreated: true,
 		},
 	}
 
@@ -191,7 +288,7 @@ func TestChatServiceAsk(t *testing.T) {
 			}
 
 			chatSessionService := &mocks.FakeChatSessionService{
-				Session: tt.session,
+				Session: tt.mockSession,
 				Err:     tt.sessionErr,
 			}
 
@@ -217,10 +314,19 @@ func TestChatServiceAsk(t *testing.T) {
 				llmClient,
 			)
 
-			answer, err := service.Ask(
-				1,
+			answer, sessionID, err := service.Ask(
+				tt.sessionID,
 				tt.message,
+				tt.mode,
+				tt.noteIDInput,
+				tt.title,
 			)
+
+			if tt.expectCreated {
+				require.Len(t, chatSessionService.Created, 1)
+			} else {
+				assert.Empty(t, chatSessionService.Created)
+			}
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -235,6 +341,12 @@ func TestChatServiceAsk(t *testing.T) {
 				answer,
 			)
 
+			assert.Equal(
+				t,
+				tt.expectedSessionID,
+				sessionID,
+			)
+
 			require.Len(
 				t,
 				chatMessageService.Saved,
@@ -243,13 +355,13 @@ func TestChatServiceAsk(t *testing.T) {
 
 			assert.Equal(
 				t,
-				1,
+				tt.expectedSessionID,
 				chatMessageService.Saved[0].SessionID,
 			)
 
 			assert.Equal(
 				t,
-				1,
+				tt.expectedSessionID,
 				chatMessageService.Saved[1].SessionID,
 			)
 
