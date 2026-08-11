@@ -93,7 +93,7 @@ button {
 
 .sidebar-menu {
     display: flex;
-    flex: 1;
+    flex: 0 0 auto;
     flex-direction: column;
     gap: 4px;
 }
@@ -142,6 +142,141 @@ button {
     font-weight: 700;
     background: rgba(154, 171, 188, 0.42);
     border-radius: 999px;
+}
+
+.sidebar-conversations {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+}
+
+.sidebar-section-title {
+    padding: 0 12px;
+    margin-bottom: 10px;
+    color: var(--soft);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.sidebar-new-chat-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    margin: 0 4px 10px;
+    color: var(--accent);
+    font-weight: 600;
+    background: var(--accent-soft);
+    border: 1px solid rgba(54, 229, 206, 0.32);
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.sidebar-new-chat-button:hover {
+    background: rgba(54, 229, 206, 0.24);
+}
+
+.conversation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.conversation-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 4px 0 12px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+}
+
+.conversation-item:hover,
+.conversation-item.active {
+    background: rgba(116, 139, 162, 0.24);
+    border-color: rgba(155, 179, 205, 0.12);
+}
+
+.conversation-item.active .conversation-title {
+    color: var(--accent);
+}
+
+.conversation-title {
+    flex: 1;
+    height: 34px;
+    overflow: hidden;
+    color: var(--muted);
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.conversation-rename-input {
+    flex: 1;
+    height: 28px;
+    padding: 0 6px;
+    color: var(--text);
+    background: var(--panel-strong);
+    border: 1px solid var(--line-strong);
+    border-radius: 5px;
+}
+
+.conversation-menu-toggle {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    color: var(--soft);
+    background: none;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.conversation-menu-toggle:hover {
+    color: var(--text);
+    background: rgba(154, 171, 188, 0.18);
+}
+
+.conversation-menu {
+    position: fixed;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    min-width: 120px;
+    padding: 4px;
+    background: var(--panel-strong);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    box-shadow: var(--shadow);
+}
+
+.conversation-menu button {
+    padding: 7px 8px;
+    color: var(--muted);
+    text-align: left;
+    background: none;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.conversation-menu button:hover {
+    color: var(--text);
+    background: rgba(154, 171, 188, 0.18);
 }
 
 .sidebar-footer {

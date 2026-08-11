@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 
 import { SelectedNoteProvider } from "@/context/SelectedNoteContext";
+import { ChatSessionProvider } from "@/context/ChatSessionContext";
 
 import "./index.css";
 
@@ -14,7 +15,11 @@ createRoot(
 
     <SelectedNoteProvider>
 
-      <App />
+      <ChatSessionProvider>
+
+        <App />
+
+      </ChatSessionProvider>
 
     </SelectedNoteProvider>
 
