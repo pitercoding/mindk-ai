@@ -1,26 +1,39 @@
 import MarkdownViewer from "@/components/common/MarkdownViewer";
 
-import type { Note } from "@/types/note";
+import type { KnowledgeSelection } from "@/types/knowledge";
 
 interface CurrentNoteProps {
-    note: Note | null;
+    selection: KnowledgeSelection | null;
 }
 
 export default function CurrentNote({
-    note,
+    selection,
 }: CurrentNoteProps) {
 
-    const content = note?.content.replace(
-        new RegExp(`^#\\s+${escapeRegExp(note.title)}\\s*\\n+`),
-        "",
-    ) ?? "";
+    const heading =
+        selection?.type === "document"
+            ? "CURRENT DOCUMENT"
+            : "CURRENT NOTE";
+
+    const name =
+        selection?.type === "note"
+            ? selection.item.title
+            : selection?.item.name;
+
+    const content =
+        selection?.type === "note"
+            ? stripTitleHeading(
+                selection.item.content,
+                selection.item.title,
+            )
+            : selection?.item.content ?? "";
 
     return (
         <section className="dashboard-panel current-note-panel">
 
             <header className="panel-header">
 
-                <h2>CURRENT NOTE</h2>
+                <h2>{heading}</h2>
 
                 <button>
                     ...
@@ -30,27 +43,40 @@ export default function CurrentNote({
 
             <div className="current-note-content">
 
-                {note ? (
+                {selection ? (
                     <>
                         <div className="current-note-title">
-                            <h3>{note.title}</h3>
+                            <h3>{name}</h3>
+
+                            {selection.type === "document" && (
+                                <span className="current-note-type">
+                                    {selection.item.type}
+                                </span>
+                            )}
                         </div>
 
                         <div className="current-note-scroll">
                             <MarkdownViewer
-                                content={content ?? ""}
+                                content={content}
                             />
                         </div>
                     </>
                 ) : (
                     <p className="current-note-empty">
-                        Select a note to view content.
+                        Select a note or document to view content.
                     </p>
                 )}
 
             </div>
 
         </section>
+    );
+}
+
+function stripTitleHeading(content: string, title: string) {
+    return content.replace(
+        new RegExp(`^#\\s+${escapeRegExp(title)}\\s*\\n+`),
+        "",
     );
 }
 
