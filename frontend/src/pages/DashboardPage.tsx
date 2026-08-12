@@ -4,46 +4,68 @@ import ChatPanel from "@/components/dashboard/ChatPanel";
 import CurrentNote from "@/components/dashboard/CurrentNote";
 import KnowledgeBase from "@/components/dashboard/KnowledgeBase";
 
-import { useSelectedNote } from "@/context/SelectedNoteContext";
+import { useSelectedKnowledge } from "@/context/SelectedKnowledgeContext";
 
+import { getDocuments } from "@/services/documentService";
 import { getNotes } from "@/services/noteService";
 
+import type { Document } from "@/types/document";
 import type { Note } from "@/types/note";
 
 export default function DashboardPage() {
 
     const [notes, setNotes] = useState<Note[]>([]);
+    const [documents, setDocuments] = useState<Document[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     const {
-        selectedNote,
-        setSelectedNote,
-    } = useSelectedNote();
+        selected,
+        selectNote,
+        selectDocument,
+    } = useSelectedKnowledge();
 
 
-    async function loadNotes() {
+    async function loadKnowledgeBase() {
+
+        setIsLoading(true);
+        setError(null);
 
         try {
 
-            const response = await getNotes();
+            const [notesResponse, documentsResponse] = await Promise.all([
+                getNotes(),
+                getDocuments(),
+            ]);
 
-            setNotes(response);
+            setNotes(notesResponse);
+            setDocuments(documentsResponse);
 
-            if (response.length > 0) {
-                setSelectedNote(response[0]);
+            if (!selected) {
+                if (notesResponse.length > 0) {
+                    selectNote(notesResponse[0]);
+                } else if (documentsResponse.length > 0) {
+                    selectDocument(documentsResponse[0]);
+                }
             }
 
         } catch (error) {
 
             console.error(
-                "Failed to load notes:",
+                "Failed to load knowledge base:",
                 error,
             );
+
+            setError("Failed to load knowledge base.");
+
+        } finally {
+            setIsLoading(false);
         }
     }
 
 
     useEffect(() => {
-        loadNotes();
+        loadKnowledgeBase();
     }, []);
 
 
@@ -54,10 +76,13 @@ export default function DashboardPage() {
 
                 <KnowledgeBase
                     notes={notes}
+                    documents={documents}
+                    isLoading={isLoading}
+                    error={error}
                 />
 
                 <CurrentNote
-                    note={selectedNote}
+                    selection={selected}
                 />
 
                 <ChatPanel />
