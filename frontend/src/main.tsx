@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import App from "./App";
 
-import { SelectedNoteProvider } from "@/context/SelectedNoteContext";
+import { SelectedKnowledgeProvider } from "@/context/SelectedKnowledgeContext";
 import { ChatSessionProvider } from "@/context/ChatSessionContext";
 
 import "./index.css";
@@ -13,7 +13,7 @@ createRoot(
 ).render(
   <StrictMode>
 
-    <SelectedNoteProvider>
+    <SelectedKnowledgeProvider>
 
       <ChatSessionProvider>
 
@@ -21,7 +21,7 @@ createRoot(
 
       </ChatSessionProvider>
 
-    </SelectedNoteProvider>
+    </SelectedKnowledgeProvider>
 
   </StrictMode>,
 );
