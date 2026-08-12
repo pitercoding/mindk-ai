@@ -4,6 +4,7 @@ import DocumentList from "@/components/documents/DocumentList";
 import DocumentUpload from "@/components/documents/DocumentUpload";
 
 import {
+    deleteDocument,
     getDocuments,
     searchDocuments,
 } from "@/services/documentService";
@@ -15,10 +16,13 @@ export default function DocumentsPage() {
 
     const [documents, setDocuments] = useState<Document[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [search, setSearch] = useState("");
 
 
     async function loadDocuments() {
+        setIsLoading(true);
+        setError(null);
 
         try {
 
@@ -32,6 +36,8 @@ export default function DocumentsPage() {
                 "Failed to load documents:",
                 error,
             );
+
+            setError("Failed to load documents.");
 
         } finally {
 
@@ -68,6 +74,34 @@ export default function DocumentsPage() {
                 error,
             );
 
+            setError("Failed to search documents.");
+
+        }
+    }
+
+
+    async function handleDelete(id: number) {
+
+        try {
+
+            if (!confirm("Delete this document?")) {
+                return;
+            }
+
+            await deleteDocument(id);
+
+            setDocuments((previous) =>
+                previous.filter((document) => document.id !== id)
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Failed to delete document:",
+                error,
+            );
+
+            setError("Failed to delete document.");
         }
     }
 
@@ -117,17 +151,20 @@ export default function DocumentsPage() {
 
 
             {
-                isLoading
-                    ? (
-                        <p>
-                            Loading documents...
-                        </p>
-                    )
-                    : (
-                        <DocumentList
-                            documents={documents}
-                        />
-                    )
+                isLoading ? (
+                    <p>
+                        Loading documents...
+                    </p>
+                ) : error ? (
+                    <p className="documents-error">
+                        {error}
+                    </p>
+                ) : (
+                    <DocumentList
+                        documents={documents}
+                        onDelete={handleDelete}
+                    />
+                )
             }
 
         </section>

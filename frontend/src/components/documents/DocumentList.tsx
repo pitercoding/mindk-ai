@@ -5,11 +5,13 @@ import DocumentCard from "./DocumentCard";
 
 interface DocumentListProps {
     documents: Document[];
+    onDelete: (id: number) => void;
 }
 
 
 export default function DocumentList({
     documents,
+    onDelete,
 }: DocumentListProps) {
 
 
@@ -33,6 +35,7 @@ export default function DocumentList({
                     <DocumentCard
                         key={document.id}
                         document={document}
+                        onDelete={onDelete}
                     />
 
                 ))

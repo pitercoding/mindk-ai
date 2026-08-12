@@ -2,24 +2,34 @@ import type { Document } from "@/types/document";
 
 interface DocumentCardProps {
     document: Document;
+    onDelete: (id: number) => void;
 }
 
 export default function DocumentCard({
     document,
+    onDelete,
 }: DocumentCardProps) {
 
     return (
         <article className="document-card">
 
-            <header>
+            <header className="document-card-header">
                 <h3>
                     {document.name}
                 </h3>
 
-                <span>
-                    {document.type}
-                </span>
+                <button
+                    className="document-action-button"
+                    type="button"
+                    onClick={() => onDelete(document.id)}
+                >
+                    🗑️
+                </button>
             </header>
+
+            <span>
+                {document.type}
+            </span>
 
             <p>
                 {document.content.slice(0, 120)}

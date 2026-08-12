@@ -3,7 +3,7 @@ import { useState } from "react";
 import Chat from "@/components/chat/Chat";
 
 import { useChatSession } from "@/context/ChatSessionContext";
-import { useSelectedNote } from "@/context/SelectedNoteContext";
+import { useSelectedKnowledge } from "@/context/SelectedKnowledgeContext";
 
 import type { ChatMode } from "@/types/chat-session";
 
@@ -19,7 +19,9 @@ export default function ChatPanel() {
         sendMessage,
     } = useChatSession();
 
-    const { selectedNote } = useSelectedNote();
+    const { selected } = useSelectedKnowledge();
+
+    const selectedNote = selected?.type === "note" ? selected.item : null;
 
     const [newChatMode, setNewChatMode] = useState<ChatMode>("knowledge");
 
