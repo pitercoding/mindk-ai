@@ -10,7 +10,14 @@ type ChatRequest struct {
 	Title  string `json:"title,omitempty"`
 }
 
+type ChatSource struct {
+	DocumentID int     `json:"document_id"`
+	Name       string  `json:"name"`
+	Score      float32 `json:"score"`
+}
+
 type ChatResponse struct {
-	Answer    string `json:"answer"`
-	SessionID int    `json:"session_id"`
+	Answer    string       `json:"answer"`
+	SessionID int          `json:"session_id"`
+	Sources   []ChatSource `json:"sources,omitempty"`
 }
