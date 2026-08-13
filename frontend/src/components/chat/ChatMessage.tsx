@@ -71,6 +71,29 @@ export default function ChatMessage({
                 </ReactMarkdown>
 
             </div>
+
+            {message.sources && message.sources.length > 0 && (
+
+                <div className="message-sources">
+
+                    <span className="message-sources-title">
+                        Sources
+                    </span>
+
+                    <ul>
+                        {message.sources.map((source) => (
+                            <li key={source.document_id}>
+                                📄 {source.name}
+
+                                <span className="message-source-score">
+                                    {Math.round(source.score * 100)}%
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+
+                </div>
+            )}
         </div>
     );
 }

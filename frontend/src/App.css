@@ -636,6 +636,44 @@ button {
     box-shadow: 0 0 24px rgba(54, 229, 206, 0.1);
 }
 
+.message-sources {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+}
+
+.message-sources-title {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--soft);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.message-sources ul {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.message-sources li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.message-source-score {
+    color: var(--soft);
+    font-size: 12px;
+}
+
 .history-header {
     padding-bottom: 14px;
     border-bottom: 1px solid var(--line);

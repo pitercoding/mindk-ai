@@ -16,7 +16,14 @@ export interface ChatRequest {
     title?: string;
 }
 
+export interface ChatSource {
+    document_id: number;
+    name: string;
+    score: number;
+}
+
 export interface ChatResponse {
     answer: string;
     session_id: number;
+    sources?: ChatSource[];
 }

@@ -136,6 +136,7 @@ export function ChatSessionProvider({
                     id: crypto.randomUUID(),
                     role: "assistant",
                     content: response.answer,
+                    sources: response.sources,
                 },
             ]);
 
