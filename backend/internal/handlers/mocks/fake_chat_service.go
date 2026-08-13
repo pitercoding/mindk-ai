@@ -1,8 +1,11 @@
 package mocks
 
+import "github.com/pitercoding/mindk-ai/backend/internal/models"
+
 type FakeChatService struct {
 	Answer          string
 	ResponseSession int
+	Sources         []models.ChatSource
 	Err             error
 
 	LastSessionID int
@@ -20,7 +23,7 @@ func (f *FakeChatService) Ask(
 	mode string,
 	noteID *int,
 	title string,
-) (string, int, error) {
+) (string, int, []models.ChatSource, error) {
 
 	f.Called = true
 
@@ -30,6 +33,6 @@ func (f *FakeChatService) Ask(
 	f.LastNoteID = noteID
 	f.LastTitle = title
 
-	return f.Answer, f.ResponseSession, f.Err
+	return f.Answer, f.ResponseSession, f.Sources, f.Err
 
 }

@@ -27,7 +27,7 @@ type DocumentContextProvider interface {
 	BuildContext(
 		query string,
 		limit int,
-	) (string, error)
+	) (string, []models.ChatSource, error)
 }
 
 type PromptBuilder interface {
@@ -66,16 +66,14 @@ func NewChatService(
 	}
 }
 
-// Ask resolves (or creates) the chat session, persists the user's message,
-// builds the prompt from notes/documents/history and returns the
-// assistant's answer together with the session it belongs to.
+// Ask resolves (or creates) the chat session, persists the user's message, builds the prompt from notes/documents/history and returns the assistant's answer together with the session it belongs to.
 func (s *ChatService) Ask(
 	sessionID int,
 	message string,
 	mode string,
 	noteID *int,
 	title string,
-) (string, int, error) {
+) (string, int, []models.ChatSource, error) {
 
 	session, err := s.resolveSession(
 		sessionID,
@@ -85,22 +83,19 @@ func (s *ChatService) Ask(
 	)
 
 	if err != nil {
-		return "", 0, err
+		return "", 0, nil, err
 	}
 
-	// History must be fetched before saving the current message,
-	// otherwise the question would be duplicated in the prompt
-	// (once as history, once as the question itself).
+	// History must be fetched before saving the current message, otherwise the question would be duplicated in the prompt (once as history, once as the question itself).
 	history, err := s.chatMessageService.GetBySessionID(
 		session.ID,
 	)
 
 	if err != nil {
-		return "", 0, err
+		return "", 0, nil, err
 	}
 
-	// Saved before calling the LLM so the user's input is never lost
-	// if the request to OpenAI fails afterwards.
+	// Saved before calling the LLM so the user's input is never lost if the request to OpenAI fails afterwards.
 	err = s.chatMessageService.Save(
 		&models.ChatMessage{
 			SessionID: session.ID,
@@ -110,7 +105,7 @@ func (s *ChatService) Ask(
 	)
 
 	if err != nil {
-		return "", 0, err
+		return "", 0, nil, err
 	}
 
 	var notes []models.Note
@@ -122,13 +117,13 @@ func (s *ChatService) Ask(
 		notes, err = s.noteService.GetAll()
 
 		if err != nil {
-			return "", 0, err
+			return "", 0, nil, err
 		}
 
 	case "note":
 
 		if session.NoteID == nil {
-			return "", 0, errors.New(
+			return "", 0, nil, errors.New(
 				"note session has no note",
 			)
 		}
@@ -138,11 +133,11 @@ func (s *ChatService) Ask(
 		)
 
 		if err != nil {
-			return "", 0, err
+			return "", 0, nil, err
 		}
 
 		if note == nil {
-			return "", 0, errors.New("note not found")
+			return "", 0, nil, errors.New("note not found")
 		}
 
 		notes = []models.Note{
@@ -151,24 +146,25 @@ func (s *ChatService) Ask(
 
 	default:
 
-		return "", 0, errors.New(
+		return "", 0, nil, errors.New(
 			"invalid chat session mode",
 		)
 	}
 
 	documentContext := ""
+	var documentSources []models.ChatSource
 
 	if session.Mode == "knowledge" &&
 		s.documentContext != nil {
 
-		documentContext, err =
+		documentContext, documentSources, err =
 			s.documentContext.BuildContext(
 				message,
 				5,
 			)
 
 		if err != nil {
-			return "", 0, err
+			return "", 0, nil, err
 		}
 	}
 
@@ -182,7 +178,7 @@ func (s *ChatService) Ask(
 	answer, err := s.llmClient.Chat(prompt)
 
 	if err != nil {
-		return "", 0, err
+		return "", 0, nil, err
 	}
 
 	err = s.chatMessageService.Save(
@@ -194,15 +190,13 @@ func (s *ChatService) Ask(
 	)
 
 	if err != nil {
-		return "", 0, err
+		return "", 0, nil, err
 	}
 
-	return answer, session.ID, nil
+	return answer, session.ID, documentSources, nil
 }
 
-// resolveSession looks up an existing session, or creates a new one when
-// sessionID is not provided (0). Auto-creation requires a mode, since a
-// chat session cannot be built without knowing how to answer questions.
+// resolveSession looks up an existing session, or creates a new one when sessionID is not provided (0). Auto-creation requires a mode, since a chat session cannot be built without knowing how to answer questions.
 func (s *ChatService) resolveSession(
 	sessionID int,
 	mode string,

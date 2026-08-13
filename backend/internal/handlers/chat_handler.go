@@ -18,7 +18,7 @@ type ChatService interface {
 		mode string,
 		noteID *int,
 		title string,
-	) (string, int, error)
+	) (string, int, []models.ChatSource, error)
 }
 
 type ChatHandler struct {
@@ -53,7 +53,7 @@ func (h *ChatHandler) Ask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	answer, sessionID, err := h.service.Ask(
+	answer, sessionID, sources, err := h.service.Ask(
 		req.SessionID,
 		req.Message,
 		req.Mode,
@@ -88,6 +88,7 @@ func (h *ChatHandler) Ask(w http.ResponseWriter, r *http.Request) {
 	resp := models.ChatResponse{
 		Answer:    answer,
 		SessionID: sessionID,
+		Sources:   sources,
 	}
 
 	w.Header().Set(

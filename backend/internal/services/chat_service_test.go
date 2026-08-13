@@ -35,10 +35,12 @@ func TestChatServiceAsk(t *testing.T) {
 		llmErr    error
 
 		documentContext string
+		documentSources []models.ChatSource
 		documentErr     error
 
 		expectedAnswer    string
 		expectedSessionID int
+		expectedSources   []models.ChatSource
 		expectCreated     bool
 		expectError       bool
 	}{
@@ -171,10 +173,16 @@ func TestChatServiceAsk(t *testing.T) {
 			message: "What is RAG?",
 
 			documentContext: "RAG combines retrieval and generation.",
+			documentSources: []models.ChatSource{
+				{DocumentID: 1, Name: "rag.md", Score: 0.9},
+			},
 
 			llmAnswer:         "RAG is a technique.",
 			expectedAnswer:    "RAG is a technique.",
 			expectedSessionID: 1,
+			expectedSources: []models.ChatSource{
+				{DocumentID: 1, Name: "rag.md", Score: 0.9},
+			},
 		},
 
 		{
@@ -303,6 +311,7 @@ func TestChatServiceAsk(t *testing.T) {
 
 			documentContextProvider := &mocks.FakeDocumentContextProvider{
 				Context: tt.documentContext,
+				Sources: tt.documentSources,
 				Err:     tt.documentErr,
 			}
 
@@ -314,7 +323,7 @@ func TestChatServiceAsk(t *testing.T) {
 				llmClient,
 			)
 
-			answer, sessionID, err := service.Ask(
+			answer, sessionID, sources, err := service.Ask(
 				tt.sessionID,
 				tt.message,
 				tt.mode,
@@ -345,6 +354,12 @@ func TestChatServiceAsk(t *testing.T) {
 				t,
 				tt.expectedSessionID,
 				sessionID,
+			)
+
+			assert.Equal(
+				t,
+				tt.expectedSources,
+				sources,
 			)
 
 			require.Len(
