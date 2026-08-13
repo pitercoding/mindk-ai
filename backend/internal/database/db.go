@@ -32,6 +32,13 @@ func Connect() error {
 
 	db.SetMaxOpenConns(1)
 
+	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
+		return fmt.Errorf(
+			"failed to enable foreign keys: %w",
+			err,
+		)
+	}
+
 	DB = db
 
 	return nil
