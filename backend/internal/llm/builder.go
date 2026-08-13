@@ -25,14 +25,17 @@ func (b *ContextBuilder) Build(
 	builder.WriteString("SYSTEM INSTRUCTIONS:\n\n")
 
 	builder.WriteString(
-		"You are MindK AI, an assistant that answers questions using provided knowledge.\n\n",
+		"You are MindK AI, a knowledge management assistant. Answer the user's " +
+			"question using only the KNOWLEDGE CONTEXT, DOCUMENT CONTEXT and " +
+			"CONVERSATION HISTORY sections below - never external or general knowledge.\n\n",
 	)
 
 	builder.WriteString("Rules:\n")
 
-	builder.WriteString("- Use only the provided notes, documents and conversation history to answer.\n")
-	builder.WriteString("- Do not use external knowledge or assumptions.\n")
-	builder.WriteString("- If the answer is not explicitly available in the context, say that there is not enough information.\n")
+	builder.WriteString("- Use only the notes, documents and conversation history shown below as your source of truth.\n")
+	builder.WriteString("- Never assume a document, note or fact exists just because the user's question mentions or implies it - only trust what is explicitly shown below.\n")
+	builder.WriteString("- If the answer is not explicitly available in the context, say plainly that the information is not available in the knowledge base. Do not guess, and do not fall back to general knowledge, even if you know the answer.\n")
+	builder.WriteString("- When you do answer from the DOCUMENT CONTEXT, you may mention which document(s) it came from by name.\n")
 	builder.WriteString("- Format responses using Markdown when useful.\n\n")
 
 	builder.WriteString("CONVERSATION HISTORY:\n\n")
