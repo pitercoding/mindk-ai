@@ -8,7 +8,8 @@ type DocumentEmbedding struct {
 	Embedding string    `json:"embedding"`
 	CreatedAt time.Time `json:"created_at"`
 
-	DocumentID int    `json:"document_id"`
-	ChunkIndex int    `json:"chunk_index"`
-	Content    string `json:"content"`
+	DocumentID   int    `json:"document_id"`
+	DocumentName string `json:"document_name"`
+	ChunkIndex   int    `json:"chunk_index"`
+	Content      string `json:"content"`
 }

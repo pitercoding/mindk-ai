@@ -126,11 +126,15 @@ func (r *DocumentEmbeddingRepository) GetAll() (
 
 			dc.document_id,
 			dc.chunk_index,
-			dc.content
+			dc.content,
+
+			d.name
 
 		FROM document_embeddings de
 		INNER JOIN document_chunks dc
 			ON dc.id = de.chunk_id
+		INNER JOIN documents d
+			ON d.id = dc.document_id
 		ORDER BY dc.document_id, dc.chunk_index
 	`
 
@@ -155,6 +159,7 @@ func (r *DocumentEmbeddingRepository) GetAll() (
 			&embedding.DocumentID,
 			&embedding.ChunkIndex,
 			&embedding.Content,
+			&embedding.DocumentName,
 		)
 
 		if err != nil {

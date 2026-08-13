@@ -6,26 +6,33 @@ import (
 	"github.com/pitercoding/mindk-ai/backend/internal/utils"
 )
 
+// DefaultMinRelevanceScore filters out chunks whose cosine similarity to the query falls below this threshold. Calibrated live against OpenAI's text-embedding-3-small: unrelated content scored ~0.18-0.24 (the noise floor for short documents on this model), while genuinely relevant chunks scored ~0.63-0.69. 0.3 sits well above the noise floor with margin to spare - a bar like 0.7 would discard real matches entirely.
+const DefaultMinRelevanceScore = 0.3
+
 type SearchResult struct {
-	DocumentID int
-	ChunkIndex int
-	Content    string
-	Score      float32
+	DocumentID   int
+	DocumentName string
+	ChunkIndex   int
+	Content      string
+	Score        float32
 }
 
 type DocumentSearchService struct {
 	embeddings DocumentEmbeddingRepository
 	generator  EmbeddingGenerator
+	minScore   float32
 }
 
 func NewDocumentSearchService(
 	embeddings DocumentEmbeddingRepository,
 	generator EmbeddingGenerator,
+	minScore float32,
 ) *DocumentSearchService {
 
 	return &DocumentSearchService{
 		embeddings: embeddings,
 		generator:  generator,
+		minScore:   minScore,
 	}
 }
 
@@ -58,13 +65,18 @@ func (s *DocumentSearchService) Search(
 			vector,
 		)
 
+		if score < s.minScore {
+			continue
+		}
+
 		results = append(
 			results,
 			SearchResult{
-				DocumentID: item.DocumentID,
-				ChunkIndex: item.ChunkIndex,
-				Content:    item.Content,
-				Score:      score,
+				DocumentID:   item.DocumentID,
+				DocumentName: item.DocumentName,
+				ChunkIndex:   item.ChunkIndex,
+				Content:      item.Content,
+				Score:        score,
 			},
 		)
 	}

@@ -58,6 +58,7 @@ func New(
 	documentSearchService := services.NewDocumentSearchService(
 		documentEmbeddingRepo,
 		embeddingGenerator,
+		services.DefaultMinRelevanceScore,
 	)
 
 	documentContextService := services.NewDocumentContextService(documentSearchService)

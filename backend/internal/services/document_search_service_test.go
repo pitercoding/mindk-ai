@@ -49,6 +49,7 @@ func TestDocumentSearchServiceSearch(t *testing.T) {
 	service := NewDocumentSearchService(
 		repository,
 		generator,
+		0,
 	)
 
 	results, err := service.Search(
@@ -122,6 +123,7 @@ func TestDocumentSearchServiceSearch_LimitGreaterThanResults(t *testing.T) {
 	service := NewDocumentSearchService(
 		repository,
 		generator,
+		0,
 	)
 
 	results, err := service.Search(
@@ -152,6 +154,7 @@ func TestDocumentSearchServiceSearch_EmbeddingGeneratorError(t *testing.T) {
 	service := NewDocumentSearchService(
 		repository,
 		generator,
+		0,
 	)
 
 	results, err := service.Search(
@@ -167,6 +170,59 @@ func TestDocumentSearchServiceSearch_EmbeddingGeneratorError(t *testing.T) {
 	assert.Nil(
 		t,
 		results,
+	)
+}
+
+func TestDocumentSearchServiceSearch_FiltersBelowMinScore(t *testing.T) {
+
+	repository := &mocks.FakeDocumentEmbeddingRepository{
+		Embeddings: []models.DocumentEmbedding{
+			{
+				DocumentID: 1,
+				Content:    "closely related",
+				Embedding:  `[1,0]`, // score 1
+			},
+			{
+				DocumentID: 2,
+				Content:    "unrelated",
+				Embedding:  `[0,1]`, // score 0
+			},
+		},
+	}
+
+	generator := &mocks.FakeEmbeddingGenerator{
+		Vector: []float32{
+			1,
+			0,
+		},
+	}
+
+	service := NewDocumentSearchService(
+		repository,
+		generator,
+		0.5,
+	)
+
+	results, err := service.Search(
+		"test",
+		10,
+	)
+
+	require.NoError(
+		t,
+		err,
+	)
+
+	require.Len(
+		t,
+		results,
+		1,
+	)
+
+	assert.Equal(
+		t,
+		1,
+		results[0].DocumentID,
 	)
 }
 
@@ -186,6 +242,7 @@ func TestDocumentSearchServiceSearch_RepositoryError(t *testing.T) {
 	service := NewDocumentSearchService(
 		repository,
 		generator,
+		0,
 	)
 
 	results, err := service.Search(
