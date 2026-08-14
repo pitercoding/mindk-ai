@@ -5,14 +5,16 @@ import type { Message } from "@/types/message";
 
 interface ChatProps {
     messages: Message[];
-    isLoading: boolean;
+    isSending: boolean;
+    isLoadingMessages: boolean;
     onSend: (message: string) => Promise<void>;
     mode: "knowledge" | "note";
 }
 
 export default function Chat({
     messages,
-    isLoading,
+    isSending,
+    isLoadingMessages,
     onSend,
     mode,
 }: ChatProps) {
@@ -31,7 +33,15 @@ export default function Chat({
         <>
             <section className="chat-content">
 
-                {messages.length === 0 ? (
+                {isLoadingMessages ? (
+
+                    <div className="chat-empty-state">
+
+                        <h3>Loading messages...</h3>
+
+                    </div>
+
+                ) : messages.length === 0 ? (
 
                     <div className="chat-empty-state">
 
@@ -45,6 +55,7 @@ export default function Chat({
 
                     <ChatMessageList
                         messages={messages}
+                        isSending={isSending}
                     />
 
                 )}
@@ -55,7 +66,7 @@ export default function Chat({
 
                 <ChatInput
                     onSend={onSend}
-                    disabled={isLoading}
+                    disabled={isSending || isLoadingMessages}
                 />
 
             </footer>

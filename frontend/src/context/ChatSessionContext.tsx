@@ -26,6 +26,8 @@ interface NewSessionOptions {
 
 interface ChatSessionContextType {
     sessions: ChatSession[];
+    isLoadingSessions: boolean;
+    sessionsError: string | null;
     currentSessionId: number | null;
     currentSession: ChatSession | null;
     messages: Message[];
@@ -51,6 +53,8 @@ export function ChatSessionProvider({
 }: ChatSessionProviderProps) {
 
     const [sessions, setSessions] = useState<ChatSession[]>([]);
+    const [isLoadingSessions, setIsLoadingSessions] = useState(true);
+    const [sessionsError, setSessionsError] = useState<string | null>(null);
     const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [isSending, setIsSending] = useState(false);
@@ -58,11 +62,17 @@ export function ChatSessionProvider({
 
     const refreshSessions = useCallback(async () => {
 
+        setIsLoadingSessions(true);
+        setSessionsError(null);
+
         try {
             const result = await getSessions();
             setSessions(result ?? []);
         } catch (error) {
             console.error("Failed to load chat sessions:", error);
+            setSessionsError("Unable to load conversations.");
+        } finally {
+            setIsLoadingSessions(false);
         }
 
     }, []);
@@ -77,6 +87,7 @@ export function ChatSessionProvider({
     async function selectSession(id: number) {
 
         setCurrentSessionId(id);
+        setMessages([]);
         setIsLoadingMessages(true);
 
         try {
@@ -154,7 +165,8 @@ export function ChatSessionProvider({
                 {
                     id: crypto.randomUUID(),
                     role: "assistant",
-                    content: "Sorry, something went wrong.",
+                    content: "Unable to process your request. Please try again.",
+                    status: "error",
                 },
             ]);
 
@@ -198,6 +210,8 @@ export function ChatSessionProvider({
         <ChatSessionContext.Provider
             value={{
                 sessions,
+                isLoadingSessions,
+                sessionsError,
                 currentSessionId,
                 currentSession,
                 messages,

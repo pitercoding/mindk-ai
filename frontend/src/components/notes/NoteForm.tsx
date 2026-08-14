@@ -4,12 +4,14 @@ import type { Note } from "@/types/note";
 
 interface NoteFormProps {
     selectedNote?: Note | null;
-    onCreated: (note: Omit<Note, "id">) => void;
-    onUpdated: (id: number, note: Omit<Note, "id">) => void;
+    isSaving: boolean;
+    onCreated: (note: Omit<Note, "id">) => Promise<boolean>;
+    onUpdated: (id: number, note: Omit<Note, "id">) => Promise<boolean>;
 }
 
 export default function NoteForm({
     selectedNote,
+    isSaving,
     onCreated,
     onUpdated,
 }: NoteFormProps) {
@@ -37,27 +39,23 @@ export default function NoteForm({
             return;
         }
 
-        if (selectedNote) {
-
-            onUpdated(
+        const success = selectedNote
+            ? await onUpdated(
                 selectedNote.id,
                 {
                     title: trimmedTitle,
                     content: trimmedContent,
                 }
-            );
-
-        } else {
-
-            onCreated({
+            )
+            : await onCreated({
                 title: trimmedTitle,
                 content: trimmedContent,
             });
 
+        if (success) {
+            setTitle("");
+            setContent("");
         }
-
-        setTitle("");
-        setContent("");
     }
 
     return (
@@ -80,12 +78,14 @@ export default function NoteForm({
                 }
             />
 
-            <button type="submit">
+            <button type="submit" disabled={isSaving}>
 
                 {
-                    selectedNote
-                        ? "Update Note"
-                        : "Save Note"
+                    isSaving
+                        ? "Saving..."
+                        : selectedNote
+                            ? "Update Note"
+                            : "Save Note"
                 }
 
             </button>

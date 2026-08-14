@@ -12,7 +12,16 @@ export default function NotesPage() {
     const [notes, setNotes] = useState<Note[]>([]);
     const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
+    const [isLoading, setIsLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
+
     async function loadNotes() {
+        setIsLoading(true);
+        setLoadError(null);
+
         try {
             const response = await getNotes();
 
@@ -23,6 +32,11 @@ export default function NotesPage() {
                 "Failed to load notes:",
                 error
             );
+
+            setLoadError("Failed to load notes.");
+
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -30,7 +44,12 @@ export default function NotesPage() {
         loadNotes();
     }, []);
 
-    async function handleCreateNote(note: Omit<Note, "id">) {
+    async function handleCreateNote(
+        note: Omit<Note, "id">
+    ): Promise<boolean> {
+
+        setActionError(null);
+        setIsSaving(true);
 
         try {
 
@@ -44,21 +63,33 @@ export default function NotesPage() {
                 ...previousNotes,
             ]);
 
+            return true;
+
         } catch (error) {
             console.error(
                 "Failed to create note:",
                 error
             );
+
+            setActionError("Failed to create note.");
+
+            return false;
+
+        } finally {
+            setIsSaving(false);
         }
     }
 
     async function handleDeleteNote(id: number) {
 
-        try {
+        if (!confirm("Delete this note?")) {
+            return;
+        }
 
-            if (!confirm("Delete this note?")) {
-                return;
-            }
+        setActionError(null);
+        setDeletingId(id);
+
+        try {
 
             await deleteNote(id);
 
@@ -68,13 +99,21 @@ export default function NotesPage() {
 
         } catch (error) {
             console.error("Failed to delete note:", error,);
+
+            setActionError("Failed to delete note.");
+
+        } finally {
+            setDeletingId(null);
         }
     }
 
     async function handleUpdateNote(
         id: number,
         note: Omit<Note, "id">
-    ) {
+    ): Promise<boolean> {
+
+        setActionError(null);
+        setIsSaving(true);
 
         try {
 
@@ -93,17 +132,27 @@ export default function NotesPage() {
 
             setSelectedNote(null);
 
+            return true;
+
         } catch (error) {
 
             console.error(
                 "Failed to update note",
                 error
             );
+
+            setActionError("Failed to update note.");
+
+            return false;
+
+        } finally {
+            setIsSaving(false);
         }
     }
 
     function handleEditNote(note: Note) {
         setSelectedNote(note);
+        setActionError(null);
 
         window.scrollTo({
             top: 0,
@@ -123,12 +172,18 @@ export default function NotesPage() {
 
                 <NoteForm
                     selectedNote={selectedNote}
+                    isSaving={isSaving}
                     onCreated={handleCreateNote}
                     onUpdated={handleUpdateNote}
                 />
 
             </section>
 
+            {actionError && (
+                <p className="notes-error">
+                    {actionError}
+                </p>
+            )}
 
             <section className="notes-list-section">
 
@@ -136,11 +191,24 @@ export default function NotesPage() {
                     Your Notes
                 </h2>
 
-                <NoteList
-                    notes={notes}
-                    onDelete={handleDeleteNote}
-                    onEdit={handleEditNote}
-                />
+                {
+                    isLoading ? (
+                        <p>
+                            Loading notes...
+                        </p>
+                    ) : loadError ? (
+                        <p className="notes-error">
+                            {loadError}
+                        </p>
+                    ) : (
+                        <NoteList
+                            notes={notes}
+                            deletingId={deletingId}
+                            onDelete={handleDeleteNote}
+                            onEdit={handleEditNote}
+                        />
+                    )
+                }
 
             </section>
 

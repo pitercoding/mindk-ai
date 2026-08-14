@@ -7,4 +7,5 @@ export interface Message {
     role: MessageRole;
     content: string;
     sources?: ChatSource[];
+    status?: "error";
 }

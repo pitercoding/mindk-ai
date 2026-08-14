@@ -6,10 +6,12 @@ import type { Message } from "@/types/message";
 
 interface ChatMessageListProps {
     messages: Message[];
+    isSending: boolean;
 }
 
 export default function ChatMessageList({
     messages,
+    isSending,
 }: ChatMessageListProps) {
 
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -18,7 +20,7 @@ export default function ChatMessageList({
         messagesEndRef.current?.scrollIntoView({
             behavior: "smooth",
         });
-    }, [messages]);
+    }, [messages, isSending]);
 
     return (
         <div className="message-list">
@@ -30,8 +32,15 @@ export default function ChatMessageList({
                 />
             ))}
 
+            {isSending && (
+                <div className="message message-assistant message-pending">
+                    <strong>AI</strong>
+                    <span className="message-thinking">Thinking...</span>
+                </div>
+            )}
+
             <div ref={messagesEndRef} />
-            
+
         </div>
     );
 }

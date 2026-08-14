@@ -212,6 +212,22 @@ button {
     color: var(--accent);
 }
 
+.conversation-item-deleting {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.sidebar-status {
+    margin: 4px 4px 10px;
+    padding: 0 8px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.sidebar-status-error {
+    color: #ff8a8a;
+}
+
 .conversation-title {
     flex: 1;
     height: 34px;
@@ -634,6 +650,27 @@ button {
     background: rgba(13, 22, 36, 0.9);
     border: 1px solid var(--line-strong);
     box-shadow: 0 0 24px rgba(54, 229, 206, 0.1);
+}
+
+.message-error {
+    background: rgba(255, 90, 90, 0.1);
+    border-color: rgba(255, 138, 138, 0.4);
+    box-shadow: none;
+}
+
+.message-error strong {
+    color: #ff8a8a;
+}
+
+.message-pending {
+    display: flex;
+    align-items: center;
+}
+
+.message-thinking {
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
 }
 
 .message-sources {
@@ -1092,6 +1129,25 @@ button {
     border-color:rgba(54, 229, 206, 0.45);
 }
 
+.note-action-button-busy {
+    width: auto;
+    padding: 0 10px;
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+    cursor: default;
+}
+
+.note-card-deleting {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.notes-error {
+    margin: 0 0 16px;
+    color: #ff8a8a;
+}
+
 /* Documents */
 
 .documents-page {
@@ -1257,6 +1313,20 @@ button {
     color: var(--accent);
     background: rgba(54, 229, 206, 0.12);
     border-color: rgba(54, 229, 206, 0.45);
+}
+
+.document-action-button-busy {
+    width: auto;
+    padding: 0 10px;
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+    cursor: default;
+}
+
+.document-card-deleting {
+    opacity: 0.55;
+    pointer-events: none;
 }
 
 .document-card span {

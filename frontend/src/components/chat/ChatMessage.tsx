@@ -16,6 +16,7 @@ export default function ChatMessage({
 }: ChatMessageProps) {
 
     const isUser = message.role === "user";
+    const isError = message.status === "error";
 
     return (
 
@@ -23,10 +24,12 @@ export default function ChatMessage({
             className={`message ${isUser
                     ? "message-user"
                     : "message-assistant"
-                }`}
+                }${isError ? " message-error" : ""}`}
         >
 
-            <strong>{isUser ? "You" : "AI"}</strong>
+            <strong>
+                {isError ? "⚠ System" : isUser ? "You" : "AI"}
+            </strong>
 
             <div className="markdown-viewer">
 

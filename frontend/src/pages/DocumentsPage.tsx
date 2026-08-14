@@ -17,12 +17,15 @@ export default function DocumentsPage() {
     const [documents, setDocuments] = useState<Document[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
     const [search, setSearch] = useState("");
 
 
     async function loadDocuments() {
         setIsLoading(true);
         setError(null);
+        setActionError(null);
 
         try {
 
@@ -51,6 +54,7 @@ export default function DocumentsPage() {
     ) {
 
         setSearch(value);
+        setActionError(null);
 
         if (!value.trim()) {
 
@@ -74,7 +78,7 @@ export default function DocumentsPage() {
                 error,
             );
 
-            setError("Failed to search documents.");
+            setActionError("Failed to search documents.");
 
         }
     }
@@ -82,11 +86,14 @@ export default function DocumentsPage() {
 
     async function handleDelete(id: number) {
 
-        try {
+        if (!confirm("Delete this document?")) {
+            return;
+        }
 
-            if (!confirm("Delete this document?")) {
-                return;
-            }
+        setActionError(null);
+        setDeletingId(id);
+
+        try {
 
             await deleteDocument(id);
 
@@ -101,7 +108,10 @@ export default function DocumentsPage() {
                 error,
             );
 
-            setError("Failed to delete document.");
+            setActionError("Failed to delete document.");
+
+        } finally {
+            setDeletingId(null);
         }
     }
 
@@ -149,6 +159,11 @@ export default function DocumentsPage() {
                 onUploadSuccess={loadDocuments}
             />
 
+            {actionError && (
+                <p className="documents-error">
+                    {actionError}
+                </p>
+            )}
 
             {
                 isLoading ? (
@@ -162,6 +177,7 @@ export default function DocumentsPage() {
                 ) : (
                     <DocumentList
                         documents={documents}
+                        deletingId={deletingId}
                         onDelete={handleDelete}
                     />
                 )

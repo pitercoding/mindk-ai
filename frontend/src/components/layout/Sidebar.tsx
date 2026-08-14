@@ -51,6 +51,8 @@ export default function Sidebar() {
 
     const {
         sessions,
+        isLoadingSessions,
+        sessionsError,
         currentSessionId,
         newChat,
         selectSession,
@@ -61,6 +63,8 @@ export default function Sidebar() {
     const [menu, setMenu] = useState<MenuState | null>(null);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editingTitle, setEditingTitle] = useState("");
+    const [actionError, setActionError] = useState<string | null>(null);
+    const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
 
     useEffect(() => {
 
@@ -135,10 +139,13 @@ export default function Sidebar() {
             return;
         }
 
+        setActionError(null);
+
         try {
             await renameSession(id, title);
         } catch (error) {
             console.error("Failed to rename conversation:", error);
+            setActionError("Unable to rename conversation.");
         }
     }
 
@@ -150,10 +157,16 @@ export default function Sidebar() {
             return;
         }
 
+        setActionError(null);
+        setPendingDeleteId(id);
+
         try {
             await deleteSession(id);
         } catch (error) {
             console.error("Failed to delete conversation:", error);
+            setActionError("Unable to delete conversation.");
+        } finally {
+            setPendingDeleteId(null);
         }
     }
 
@@ -213,18 +226,54 @@ export default function Sidebar() {
                     + New Chat
                 </button>
 
+                {actionError && (
+                    <p className="sidebar-status sidebar-status-error">
+                        {actionError}
+                    </p>
+                )}
+
+                {isLoadingSessions ? (
+
+                    <p className="sidebar-status">
+                        Loading conversations...
+                    </p>
+
+                ) : sessionsError ? (
+
+                    <p className="sidebar-status sidebar-status-error">
+                        {sessionsError}
+                    </p>
+
+                ) : sessions.length === 0 ? (
+
+                    <p className="sidebar-status">
+                        No conversations yet.
+                    </p>
+
+                ) : (
+
                 <ul className="conversation-list">
 
-                    {sessions.map((session) => (
+                    {sessions.map((session) => {
+
+                        const isDeleting = pendingDeleteId === session.id;
+
+                        return (
                         <li
                             key={session.id}
-                            className={
-                                session.id === currentSessionId
-                                    ? "conversation-item active"
-                                    : "conversation-item"
-                            }
+                            className={[
+                                "conversation-item",
+                                session.id === currentSessionId ? "active" : "",
+                                isDeleting ? "conversation-item-deleting" : "",
+                            ].filter(Boolean).join(" ")}
                         >
-                            {editingId === session.id ? (
+                            {isDeleting ? (
+
+                                <span className="conversation-title">
+                                    Deleting...
+                                </span>
+
+                            ) : editingId === session.id ? (
 
                                 <input
                                     autoFocus
@@ -259,15 +308,19 @@ export default function Sidebar() {
 
                             <button
                                 className="conversation-menu-toggle"
+                                disabled={isDeleting}
                                 onMouseDown={(event) => event.stopPropagation()}
                                 onClick={(event) => toggleMenu(event, session.id)}
                             >
                                 ⋮
                             </button>
                         </li>
-                    ))}
+                        );
+                    })}
 
                 </ul>
+
+                )}
 
             </div>
 

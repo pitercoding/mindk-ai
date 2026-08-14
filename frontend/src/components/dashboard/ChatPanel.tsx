@@ -118,7 +118,8 @@ export default function ChatPanel() {
 
             <Chat
                 messages={messages}
-                isLoading={isSending || isLoadingMessages}
+                isSending={isSending}
+                isLoadingMessages={isLoadingMessages}
                 onSend={handleSend}
                 mode={chatMode}
             />

@@ -2,51 +2,77 @@ import type { Note } from "@/types/note";
 
 interface NoteListProps {
     notes: Note[];
+    deletingId: number | null;
     onDelete: (id: number) => void;
     onEdit: (note: Note) => void;
 }
 
 export default function NoteList({
     notes,
+    deletingId,
     onDelete,
     onEdit,
 }: NoteListProps) {
 
+    if (notes.length === 0) {
+
+        return (
+            <p>
+                No notes yet.
+            </p>
+        );
+    }
+
     return (
         <section className="notes-grid">
 
-            {notes.map((note) => (
-                <article
-                    className="note-card"
-                    key={note.id}
-                >
+            {notes.map((note) => {
 
-                    <div className="note-card-header">
+                const isDeleting = deletingId === note.id;
 
-                        <h3>{note.title}</h3>
+                return (
+                    <article
+                        className={
+                            isDeleting
+                                ? "note-card note-card-deleting"
+                                : "note-card"
+                        }
+                        key={note.id}
+                    >
 
-                        <button
-                            className="note-action-button"
-                            type="button"
-                            onClick={() => onEdit(note)}
-                        >
-                            ✏️
-                        </button>
+                        <div className="note-card-header">
 
-                        <button
-                            className="note-action-button"
-                            type="button"
-                            onClick={() => onDelete(note.id)}
-                        >
-                            🗑️
-                        </button>
+                            <h3>{note.title}</h3>
 
-                    </div>
+                            <button
+                                className="note-action-button"
+                                type="button"
+                                disabled={isDeleting}
+                                onClick={() => onEdit(note)}
+                            >
+                                ✏️
+                            </button>
 
-                    <p>{note.content}</p>
+                            <button
+                                className={
+                                    isDeleting
+                                        ? "note-action-button note-action-button-busy"
+                                        : "note-action-button"
+                                }
+                                type="button"
+                                disabled={isDeleting}
+                                onClick={() => onDelete(note.id)}
+                            >
+                                {isDeleting ? "Deleting..." : "🗑️"}
+                            </button>
 
-                </article>
-            ))}
+                        </div>
+
+                        <p>{note.content}</p>
+
+                    </article>
+                );
+            })}
 
         </section>
     );

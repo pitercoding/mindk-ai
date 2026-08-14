@@ -2,16 +2,22 @@ import type { Document } from "@/types/document";
 
 interface DocumentCardProps {
     document: Document;
+    isDeleting: boolean;
     onDelete: (id: number) => void;
 }
 
 export default function DocumentCard({
     document,
+    isDeleting,
     onDelete,
 }: DocumentCardProps) {
 
     return (
-        <article className="document-card">
+        <article className={
+            isDeleting
+                ? "document-card document-card-deleting"
+                : "document-card"
+        }>
 
             <header className="document-card-header">
                 <h3>
@@ -19,11 +25,16 @@ export default function DocumentCard({
                 </h3>
 
                 <button
-                    className="document-action-button"
+                    className={
+                        isDeleting
+                            ? "document-action-button document-action-button-busy"
+                            : "document-action-button"
+                    }
                     type="button"
+                    disabled={isDeleting}
                     onClick={() => onDelete(document.id)}
                 >
-                    🗑️
+                    {isDeleting ? "Deleting..." : "🗑️"}
                 </button>
             </header>
 
