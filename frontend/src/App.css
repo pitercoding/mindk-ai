@@ -164,6 +164,28 @@ button {
     text-transform: uppercase;
 }
 
+.sidebar-conversations-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sidebar-conversations-header .sidebar-section-title {
+    margin-bottom: 10px;
+}
+
+.sidebar-conversations-toggle {
+    display: none;
+    width: 22px;
+    height: 22px;
+    margin-bottom: 10px;
+    color: var(--soft);
+    background: none;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
 .sidebar-new-chat-button {
     display: flex;
     align-items: center;
@@ -617,9 +639,15 @@ button {
 }
 
 .chat-input textarea {
+    flex: 1;
+    min-width: 0;
     min-height: 48px;
     max-height: 140px;
     resize: none;
+}
+
+.chat-input button {
+    flex: 0 0 auto;
 }
 
 .message-list,
@@ -796,6 +824,11 @@ button {
     gap: 10px;
 }
 
+.notes-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+}
+
 .notes-list-section h3 {
     margin: 0 0 8px;
     color: var(--text);
@@ -806,7 +839,7 @@ button {
     line-height: 1.5;
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1024px) {
     .dashboard-layout {
         margin: 0;
         height: 100vh;
@@ -814,8 +847,25 @@ button {
     }
 
     .dashboard-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+        grid-template-areas:
+            "knowledge current"
+            "chat chat";
         overflow-y: auto;
+    }
+
+    .knowledge-panel {
+        grid-area: knowledge;
+    }
+
+    .current-note-panel {
+        grid-area: current;
+    }
+
+    .chat-panel {
+        grid-area: chat;
+        min-height: 480px;
     }
 
     .dashboard-panel {
@@ -823,9 +873,21 @@ button {
     }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 640px) {
     .dashboard-layout {
         flex-direction: column;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "knowledge"
+            "current"
+            "chat";
+    }
+
+    .chat-panel {
+        min-height: 420px;
     }
 
     .sidebar {
@@ -848,6 +910,21 @@ button {
 
     .sidebar-footer {
         display: none;
+    }
+
+    .sidebar-conversations-toggle {
+        display: grid;
+        place-items: center;
+    }
+
+    .sidebar-conversations:not(.sidebar-conversations-open) .sidebar-new-chat-button,
+    .sidebar-conversations:not(.sidebar-conversations-open) .conversation-list,
+    .sidebar-conversations:not(.sidebar-conversations-open) .sidebar-status {
+        display: none;
+    }
+
+    .sidebar-conversations.sidebar-conversations-open .conversation-list {
+        max-height: 40vh;
     }
 
     .app-header {

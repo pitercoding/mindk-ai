@@ -65,6 +65,7 @@ export default function Sidebar() {
     const [editingTitle, setEditingTitle] = useState("");
     const [actionError, setActionError] = useState<string | null>(null);
     const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+    const [conversationsOpen, setConversationsOpen] = useState(false);
 
     useEffect(() => {
 
@@ -213,10 +214,28 @@ export default function Sidebar() {
             </nav>
 
 
-            <div className="sidebar-conversations">
+            <div
+                className={
+                    conversationsOpen
+                        ? "sidebar-conversations sidebar-conversations-open"
+                        : "sidebar-conversations"
+                }
+            >
 
-                <div className="sidebar-section-title">
-                    Conversations
+                <div className="sidebar-conversations-header">
+                    <span className="sidebar-section-title">
+                        Conversations
+                    </span>
+
+                    <button
+                        type="button"
+                        className="sidebar-conversations-toggle"
+                        aria-expanded={conversationsOpen}
+                        aria-label="Toggle conversations"
+                        onClick={() => setConversationsOpen((open) => !open)}
+                    >
+                        {conversationsOpen ? "▲" : "▼"}
+                    </button>
                 </div>
 
                 <button
