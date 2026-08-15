@@ -23,19 +23,18 @@ const menuItems = [
     },
     {
         label: "Links",
-        path: "/links",
         icon: "∞",
+        soon: true as const,
     },
     {
         label: "PDFs",
-        path: "/pdfs",
         icon: "⌑",
-        badge: "Soon",
+        soon: true as const,
     },
     {
         label: "Settings",
-        path: "/settings",
         icon: "⚙",
+        soon: true as const,
     },
 ];
 
@@ -187,28 +186,44 @@ export default function Sidebar() {
             <nav className="sidebar-menu">
 
                 {menuItems.map((item) => (
-                    <NavLink
-                        key={item.label}
-                        data-icon={item.icon}
-                        to={item.path}
-                        end={item.end}
-                        className={({ isActive }) =>
-                            isActive
-                                ? "sidebar-link active"
-                                : "sidebar-link"
-                        }
-                    >
-                        <span>
-                            {item.label}
-                        </span>
 
-                        {item.badge && (
+                    item.soon ? (
+
+                        <div
+                            key={item.label}
+                            data-icon={item.icon}
+                            className="sidebar-link sidebar-link-disabled"
+                            aria-disabled="true"
+                            title="Coming soon"
+                        >
+                            <span>
+                                {item.label}
+                            </span>
+
                             <small>
-                                {item.badge}
+                                Soon
                             </small>
-                        )}
+                        </div>
 
-                    </NavLink>
+                    ) : (
+
+                        <NavLink
+                            key={item.label}
+                            data-icon={item.icon}
+                            to={item.path}
+                            end={item.end}
+                            className={({ isActive }) =>
+                                isActive
+                                    ? "sidebar-link active"
+                                    : "sidebar-link"
+                            }
+                        >
+                            <span>
+                                {item.label}
+                            </span>
+                        </NavLink>
+
+                    )
                 ))}
 
             </nav>
@@ -346,7 +361,7 @@ export default function Sidebar() {
 
             <footer className="sidebar-footer">
 
-                <button>
+                <button onClick={() => navigate("/documents")}>
                     ⬆ Upload
                 </button>
 

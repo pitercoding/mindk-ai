@@ -18,6 +18,8 @@ export default function Header() {
                     className="notification-button"
                     type="button"
                     aria-label="Notifications"
+                    title="Coming soon"
+                    disabled
                 >
                     🔔
                 </button>
@@ -27,6 +29,8 @@ export default function Header() {
                     className="profile-button"
                     type="button"
                     aria-label="Profile"
+                    title="Coming soon"
+                    disabled
                 >
                     👤
                 </button>

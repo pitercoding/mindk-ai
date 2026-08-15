@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
 
 import DashboardPage from "@/pages/DashboardPage";
 import NotesPage from "@/pages/NotesPage";
@@ -22,6 +22,10 @@ export const router = createBrowserRouter([
             {
                 path: "documents",
                 element: <DocumentsPage />,
+            },
+            {
+                path: "*",
+                element: <Navigate to="/" replace />,
             },
         ],
     },
