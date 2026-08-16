@@ -710,6 +710,7 @@ button {
 .message-pending {
     display: flex;
     align-items: center;
+    gap: 8px;
 }
 
 .message-thinking {
