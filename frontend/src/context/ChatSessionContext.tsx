@@ -3,6 +3,7 @@ import {
     useCallback,
     useContext,
     useEffect,
+    useRef,
     useState,
     type ReactNode,
 } from "react";
@@ -60,6 +61,11 @@ export function ChatSessionProvider({
     const [isSending, setIsSending] = useState(false);
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
+    // Bumped whenever the active conversation changes (session switch, new chat).
+    // In-flight requests started under a previous value are ignored on completion,
+    // so a slow response can't overwrite the messages of a session the user has since left.
+    const activeContextRef = useRef(0);
+
     const refreshSessions = useCallback(async () => {
 
         setIsLoadingSessions(true);
@@ -86,6 +92,9 @@ export function ChatSessionProvider({
 
     async function selectSession(id: number) {
 
+        const contextId = ++activeContextRef.current;
+
+        setIsSending(false);
         setCurrentSessionId(id);
         setMessages([]);
         setIsLoadingMessages(true);
@@ -93,6 +102,10 @@ export function ChatSessionProvider({
         try {
 
             const history = (await getMessagesBySession(id)) ?? [];
+
+            if (activeContextRef.current !== contextId) {
+                return;
+            }
 
             setMessages(
                 history.map(message => ({
@@ -104,15 +117,23 @@ export function ChatSessionProvider({
 
         } catch (error) {
 
+            if (activeContextRef.current !== contextId) {
+                return;
+            }
+
             console.error("Failed to load session messages:", error);
             setMessages([]);
 
         } finally {
-            setIsLoadingMessages(false);
+            if (activeContextRef.current === contextId) {
+                setIsLoadingMessages(false);
+            }
         }
     }
 
     function newChat() {
+        ++activeContextRef.current;
+        setIsSending(false);
         setCurrentSessionId(null);
         setMessages([]);
     }
@@ -121,6 +142,9 @@ export function ChatSessionProvider({
         text: string,
         options?: NewSessionOptions,
     ) {
+
+        const contextId = activeContextRef.current;
+        const sessionIdAtSend = currentSessionId;
 
         const userMessage: Message = {
             id: crypto.randomUUID(),
@@ -134,12 +158,16 @@ export function ChatSessionProvider({
         try {
 
             const response = await ask({
-                session_id: currentSessionId ?? 0,
+                session_id: sessionIdAtSend ?? 0,
                 message: text,
                 mode: options?.mode,
                 note_id: options?.noteId,
                 title: options?.title,
             });
+
+            if (activeContextRef.current !== contextId) {
+                return;
+            }
 
             setMessages(previous => [
                 ...previous,
@@ -151,12 +179,16 @@ export function ChatSessionProvider({
                 },
             ]);
 
-            if (currentSessionId === null) {
+            if (sessionIdAtSend === null) {
                 setCurrentSessionId(response.session_id);
                 await refreshSessions();
             }
 
         } catch (error) {
+
+            if (activeContextRef.current !== contextId) {
+                return;
+            }
 
             console.error("Failed to send chat message:", error);
 
@@ -171,7 +203,9 @@ export function ChatSessionProvider({
             ]);
 
         } finally {
-            setIsSending(false);
+            if (activeContextRef.current === contextId) {
+                setIsSending(false);
+            }
         }
     }
 
