@@ -1,3 +1,5 @@
+import { UserButton } from "@clerk/react";
+
 export default function Header() {
     return (
         <header className="app-header">
@@ -24,16 +26,13 @@ export default function Header() {
                     🔔
                 </button>
 
-
-                <button
-                    className="profile-button"
-                    type="button"
-                    aria-label="Profile"
-                    title="Coming soon"
-                    disabled
-                >
-                    👤
-                </button>
+                <UserButton
+                    appearance={{
+                        elements: {
+                            userButtonAvatarBox: "auth-user-avatar",
+                        },
+                    }}
+                />
 
             </div>
 

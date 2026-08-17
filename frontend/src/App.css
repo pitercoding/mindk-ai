@@ -1560,3 +1560,67 @@ button:focus-visible,
     color: var(--accent);
     font-weight: 700;
 }
+
+/*
+    Auth
+*/
+
+.auth-loading {
+    display: grid;
+    height: 100vh;
+    place-items: center;
+    color: var(--muted);
+    background: var(--bg);
+}
+
+.auth-page {
+    display: grid;
+    min-height: 100vh;
+    place-items: center;
+    padding: var(--space-7);
+    background:
+        radial-gradient(circle at 78% 18%, rgba(24, 88, 122, 0.16), transparent 28%),
+        linear-gradient(135deg, #121d2d 0%, #08101e 100%);
+}
+
+.auth-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: min(400px, 100%);
+}
+
+.auth-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: var(--space-7);
+}
+
+.auth-brand-mark {
+    width: 25px;
+    height: 25px;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 5px rgba(54, 229, 206, 0.08), 0 0 22px rgba(54, 229, 206, 0.28);
+}
+
+.auth-brand-name {
+    color: var(--text);
+    font-size: var(--text-xl);
+    font-weight: 700;
+}
+
+.auth-clerk-root {
+    width: 100%;
+}
+
+.auth-clerk-card {
+    width: 100%;
+    box-shadow: var(--shadow);
+}
+
+.auth-user-avatar {
+    width: 32px;
+    height: 32px;
+}

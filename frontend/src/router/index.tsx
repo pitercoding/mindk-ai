@@ -2,30 +2,42 @@ import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom"
 
 import DashboardPage from "@/pages/DashboardPage";
 import NotesPage from "@/pages/NotesPage";
+import AuthPage from "@/pages/AuthPage";
 
 import DashboardLayout from "@/layouts/DashboardLayout";
 import DocumentsPage from "@/pages/DocumentsPage";
 
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+
 export const router = createBrowserRouter([
     {
+        path: "/auth",
+        element: <AuthPage />,
+    },
+    {
         path: "/",
-        element: <DashboardLayout />,
+        element: <ProtectedRoute />,
         children: [
             {
-                index: true,
-                element: <DashboardPage />,
-            },
-            {
-                path: "notes",
-                element: <NotesPage />,
-            },
-            {
-                path: "documents",
-                element: <DocumentsPage />,
-            },
-            {
-                path: "*",
-                element: <Navigate to="/" replace />,
+                element: <DashboardLayout />,
+                children: [
+                    {
+                        index: true,
+                        element: <DashboardPage />,
+                    },
+                    {
+                        path: "notes",
+                        element: <NotesPage />,
+                    },
+                    {
+                        path: "documents",
+                        element: <DocumentsPage />,
+                    },
+                    {
+                        path: "*",
+                        element: <Navigate to="/" replace />,
+                    },
+                ],
             },
         ],
     },
