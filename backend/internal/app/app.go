@@ -2,10 +2,12 @@ package app
 
 import (
 	"database/sql"
+	"net/http"
 
 	"github.com/pitercoding/mindk-ai/backend/internal/config"
 	"github.com/pitercoding/mindk-ai/backend/internal/handlers"
 	"github.com/pitercoding/mindk-ai/backend/internal/llm"
+	"github.com/pitercoding/mindk-ai/backend/internal/middleware"
 	"github.com/pitercoding/mindk-ai/backend/internal/repository"
 	"github.com/pitercoding/mindk-ai/backend/internal/services"
 )
@@ -16,6 +18,7 @@ type App struct {
 	ChatMessageHandler *handlers.ChatMessageHandler
 	ChatSessionHandler *handlers.ChatSessionHandler
 	DocumentHandler    *handlers.DocumentHandler
+	AuthMiddleware     func(http.Handler) http.Handler
 }
 
 func New(
@@ -85,11 +88,15 @@ func New(
 	chatSessionHandler := handlers.NewChatSessionHandler(chatSessionService)
 	documentHandler := handlers.NewDocumentHandler(documentService)
 
+	// Middleware
+	authMiddleware := middleware.NewClerkAuth(cfg.ClerkSecretKey)
+
 	return &App{
 		NoteHandler:        noteHandler,
 		ChatHandler:        chatHandler,
 		ChatMessageHandler: chatMessageHandler,
 		ChatSessionHandler: chatSessionHandler,
 		DocumentHandler:    documentHandler,
+		AuthMiddleware:     authMiddleware,
 	}
 }

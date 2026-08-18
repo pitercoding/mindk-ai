@@ -8,7 +8,8 @@ import (
 )
 
 type Config struct {
-	OpenAIAPIKey string
+	OpenAIAPIKey   string
+	ClerkSecretKey string
 }
 
 func Load() *Config {
@@ -18,11 +19,16 @@ func Load() *Config {
 	}
 
 	cfg := &Config{
-		OpenAIAPIKey: os.Getenv("OPENAI_API_KEY"),
+		OpenAIAPIKey:   os.Getenv("OPENAI_API_KEY"),
+		ClerkSecretKey: os.Getenv("CLERK_SECRET_KEY"),
 	}
 
 	if cfg.OpenAIAPIKey == "" {
 		log.Fatal("OPENAI_API_KEY is not set")
+	}
+
+	if cfg.ClerkSecretKey == "" {
+		log.Fatal("CLERK_SECRET_KEY is not set")
 	}
 
 	return cfg
