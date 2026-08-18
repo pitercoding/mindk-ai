@@ -9,21 +9,24 @@ import (
 
 func RegisterRoutes(app *app.App) {
 
-	// Routes
+	protected := app.AuthMiddleware
+
+	// Public routes
 	http.HandleFunc("/health", handlers.HealthHandler)
 
-	http.HandleFunc("/notes", app.NoteHandler.HandleNotes)
-	http.HandleFunc("/notes/", app.NoteHandler.HandleNote)
+	// Protected routes
+	http.Handle("/notes", protected(http.HandlerFunc(app.NoteHandler.HandleNotes)))
+	http.Handle("/notes/", protected(http.HandlerFunc(app.NoteHandler.HandleNote)))
 
-	http.HandleFunc("/chat", app.ChatHandler.Ask)
+	http.Handle("/chat", protected(http.HandlerFunc(app.ChatHandler.Ask)))
 
-	http.HandleFunc("/chat/messages/", app.ChatMessageHandler.HandleMessages)
+	http.Handle("/chat/messages/", protected(http.HandlerFunc(app.ChatMessageHandler.HandleMessages)))
 
-	http.HandleFunc("/documents", app.DocumentHandler.HandleDocuments)
-	http.HandleFunc("/documents/upload", app.DocumentHandler.UploadDocument)
-	http.HandleFunc("/documents/search", app.DocumentHandler.SearchDocuments)
-	http.HandleFunc("/documents/", app.DocumentHandler.HandleDocument)
+	http.Handle("/documents", protected(http.HandlerFunc(app.DocumentHandler.HandleDocuments)))
+	http.Handle("/documents/upload", protected(http.HandlerFunc(app.DocumentHandler.UploadDocument)))
+	http.Handle("/documents/search", protected(http.HandlerFunc(app.DocumentHandler.SearchDocuments)))
+	http.Handle("/documents/", protected(http.HandlerFunc(app.DocumentHandler.HandleDocument)))
 
-	http.HandleFunc("/chat/sessions", app.ChatSessionHandler.HandleSessions)
-	http.HandleFunc("/chat/sessions/", app.ChatSessionHandler.HandleSession)
+	http.Handle("/chat/sessions", protected(http.HandlerFunc(app.ChatSessionHandler.HandleSessions)))
+	http.Handle("/chat/sessions/", protected(http.HandlerFunc(app.ChatSessionHandler.HandleSession)))
 }

@@ -48,6 +48,7 @@ func main() {
 		},
 		AllowedHeaders: []string{
 			"Content-Type",
+			"Authorization",
 		},
 	}).Handler(http.DefaultServeMux)
 
