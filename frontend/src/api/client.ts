@@ -1,3 +1,5 @@
+import { getToken } from "@clerk/react";
+
 const API_URL =
   import.meta.env.VITE_API_URL ??
   "http://localhost:8080";
@@ -7,13 +9,17 @@ export async function apiClient<T>(
   options?: RequestInit,
 ): Promise<T> {
 
+  const token = await getToken();
+
   const response = await fetch(
     `${API_URL}${endpoint}`,
     {
+      ...options,
       headers: {
         "Content-Type": "application/json",
+        ...options?.headers,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      ...options,
     },
   );
 

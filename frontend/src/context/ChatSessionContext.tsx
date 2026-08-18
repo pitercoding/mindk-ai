@@ -7,6 +7,7 @@ import {
     useState,
     type ReactNode,
 } from "react";
+import { useAuth } from "@clerk/react";
 
 import { ask } from "@/services/chatService";
 import { getMessagesBySession } from "@/services/chatMessageService";
@@ -53,6 +54,8 @@ export function ChatSessionProvider({
     children,
 }: ChatSessionProviderProps) {
 
+    const { isLoaded, isSignedIn } = useAuth();
+
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [isLoadingSessions, setIsLoadingSessions] = useState(true);
     const [sessionsError, setSessionsError] = useState<string | null>(null);
@@ -84,8 +87,11 @@ export function ChatSessionProvider({
     }, []);
 
     useEffect(() => {
+        if (!isLoaded || !isSignedIn) {
+            return;
+        }
         refreshSessions();
-    }, [refreshSessions]);
+    }, [isLoaded, isSignedIn, refreshSessions]);
 
     const currentSession =
         sessions.find(session => session.id === currentSessionId) ?? null;
