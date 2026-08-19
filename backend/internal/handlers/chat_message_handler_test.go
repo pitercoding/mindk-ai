@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
+	"github.com/pitercoding/mindk-ai/backend/internal/repository"
 	"github.com/pitercoding/mindk-ai/backend/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,6 +37,7 @@ func TestChatMessageHandlerSave(t *testing.T) {
 		"Content-Type",
 		"application/json",
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -102,6 +104,89 @@ func TestChatMessageHandlerSave(t *testing.T) {
 
 }
 
+func TestChatMessageHandlerSave_SessionNotOwned(t *testing.T) {
+	service := &mocks.FakeChatMessageService{
+		Err: repository.ErrChatSessionNotFound,
+	}
+
+	handler := NewChatMessageHandler(service)
+
+	body := `{
+	"session_id": 1,
+	"role": "user",
+	"content": "What is Go?"
+}`
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/chat/messages/1",
+		strings.NewReader(body),
+	)
+
+	req.Header.Set(
+		"Content-Type",
+		"application/json",
+	)
+	req = withUserID(req, testUserID)
+
+	recorder := httptest.NewRecorder()
+
+	handler.Save(
+		recorder,
+		req,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		recorder.Code,
+	)
+
+	assert.Contains(
+		t,
+		recorder.Body.String(),
+		"session not found",
+	)
+}
+
+func TestChatMessageHandlerSave_Unauthorized(t *testing.T) {
+	service := &mocks.FakeChatMessageService{}
+
+	handler := NewChatMessageHandler(service)
+
+	body := `{
+	"session_id": 1,
+	"role": "user",
+	"content": "What is Go?"
+}`
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/chat/messages/1",
+		strings.NewReader(body),
+	)
+
+	req.Header.Set(
+		"Content-Type",
+		"application/json",
+	)
+
+	recorder := httptest.NewRecorder()
+
+	handler.Save(
+		recorder,
+		req,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		recorder.Code,
+	)
+
+	assert.Empty(t, service.Saved)
+}
+
 func TestChatMessageHandlerSave_InvalidJSON(t *testing.T) {
 	service := &mocks.FakeChatMessageService{}
 
@@ -123,6 +208,7 @@ func TestChatMessageHandlerSave_InvalidJSON(t *testing.T) {
 		"Content-Type",
 		"application/json",
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -172,6 +258,7 @@ func TestChatMessageHandlerSave_EmptyContent(t *testing.T) {
 		"Content-Type",
 		"application/json",
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -223,6 +310,7 @@ func TestChatMessageHandlerSave_ServiceError(t *testing.T) {
 		"Content-Type",
 		"application/json",
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -278,6 +366,7 @@ func TestChatMessageHandlerGetBySessionID(t *testing.T) {
 		"/chat/messages/10",
 		nil,
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -356,6 +445,65 @@ func TestChatMessageHandlerGetBySessionID(t *testing.T) {
 
 }
 
+func TestChatMessageHandlerGetBySessionID_SessionNotOwned(t *testing.T) {
+	service := &mocks.FakeChatMessageService{
+		Err: repository.ErrChatSessionNotFound,
+	}
+
+	handler := NewChatMessageHandler(service)
+
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/chat/messages/10",
+		nil,
+	)
+	req = withUserID(req, testUserID)
+
+	recorder := httptest.NewRecorder()
+
+	handler.GetBySessionID(
+		recorder,
+		req,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		recorder.Code,
+	)
+
+	assert.Contains(
+		t,
+		recorder.Body.String(),
+		"session not found",
+	)
+}
+
+func TestChatMessageHandlerGetBySessionID_Unauthorized(t *testing.T) {
+	service := &mocks.FakeChatMessageService{}
+
+	handler := NewChatMessageHandler(service)
+
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/chat/messages/10",
+		nil,
+	)
+
+	recorder := httptest.NewRecorder()
+
+	handler.GetBySessionID(
+		recorder,
+		req,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		recorder.Code,
+	)
+}
+
 func TestChatMessageHandlerGetBySessionID_InvalidID(t *testing.T) {
 	service := &mocks.FakeChatMessageService{}
 
@@ -366,6 +514,7 @@ func TestChatMessageHandlerGetBySessionID_InvalidID(t *testing.T) {
 		"/chat/messages/invalid",
 		nil,
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -406,6 +555,7 @@ func TestChatMessageHandlerGetBySessionID_ServiceError(t *testing.T) {
 		"/chat/messages/10",
 		nil,
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 

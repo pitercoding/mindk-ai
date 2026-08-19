@@ -9,24 +9,25 @@ import (
 )
 
 type NoteProvider interface {
-	GetAll() ([]models.Note, error)
-	GetByID(id int) (*models.Note, error)
+	GetAll(userID string) ([]models.Note, error)
+	GetByID(id int, userID string) (*models.Note, error)
 }
 
 type ChatSessionProvider interface {
-	GetByID(id int) (*models.ChatSession, error)
+	GetByID(id int, userID string) (*models.ChatSession, error)
 	Create(session *models.ChatSession) error
 }
 
 type ChatMessageProvider interface {
-	Save(message *models.ChatMessage) error
-	GetBySessionID(sessionID int) ([]models.ChatMessage, error)
+	Save(message *models.ChatMessage, userID string) error
+	GetBySessionID(sessionID int, userID string) ([]models.ChatMessage, error)
 }
 
 type DocumentContextProvider interface {
 	BuildContext(
 		query string,
 		limit int,
+		userID string,
 	) (string, []models.ChatSource, error)
 }
 
@@ -68,6 +69,7 @@ func NewChatService(
 
 // Ask resolves (or creates) the chat session, persists the user's message, builds the prompt from notes/documents/history and returns the assistant's answer together with the session it belongs to.
 func (s *ChatService) Ask(
+	userID string,
 	sessionID int,
 	message string,
 	mode string,
@@ -76,6 +78,7 @@ func (s *ChatService) Ask(
 ) (string, int, []models.ChatSource, error) {
 
 	session, err := s.resolveSession(
+		userID,
 		sessionID,
 		mode,
 		noteID,
@@ -89,6 +92,7 @@ func (s *ChatService) Ask(
 	// History must be fetched before saving the current message, otherwise the question would be duplicated in the prompt (once as history, once as the question itself).
 	history, err := s.chatMessageService.GetBySessionID(
 		session.ID,
+		userID,
 	)
 
 	if err != nil {
@@ -102,6 +106,7 @@ func (s *ChatService) Ask(
 			Role:      "user",
 			Content:   message,
 		},
+		userID,
 	)
 
 	if err != nil {
@@ -114,7 +119,7 @@ func (s *ChatService) Ask(
 
 	case "knowledge":
 
-		notes, err = s.noteService.GetAll()
+		notes, err = s.noteService.GetAll(userID)
 
 		if err != nil {
 			return "", 0, nil, err
@@ -130,6 +135,7 @@ func (s *ChatService) Ask(
 
 		note, err := s.noteService.GetByID(
 			*session.NoteID,
+			userID,
 		)
 
 		if err != nil {
@@ -161,6 +167,7 @@ func (s *ChatService) Ask(
 			s.documentContext.BuildContext(
 				message,
 				5,
+				userID,
 			)
 
 		if err != nil {
@@ -187,6 +194,7 @@ func (s *ChatService) Ask(
 			Role:      "assistant",
 			Content:   answer,
 		},
+		userID,
 	)
 
 	if err != nil {
@@ -198,6 +206,7 @@ func (s *ChatService) Ask(
 
 // resolveSession looks up an existing session, or creates a new one when sessionID is not provided (0). Auto-creation requires a mode, since a chat session cannot be built without knowing how to answer questions.
 func (s *ChatService) resolveSession(
+	userID string,
 	sessionID int,
 	mode string,
 	noteID *int,
@@ -208,6 +217,7 @@ func (s *ChatService) resolveSession(
 
 		session, err := s.chatSessionService.GetByID(
 			sessionID,
+			userID,
 		)
 
 		if err != nil {
@@ -228,6 +238,7 @@ func (s *ChatService) resolveSession(
 	}
 
 	session := &models.ChatSession{
+		UserID: userID,
 		Title:  sessionTitle(title),
 		Mode:   mode,
 		NoteID: noteID,

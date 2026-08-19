@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/pitercoding/mindk-ai/backend/internal/auth"
 	"github.com/pitercoding/mindk-ai/backend/internal/httputil"
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
 	"github.com/pitercoding/mindk-ai/backend/internal/repository"
@@ -12,10 +13,10 @@ import (
 
 type ChatSessionService interface {
 	Create(session *models.ChatSession) error
-	GetAll() ([]models.ChatSession, error)
-	GetByID(id int) (*models.ChatSession, error)
+	GetAll(userID string) ([]models.ChatSession, error)
+	GetByID(id int, userID string) (*models.ChatSession, error)
 	Update(session *models.ChatSession) error
-	Delete(id int) error
+	Delete(id int, userID string) error
 }
 
 type ChatSessionHandler struct {
@@ -83,6 +84,12 @@ func (h *ChatSessionHandler) CreateSession(
 	r *http.Request,
 ) {
 
+	userID, ok := auth.UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	var session models.ChatSession
 
 	err := json.NewDecoder(
@@ -108,6 +115,9 @@ func (h *ChatSessionHandler) CreateSession(
 
 		return
 	}
+
+	// The owner is always the authenticated user, never the request body
+	session.UserID = userID
 
 	err = h.Service.Create(&session)
 
@@ -139,7 +149,13 @@ func (h *ChatSessionHandler) GetAllSessions(
 	r *http.Request,
 ) {
 
-	sessions, err := h.Service.GetAll()
+	userID, ok := auth.UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	sessions, err := h.Service.GetAll(userID)
 
 	if err != nil {
 
@@ -165,6 +181,12 @@ func (h *ChatSessionHandler) GetSessionByID(
 	r *http.Request,
 ) {
 
+	userID, ok := auth.UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	id, err := httputil.GetIDFromPath(r)
 
 	if err != nil {
@@ -178,7 +200,7 @@ func (h *ChatSessionHandler) GetSessionByID(
 		return
 	}
 
-	session, err := h.Service.GetByID(id)
+	session, err := h.Service.GetByID(id, userID)
 
 	if err != nil {
 
@@ -217,6 +239,12 @@ func (h *ChatSessionHandler) UpdateSession(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
+
+	userID, ok := auth.UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	id, err := httputil.GetIDFromPath(r)
 
@@ -260,6 +288,7 @@ func (h *ChatSessionHandler) UpdateSession(
 	}
 
 	session.ID = id
+	session.UserID = userID
 
 	err = h.Service.Update(&session)
 
@@ -301,6 +330,12 @@ func (h *ChatSessionHandler) DeleteSession(
 	r *http.Request,
 ) {
 
+	userID, ok := auth.UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	id, err := httputil.GetIDFromPath(r)
 
 	if err != nil {
@@ -314,7 +349,7 @@ func (h *ChatSessionHandler) DeleteSession(
 		return
 	}
 
-	err = h.Service.Delete(id)
+	err = h.Service.Delete(id, userID)
 
 	if err != nil {
 

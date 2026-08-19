@@ -324,6 +324,7 @@ func TestChatServiceAsk(t *testing.T) {
 			)
 
 			answer, sessionID, sources, err := service.Ask(
+				"user_1",
 				tt.sessionID,
 				tt.message,
 				tt.mode,

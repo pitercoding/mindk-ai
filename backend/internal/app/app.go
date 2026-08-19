@@ -43,6 +43,7 @@ func New(
 
 	chatMessageService := services.NewChatMessageService(
 		chatMessageRepo,
+		chatSessionRepo,
 	)
 
 	chatSessionService := services.NewChatSessionService(

@@ -2,15 +2,18 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/pitercoding/mindk-ai/backend/internal/auth"
 	"github.com/pitercoding/mindk-ai/backend/internal/httputil"
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
+	"github.com/pitercoding/mindk-ai/backend/internal/repository"
 )
 
 type ChatMessageService interface {
-	Save(message *models.ChatMessage) error
-	GetBySessionID(sessionID int) ([]models.ChatMessage, error)
+	Save(message *models.ChatMessage, userID string) error
+	GetBySessionID(sessionID int, userID string) ([]models.ChatMessage, error)
 }
 
 type ChatMessageHandler struct {
@@ -30,6 +33,12 @@ func (h *ChatMessageHandler) Save(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
+
+	userID, ok := auth.UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	var message models.ChatMessage
 
@@ -57,9 +66,23 @@ func (h *ChatMessageHandler) Save(
 		return
 	}
 
-	err = h.Service.Save(&message)
+	err = h.Service.Save(&message, userID)
 
 	if err != nil {
+
+		if errors.Is(
+			err,
+			repository.ErrChatSessionNotFound,
+		) {
+
+			http.Error(
+				w,
+				"session not found",
+				http.StatusNotFound,
+			)
+
+			return
+		}
 
 		http.Error(
 			w,
@@ -85,6 +108,12 @@ func (h *ChatMessageHandler) GetBySessionID(
 	r *http.Request,
 ) {
 
+	userID, ok := auth.UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	sessionID, err := httputil.GetIDFromPath(r)
 
 	if err != nil {
@@ -98,9 +127,23 @@ func (h *ChatMessageHandler) GetBySessionID(
 		return
 	}
 
-	messages, err := h.Service.GetBySessionID(sessionID)
+	messages, err := h.Service.GetBySessionID(sessionID, userID)
 
 	if err != nil {
+
+		if errors.Is(
+			err,
+			repository.ErrChatSessionNotFound,
+		) {
+
+			http.Error(
+				w,
+				"session not found",
+				http.StatusNotFound,
+			)
+
+			return
+		}
 
 		http.Error(
 			w,

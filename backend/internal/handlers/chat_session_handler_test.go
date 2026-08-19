@@ -41,6 +41,7 @@ func TestChatSessionHandlerCreateSession(t *testing.T) {
 		"Content-Type",
 		"application/json",
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -94,6 +95,85 @@ func TestChatSessionHandlerCreateSession(t *testing.T) {
 	)
 }
 
+func TestChatSessionHandlerCreateSession_IgnoresBodyUserID(t *testing.T) {
+	service := &mocks.FakeChatSessionService{
+		Session: &models.ChatSession{ID: 1},
+	}
+
+	handler := NewChatSessionHandler(service)
+
+	body := `{
+		"user_id": "someone_else",
+		"title": "Docker",
+		"mode": "knowledge"
+	}`
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/chat/sessions",
+		strings.NewReader(body),
+	)
+
+	req.Header.Set(
+		"Content-Type",
+		"application/json",
+	)
+	req = withUserID(req, testUserID)
+
+	recorder := httptest.NewRecorder()
+
+	handler.HandleSessions(
+		recorder,
+		req,
+	)
+
+	require.Equal(
+		t,
+		http.StatusCreated,
+		recorder.Code,
+	)
+
+	require.Len(t, service.Created, 1)
+	assert.Equal(t, testUserID, service.Created[0].UserID)
+}
+
+func TestChatSessionHandlerCreateSession_Unauthorized(t *testing.T) {
+	service := &mocks.FakeChatSessionService{}
+
+	handler := NewChatSessionHandler(service)
+
+	body := `{
+		"title": "Docker",
+		"mode": "knowledge"
+	}`
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/chat/sessions",
+		strings.NewReader(body),
+	)
+
+	req.Header.Set(
+		"Content-Type",
+		"application/json",
+	)
+
+	recorder := httptest.NewRecorder()
+
+	handler.HandleSessions(
+		recorder,
+		req,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		recorder.Code,
+	)
+
+	assert.Empty(t, service.Created)
+}
+
 func TestChatSessionHandlerCreateSessionInvalidJSON(t *testing.T) {
 	service := &mocks.FakeChatSessionService{}
 
@@ -109,6 +189,7 @@ func TestChatSessionHandlerCreateSessionInvalidJSON(t *testing.T) {
 		"/chat/sessions",
 		strings.NewReader(body),
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -149,6 +230,7 @@ func TestChatSessionHandlerCreateSessionMissingFields(t *testing.T) {
 		"/chat/sessions",
 		strings.NewReader(body),
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -192,6 +274,7 @@ func TestChatSessionHandlerCreateSessionServiceError(t *testing.T) {
 		"/chat/sessions",
 		strings.NewReader(body),
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -242,6 +325,7 @@ func TestChatSessionHandlerGetAllSessions(t *testing.T) {
 		"/chat/sessions",
 		nil,
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -295,6 +379,7 @@ func TestChatSessionHandlerGetAllSessionsServiceError(t *testing.T) {
 		"/chat/sessions",
 		nil,
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -316,6 +401,31 @@ func TestChatSessionHandlerGetAllSessionsServiceError(t *testing.T) {
 	)
 }
 
+func TestChatSessionHandlerGetAllSessions_Unauthorized(t *testing.T) {
+	service := &mocks.FakeChatSessionService{}
+
+	handler := NewChatSessionHandler(service)
+
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/chat/sessions",
+		nil,
+	)
+
+	recorder := httptest.NewRecorder()
+
+	handler.HandleSessions(
+		recorder,
+		req,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		recorder.Code,
+	)
+}
+
 func TestChatSessionHandlerGetSessionByID(t *testing.T) {
 	service := &mocks.FakeChatSessionService{
 		Session: &models.ChatSession{
@@ -332,6 +442,7 @@ func TestChatSessionHandlerGetSessionByID(t *testing.T) {
 		"/chat/sessions/5",
 		nil,
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -385,6 +496,7 @@ func TestChatSessionHandlerGetSessionByIDNotFound(t *testing.T) {
 		"/chat/sessions/999",
 		nil,
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -416,6 +528,7 @@ func TestChatSessionHandlerGetSessionByIDInvalidID(t *testing.T) {
 		"/chat/sessions/abc",
 		nil,
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -437,6 +550,31 @@ func TestChatSessionHandlerGetSessionByIDInvalidID(t *testing.T) {
 	)
 }
 
+func TestChatSessionHandlerGetSessionByID_Unauthorized(t *testing.T) {
+	service := &mocks.FakeChatSessionService{}
+
+	handler := NewChatSessionHandler(service)
+
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/chat/sessions/5",
+		nil,
+	)
+
+	recorder := httptest.NewRecorder()
+
+	handler.HandleSession(
+		recorder,
+		req,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		recorder.Code,
+	)
+}
+
 func TestChatSessionHandlerUpdateSession(t *testing.T) {
 	service := &mocks.FakeChatSessionService{}
 
@@ -452,6 +590,7 @@ func TestChatSessionHandlerUpdateSession(t *testing.T) {
 		"/chat/sessions/10",
 		strings.NewReader(body),
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -505,6 +644,68 @@ func TestChatSessionHandlerUpdateSession(t *testing.T) {
 	)
 }
 
+func TestChatSessionHandlerUpdateSession_IgnoresBodyUserID(t *testing.T) {
+	service := &mocks.FakeChatSessionService{}
+
+	handler := NewChatSessionHandler(service)
+
+	body := `{
+		"user_id": "someone_else",
+		"title": "Updated title",
+		"mode": "knowledge"
+	}`
+
+	req := httptest.NewRequest(
+		http.MethodPut,
+		"/chat/sessions/10",
+		strings.NewReader(body),
+	)
+	req = withUserID(req, testUserID)
+
+	recorder := httptest.NewRecorder()
+
+	handler.HandleSession(
+		recorder,
+		req,
+	)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+	require.Len(t, service.Updated, 1)
+	assert.Equal(t, testUserID, service.Updated[0].UserID)
+}
+
+func TestChatSessionHandlerUpdateSession_Unauthorized(t *testing.T) {
+	service := &mocks.FakeChatSessionService{}
+
+	handler := NewChatSessionHandler(service)
+
+	body := `{
+		"title": "Updated title",
+		"mode": "knowledge"
+	}`
+
+	req := httptest.NewRequest(
+		http.MethodPut,
+		"/chat/sessions/10",
+		strings.NewReader(body),
+	)
+
+	recorder := httptest.NewRecorder()
+
+	handler.HandleSession(
+		recorder,
+		req,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		recorder.Code,
+	)
+
+	assert.Empty(t, service.Updated)
+}
+
 func TestChatSessionHandlerUpdateSessionInvalidID(t *testing.T) {
 	service := &mocks.FakeChatSessionService{}
 
@@ -520,6 +721,7 @@ func TestChatSessionHandlerUpdateSessionInvalidID(t *testing.T) {
 		"/chat/sessions/abc",
 		strings.NewReader(body),
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -555,6 +757,7 @@ func TestChatSessionHandlerUpdateSessionInvalidJSON(t *testing.T) {
 		"/chat/sessions/10",
 		strings.NewReader(body),
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -589,6 +792,7 @@ func TestChatSessionHandlerUpdateSessionMissingFields(t *testing.T) {
 		"/chat/sessions/10",
 		strings.NewReader(body),
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -626,6 +830,7 @@ func TestChatSessionHandlerUpdateSessionNotFound(t *testing.T) {
 		"/chat/sessions/10",
 		strings.NewReader(body),
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -657,6 +862,7 @@ func TestChatSessionHandlerDeleteSession(t *testing.T) {
 		"/chat/sessions/10",
 		nil,
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -684,6 +890,33 @@ func TestChatSessionHandlerDeleteSession(t *testing.T) {
 	)
 }
 
+func TestChatSessionHandlerDeleteSession_Unauthorized(t *testing.T) {
+	service := &mocks.FakeChatSessionService{}
+
+	handler := NewChatSessionHandler(service)
+
+	req := httptest.NewRequest(
+		http.MethodDelete,
+		"/chat/sessions/10",
+		nil,
+	)
+
+	recorder := httptest.NewRecorder()
+
+	handler.HandleSession(
+		recorder,
+		req,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		recorder.Code,
+	)
+
+	assert.Empty(t, service.Deleted)
+}
+
 func TestChatSessionHandlerDeleteSessionInvalidID(t *testing.T) {
 	service := &mocks.FakeChatSessionService{}
 
@@ -694,6 +927,7 @@ func TestChatSessionHandlerDeleteSessionInvalidID(t *testing.T) {
 		"/chat/sessions/abc",
 		nil,
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -726,6 +960,7 @@ func TestChatSessionHandlerDeleteSessionNotFound(t *testing.T) {
 		"/chat/sessions/10",
 		nil,
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -759,6 +994,7 @@ func TestChatSessionHandlerDeleteSessionServiceError(t *testing.T) {
 		"/chat/sessions/10",
 		nil,
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 

@@ -9,6 +9,10 @@ type FakeChatSessionService struct {
 	Updated  []models.ChatSession
 	Deleted  []int
 	Err      error
+
+	GetAllUserID  string
+	GetByIDUserID string
+	DeleteUserID  string
 }
 
 func (f *FakeChatSessionService) Create(
@@ -31,10 +35,12 @@ func (f *FakeChatSessionService) Create(
 	return nil
 }
 
-func (f *FakeChatSessionService) GetAll() (
+func (f *FakeChatSessionService) GetAll(userID string) (
 	[]models.ChatSession,
 	error,
 ) {
+
+	f.GetAllUserID = userID
 
 	if f.Err != nil {
 		return nil, f.Err
@@ -45,7 +51,10 @@ func (f *FakeChatSessionService) GetAll() (
 
 func (f *FakeChatSessionService) GetByID(
 	id int,
+	userID string,
 ) (*models.ChatSession, error) {
+
+	f.GetByIDUserID = userID
 
 	if f.Err != nil {
 		return nil, f.Err
@@ -76,12 +85,15 @@ func (f *FakeChatSessionService) Update(
 
 func (f *FakeChatSessionService) Delete(
 	id int,
+	userID string,
 ) error {
 
 	f.Deleted = append(
 		f.Deleted,
 		id,
 	)
+
+	f.DeleteUserID = userID
 
 	return f.Err
 }

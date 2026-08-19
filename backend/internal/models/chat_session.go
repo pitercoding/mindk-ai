@@ -5,6 +5,8 @@ import "time"
 type ChatSession struct {
 	ID int `json:"id"`
 
+	UserID string `json:"user_id"`
+
 	// Session title shown in the sidebar.
 	Title string `json:"title"`
 
