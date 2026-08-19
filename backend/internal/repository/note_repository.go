@@ -17,13 +17,14 @@ func NewNoteRepository(db *sql.DB) *NoteRepository {
 
 func (r *NoteRepository) Create(note *models.Note) error {
 	query := `
-		INSERT INTO notes (title, content, created_at, updated_at)
-		VALUES (?, ?, ?, ?)
+		INSERT INTO notes (user_id, title, content, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?)
 	`
 
 	now := time.Now()
 
 	result, err := r.DB.Exec(query,
+		note.UserID,
 		note.Title,
 		note.Content,
 		now,
@@ -46,19 +47,21 @@ func (r *NoteRepository) Create(note *models.Note) error {
 	return nil
 }
 
-func (r *NoteRepository) GetAll() ([]models.Note, error) {
+func (r *NoteRepository) GetAll(userID string) ([]models.Note, error) {
 	query := `
 		SELECT
 			id,
+			user_id,
 			title,
 			content,
 			created_at,
 			updated_at
 		FROM notes
+		WHERE user_id = ?
 		ORDER BY created_at DESC
 	`
 
-	rows, err := r.DB.Query(query)
+	rows, err := r.DB.Query(query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +74,7 @@ func (r *NoteRepository) GetAll() ([]models.Note, error) {
 
 		err := rows.Scan(
 			&note.ID,
+			&note.UserID,
 			&note.Title,
 			&note.Content,
 			&note.CreatedAt,
@@ -90,22 +94,24 @@ func (r *NoteRepository) GetAll() ([]models.Note, error) {
 	return notes, nil
 }
 
-func (r *NoteRepository) GetByID(id int) (*models.Note, error) {
+func (r *NoteRepository) GetByID(id int, userID string) (*models.Note, error) {
 	query := `
 		SELECT
 			id,
+			user_id,
 			title,
 			content,
 			created_at,
 			updated_at
 		FROM notes
-		WHERE id = ?
+		WHERE id = ? AND user_id = ?
 	`
 
 	var note models.Note
 
-	err := r.DB.QueryRow(query, id).Scan(
+	err := r.DB.QueryRow(query, id, userID).Scan(
 		&note.ID,
+		&note.UserID,
 		&note.Title,
 		&note.Content,
 		&note.CreatedAt,
@@ -123,19 +129,45 @@ func (r *NoteRepository) Update(note *models.Note) error {
 	query := `
 		UPDATE notes
 		SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP
-		WHERE id = ?
+		WHERE id = ? AND user_id = ?
 	`
 
-	_, err := r.DB.Exec(query, note.Title, note.Content, note.ID)
-	return err
+	result, err := r.DB.Exec(query, note.Title, note.Content, note.ID, note.UserID)
+	if err != nil {
+		return err
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
 }
 
-func (r *NoteRepository) Delete(id int) error {
+func (r *NoteRepository) Delete(id int, userID string) error {
 	query := `
 		DELETE FROM notes
-		WHERE id = ?
+		WHERE id = ? AND user_id = ?
 	`
 
-	_, err := r.DB.Exec(query, id)
-	return err
+	result, err := r.DB.Exec(query, id, userID)
+	if err != nil {
+		return err
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
 }

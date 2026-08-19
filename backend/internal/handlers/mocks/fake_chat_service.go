@@ -8,6 +8,7 @@ type FakeChatService struct {
 	Sources         []models.ChatSource
 	Err             error
 
+	LastUserID    string
 	LastSessionID int
 	LastMessage   string
 	LastMode      string
@@ -18,6 +19,7 @@ type FakeChatService struct {
 }
 
 func (f *FakeChatService) Ask(
+	userID string,
 	sessionID int,
 	message string,
 	mode string,
@@ -27,6 +29,7 @@ func (f *FakeChatService) Ask(
 
 	f.Called = true
 
+	f.LastUserID = userID
 	f.LastSessionID = sessionID
 	f.LastMessage = message
 	f.LastMode = mode

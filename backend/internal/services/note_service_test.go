@@ -73,7 +73,9 @@ func TestNoteServiceGetAll(t *testing.T) {
 
 			service := NewNoteService(repo)
 
-			notes, err := service.GetAll()
+			notes, err := service.GetAll("user_1")
+
+			assert.Equal(t, "user_1", repo.GetAllUserID)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -126,7 +128,9 @@ func TestNoteServiceGetByID(t *testing.T) {
 
 			service := NewNoteService(repo)
 
-			note, err := service.GetByID(tt.expectedID)
+			note, err := service.GetByID(tt.expectedID, "user_1")
+
+			assert.Equal(t, "user_1", repo.GetByIDUserID)
 
 			if tt.expectedErr {
 				assert.Error(t, err)
@@ -277,7 +281,9 @@ func TestNoteServiceDelete(t *testing.T) {
 
 			service := NewNoteService(repo)
 
-			err := service.Delete(tt.id)
+			err := service.Delete(tt.id, "user_1")
+
+			assert.Equal(t, "user_1", repo.DeleteUserID)
 
 			if tt.expectedErr {
 				assert.Error(t, err)

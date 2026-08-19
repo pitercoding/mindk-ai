@@ -9,13 +9,19 @@ type FakeNoteRepository struct {
 	CreatedNote *models.Note
 	UpdatedNote *models.Note
 	DeletedID   int
+
+	GetAllUserID  string
+	GetByIDUserID string
+	DeleteUserID  string
 }
 
-func (r *FakeNoteRepository) GetAll() ([]models.Note, error) {
+func (r *FakeNoteRepository) GetAll(userID string) ([]models.Note, error) {
+	r.GetAllUserID = userID
 	return r.Notes, r.Err
 }
 
-func (r *FakeNoteRepository) GetByID(id int) (*models.Note, error) {
+func (r *FakeNoteRepository) GetByID(id int, userID string) (*models.Note, error) {
+	r.GetByIDUserID = userID
 	return r.Note, r.Err
 }
 
@@ -29,7 +35,8 @@ func (r *FakeNoteRepository) Update(note *models.Note) error {
 	return r.Err
 }
 
-func (r *FakeNoteRepository) Delete(id int) error {
+func (r *FakeNoteRepository) Delete(id int, userID string) error {
 	r.DeletedID = id
+	r.DeleteUserID = userID
 	return r.Err
 }

@@ -38,6 +38,7 @@ func TestChatHandlerAsk(t *testing.T) {
 		"Content-Type",
 		"application/json",
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -115,6 +116,7 @@ func TestChatHandlerAsk_AutoCreatesSession(t *testing.T) {
 		"Content-Type",
 		"application/json",
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -182,6 +184,7 @@ func TestChatHandlerAsk_InvalidJSON(t *testing.T) {
 		"Content-Type",
 		"application/json",
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -229,6 +232,7 @@ func TestChatHandlerAsk_EmptyMessage(t *testing.T) {
 		"Content-Type",
 		"application/json",
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -277,6 +281,7 @@ func TestChatHandlerAsk_ServiceError(t *testing.T) {
 		"Content-Type",
 		"application/json",
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -338,6 +343,7 @@ func TestChatHandlerAsk_SessionNotFound(t *testing.T) {
 		"Content-Type",
 		"application/json",
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 
@@ -356,6 +362,46 @@ func TestChatHandlerAsk_SessionNotFound(t *testing.T) {
 		t,
 		recorder.Body.String(),
 		"session not found",
+	)
+}
+
+func TestChatHandlerAsk_Unauthorized(t *testing.T) {
+	service := &mocks.FakeChatService{}
+
+	handler := NewChatHandler(service)
+
+	body := `{
+	"session_id": 1,
+	"message": "Hello"
+}`
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/chat",
+		strings.NewReader(body),
+	)
+
+	req.Header.Set(
+		"Content-Type",
+		"application/json",
+	)
+
+	recorder := httptest.NewRecorder()
+
+	handler.Ask(
+		recorder,
+		req,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		recorder.Code,
+	)
+
+	assert.False(
+		t,
+		service.Called,
 	)
 }
 
@@ -382,6 +428,7 @@ func TestChatHandlerAsk_NoteSession(t *testing.T) {
 		"Content-Type",
 		"application/json",
 	)
+	req = withUserID(req, testUserID)
 
 	recorder := httptest.NewRecorder()
 

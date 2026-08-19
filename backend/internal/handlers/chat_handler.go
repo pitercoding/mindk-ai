@@ -7,12 +7,14 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/pitercoding/mindk-ai/backend/internal/auth"
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
 	"github.com/pitercoding/mindk-ai/backend/internal/repository"
 )
 
 type ChatService interface {
 	Ask(
+		userID string,
 		sessionID int,
 		message string,
 		mode string,
@@ -32,6 +34,12 @@ func NewChatHandler(service ChatService) *ChatHandler {
 }
 
 func (h *ChatHandler) Ask(w http.ResponseWriter, r *http.Request) {
+	userID, ok := auth.UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	var req models.ChatRequest
 
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -54,6 +62,7 @@ func (h *ChatHandler) Ask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	answer, sessionID, sources, err := h.service.Ask(
+		userID,
 		req.SessionID,
 		req.Message,
 		req.Mode,
