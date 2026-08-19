@@ -6,6 +6,7 @@ import (
 
 	"github.com/clerk/clerk-sdk-go/v2"
 	clerkhttp "github.com/clerk/clerk-sdk-go/v2/http"
+	"github.com/pitercoding/mindk-ai/backend/internal/auth"
 )
 
 // clockLeeway absorbs small clock drift between this server and Clerk's,
@@ -19,7 +20,8 @@ const clockLeeway = 5 * time.Second
 //
 // Requests without a valid session are rejected with 401 Unauthorized.
 // On success, the Clerk SessionClaims are available in the request
-// context via clerk.SessionClaimsFromContext.
+// context via clerk.SessionClaimsFromContext, and the authenticated
+// user's ID is available via auth.UserIDFromContext.
 func NewClerkAuth(secretKey string) func(http.Handler) http.Handler {
 	clerk.SetKey(secretKey)
 
@@ -30,7 +32,9 @@ func NewClerkAuth(secretKey string) func(http.Handler) http.Handler {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
-			next.ServeHTTP(w, r)
+
+			ctx := auth.WithUserID(r.Context(), claims.Subject)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		}))
 	}
 }
