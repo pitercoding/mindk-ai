@@ -39,6 +39,7 @@ func NewDocumentSearchService(
 func (s *DocumentSearchService) Search(
 	query string,
 	limit int,
+	userID string,
 ) ([]SearchResult, error) {
 
 	queryVector, err := s.generator.Generate(query)
@@ -46,7 +47,7 @@ func (s *DocumentSearchService) Search(
 		return nil, err
 	}
 
-	items, err := s.embeddings.GetAll()
+	items, err := s.embeddings.GetAll(userID)
 	if err != nil {
 		return nil, err
 	}

@@ -55,6 +55,7 @@ func TestDocumentSearchServiceSearch(t *testing.T) {
 	results, err := service.Search(
 		"programming language",
 		2,
+		"user_1",
 	)
 
 	require.NoError(
@@ -99,6 +100,12 @@ func TestDocumentSearchServiceSearch(t *testing.T) {
 		"programming language",
 		generator.Texts[0],
 	)
+
+	assert.Equal(
+		t,
+		"user_1",
+		repository.GetAllUserID,
+	)
 }
 
 func TestDocumentSearchServiceSearch_LimitGreaterThanResults(t *testing.T) {
@@ -129,6 +136,7 @@ func TestDocumentSearchServiceSearch_LimitGreaterThanResults(t *testing.T) {
 	results, err := service.Search(
 		"test",
 		10,
+		"user_1",
 	)
 
 	require.NoError(
@@ -160,6 +168,7 @@ func TestDocumentSearchServiceSearch_EmbeddingGeneratorError(t *testing.T) {
 	results, err := service.Search(
 		"test",
 		5,
+		"user_1",
 	)
 
 	assert.Error(
@@ -206,6 +215,7 @@ func TestDocumentSearchServiceSearch_FiltersBelowMinScore(t *testing.T) {
 	results, err := service.Search(
 		"test",
 		10,
+		"user_1",
 	)
 
 	require.NoError(
@@ -248,6 +258,7 @@ func TestDocumentSearchServiceSearch_RepositoryError(t *testing.T) {
 	results, err := service.Search(
 		"test",
 		5,
+		"user_1",
 	)
 
 	assert.Error(

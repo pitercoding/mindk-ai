@@ -7,6 +7,8 @@ import (
 type FakeDocumentEmbeddingRepository struct {
 	Embeddings []models.DocumentEmbedding
 	Err        error
+
+	GetAllUserID string
 }
 
 func (f *FakeDocumentEmbeddingRepository) Create(
@@ -63,9 +65,10 @@ func (f *FakeDocumentEmbeddingRepository) DeleteByChunkID(
 	return f.Err
 }
 
-func (f *FakeDocumentEmbeddingRepository) GetAll() (
+func (f *FakeDocumentEmbeddingRepository) GetAll(userID string) (
 	[]models.DocumentEmbedding,
 	error,
 ) {
+	f.GetAllUserID = userID
 	return f.Embeddings, f.Err
 }

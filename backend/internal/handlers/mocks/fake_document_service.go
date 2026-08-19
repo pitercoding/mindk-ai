@@ -9,6 +9,11 @@ type FakeDocumentService struct {
 
 	Created bool
 	Deleted bool
+
+	GetAllUserID  string
+	GetByIDUserID string
+	DeleteUserID  string
+	SearchUserID  string
 }
 
 func (f *FakeDocumentService) Create(
@@ -27,7 +32,9 @@ func (f *FakeDocumentService) Create(
 	return nil
 }
 
-func (f *FakeDocumentService) GetAll() ([]models.Document, error) {
+func (f *FakeDocumentService) GetAll(userID string) ([]models.Document, error) {
+
+	f.GetAllUserID = userID
 
 	if f.Err != nil {
 		return nil, f.Err
@@ -38,7 +45,10 @@ func (f *FakeDocumentService) GetAll() ([]models.Document, error) {
 
 func (f *FakeDocumentService) GetByID(
 	id int,
+	userID string,
 ) (*models.Document, error) {
+
+	f.GetByIDUserID = userID
 
 	if f.Err != nil {
 		return nil, f.Err
@@ -49,7 +59,10 @@ func (f *FakeDocumentService) GetByID(
 
 func (f *FakeDocumentService) Delete(
 	id int,
+	userID string,
 ) error {
+
+	f.DeleteUserID = userID
 
 	if f.Err != nil {
 		return f.Err
@@ -62,7 +75,10 @@ func (f *FakeDocumentService) Delete(
 
 func (f *FakeDocumentService) Search(
 	query string,
+	userID string,
 ) ([]models.Document, error) {
+
+	f.SearchUserID = userID
 
 	if f.Err != nil {
 		return nil, f.Err

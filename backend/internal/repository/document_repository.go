@@ -17,12 +17,13 @@ func NewDocumentRepository(db *sql.DB) *DocumentRepository {
 
 func (r *DocumentRepository) Create(document *models.Document) error {
 	query := `
-		INSERT INTO documents (name, type, content)
-		VALUES (?, ?, ?)
+		INSERT INTO documents (user_id, name, type, content)
+		VALUES (?, ?, ?, ?)
 	`
 
 	result, err := r.DB.Exec(
 		query,
+		document.UserID,
 		document.Name,
 		document.Type,
 		document.Content,
@@ -43,19 +44,21 @@ func (r *DocumentRepository) Create(document *models.Document) error {
 	return nil
 }
 
-func (r *DocumentRepository) GetAll() ([]models.Document, error) {
+func (r *DocumentRepository) GetAll(userID string) ([]models.Document, error) {
 	query := `
 		SELECT
 			id,
+			user_id,
 			name,
 			type,
 			content,
 			created_at
 		FROM documents
+		WHERE user_id = ?
 		ORDER BY created_at DESC
 	`
 
-	rows, err := r.DB.Query(query)
+	rows, err := r.DB.Query(query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -68,6 +71,7 @@ func (r *DocumentRepository) GetAll() ([]models.Document, error) {
 
 		err := rows.Scan(
 			&document.ID,
+			&document.UserID,
 			&document.Name,
 			&document.Type,
 			&document.Content,
@@ -87,22 +91,24 @@ func (r *DocumentRepository) GetAll() ([]models.Document, error) {
 	return documents, nil
 }
 
-func (r *DocumentRepository) GetByID(id int) (*models.Document, error) {
+func (r *DocumentRepository) GetByID(id int, userID string) (*models.Document, error) {
 	query := `
 		SELECT
 			id,
+			user_id,
 			name,
 			type,
 			content,
 			created_at
 		FROM documents
-		WHERE id = ?
+		WHERE id = ? AND user_id = ?
 	`
 
 	var document models.Document
 
-	err := r.DB.QueryRow(query, id).Scan(
+	err := r.DB.QueryRow(query, id, userID).Scan(
 		&document.ID,
+		&document.UserID,
 		&document.Name,
 		&document.Type,
 		&document.Content,
@@ -116,33 +122,48 @@ func (r *DocumentRepository) GetByID(id int) (*models.Document, error) {
 	return &document, nil
 }
 
-func (r *DocumentRepository) Delete(id int) error {
+func (r *DocumentRepository) Delete(id int, userID string) error {
 	query := `
 	DELETE FROM documents
-	WHERE id = ?
+	WHERE id = ? AND user_id = ?
 	`
 
-	_, err := r.DB.Exec(query, id)
-	return err
+	result, err := r.DB.Exec(query, id, userID)
+	if err != nil {
+		return err
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
 }
 
-func (r *DocumentRepository) Search(term string) ([]models.Document, error) {
+func (r *DocumentRepository) Search(term string, userID string) ([]models.Document, error) {
 	query := `
 		SELECT
 			id,
+			user_id,
 			name,
 			type,
 			content,
 			created_at
 		FROM documents
-		WHERE name LIKE ?
-		OR content LIKE ?
+		WHERE user_id = ?
+		AND (name LIKE ? OR content LIKE ?)
 	`
 
 	search := "%" + term + "%"
 
 	rows, err := r.DB.Query(
 		query,
+		userID,
 		search,
 		search,
 	)
@@ -159,6 +180,7 @@ func (r *DocumentRepository) Search(term string) ([]models.Document, error) {
 
 		err := rows.Scan(
 			&document.ID,
+			&document.UserID,
 			&document.Name,
 			&document.Type,
 			&document.Content,

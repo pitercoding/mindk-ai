@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"mime/multipart"
@@ -39,6 +40,7 @@ func TestDocumentHandlerCreateDocument(t *testing.T) {
 		"Content-Type",
 		"application/json",
 	)
+	request = withUserID(request, testUserID)
 
 	response := httptest.NewRecorder()
 
@@ -63,6 +65,59 @@ func TestDocumentHandlerCreateDocument(t *testing.T) {
 		"test.md",
 		service.Document.Name,
 	)
+
+	assert.Equal(
+		t,
+		testUserID,
+		service.Document.UserID,
+	)
+}
+
+func TestDocumentHandlerCreateDocument_IgnoresBodyUserID(t *testing.T) {
+
+	service := &mocks.FakeDocumentService{}
+
+	handler := NewDocumentHandler(service)
+
+	body := `
+	{
+		"user_id": "someone_else",
+		"name": "test.md",
+		"type": ".md",
+		"content": "document content"
+	}
+	`
+
+	request := httptest.NewRequest(
+		http.MethodPost,
+		"/documents",
+		bytes.NewBufferString(body),
+	)
+
+	request.Header.Set(
+		"Content-Type",
+		"application/json",
+	)
+	request = withUserID(request, testUserID)
+
+	response := httptest.NewRecorder()
+
+	handler.CreateDocument(
+		response,
+		request,
+	)
+
+	require.Equal(
+		t,
+		http.StatusCreated,
+		response.Code,
+	)
+
+	assert.Equal(
+		t,
+		testUserID,
+		service.Document.UserID,
+	)
 }
 
 func TestDocumentHandlerCreateDocument_InvalidJSON(t *testing.T) {
@@ -76,6 +131,7 @@ func TestDocumentHandlerCreateDocument_InvalidJSON(t *testing.T) {
 		"/documents",
 		bytes.NewBufferString("{invalid"),
 	)
+	request = withUserID(request, testUserID)
 
 	response := httptest.NewRecorder()
 
@@ -111,6 +167,7 @@ func TestDocumentHandlerCreateDocument_ServiceError(t *testing.T) {
 		"/documents",
 		bytes.NewBufferString(body),
 	)
+	request = withUserID(request, testUserID)
 
 	response := httptest.NewRecorder()
 
@@ -123,6 +180,44 @@ func TestDocumentHandlerCreateDocument_ServiceError(t *testing.T) {
 		t,
 		http.StatusInternalServerError,
 		response.Code,
+	)
+}
+
+func TestDocumentHandlerCreateDocument_Unauthorized(t *testing.T) {
+
+	service := &mocks.FakeDocumentService{}
+
+	handler := NewDocumentHandler(service)
+
+	body := `
+	{
+		"name": "test.md",
+		"content": "content"
+	}
+	`
+
+	request := httptest.NewRequest(
+		http.MethodPost,
+		"/documents",
+		bytes.NewBufferString(body),
+	)
+
+	response := httptest.NewRecorder()
+
+	handler.CreateDocument(
+		response,
+		request,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		response.Code,
+	)
+
+	assert.False(
+		t,
+		service.Created,
 	)
 }
 
@@ -145,6 +240,7 @@ func TestDocumentHandlerGetDocuments(t *testing.T) {
 		"/documents",
 		nil,
 	)
+	request = withUserID(request, testUserID)
 
 	response := httptest.NewRecorder()
 
@@ -175,9 +271,189 @@ func TestDocumentHandlerGetDocuments(t *testing.T) {
 		documents,
 		1,
 	)
+
+	assert.Equal(t, testUserID, service.GetAllUserID)
+}
+
+func TestDocumentHandlerGetDocuments_Unauthorized(t *testing.T) {
+
+	service := &mocks.FakeDocumentService{}
+
+	handler := NewDocumentHandler(service)
+
+	request := httptest.NewRequest(
+		http.MethodGet,
+		"/documents",
+		nil,
+	)
+
+	response := httptest.NewRecorder()
+
+	handler.GetDocuments(
+		response,
+		request,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		response.Code,
+	)
+}
+
+func TestDocumentHandlerGetDocumentByID(t *testing.T) {
+
+	service := &mocks.FakeDocumentService{
+		Document: &models.Document{
+			ID:   1,
+			Name: "test.md",
+		},
+	}
+
+	handler := NewDocumentHandler(service)
+
+	request := httptest.NewRequest(
+		http.MethodGet,
+		"/documents/1",
+		nil,
+	)
+	request = withUserID(request, testUserID)
+
+	response := httptest.NewRecorder()
+
+	handler.GetDocumentByID(
+		response,
+		request,
+	)
+
+	require.Equal(
+		t,
+		http.StatusOK,
+		response.Code,
+	)
+
+	assert.Equal(t, testUserID, service.GetByIDUserID)
+}
+
+func TestDocumentHandlerGetDocumentByID_NotFound(t *testing.T) {
+
+	service := &mocks.FakeDocumentService{
+		Err: sql.ErrNoRows,
+	}
+
+	handler := NewDocumentHandler(service)
+
+	request := httptest.NewRequest(
+		http.MethodGet,
+		"/documents/99",
+		nil,
+	)
+	request = withUserID(request, testUserID)
+
+	response := httptest.NewRecorder()
+
+	handler.GetDocumentByID(
+		response,
+		request,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		response.Code,
+	)
+}
+
+func TestDocumentHandlerGetDocumentByID_Unauthorized(t *testing.T) {
+
+	service := &mocks.FakeDocumentService{}
+
+	handler := NewDocumentHandler(service)
+
+	request := httptest.NewRequest(
+		http.MethodGet,
+		"/documents/1",
+		nil,
+	)
+
+	response := httptest.NewRecorder()
+
+	handler.GetDocumentByID(
+		response,
+		request,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		response.Code,
+	)
 }
 
 func TestDocumentHandlerDeleteDocument(t *testing.T) {
+
+	service := &mocks.FakeDocumentService{}
+
+	handler := NewDocumentHandler(service)
+
+	request := httptest.NewRequest(
+		http.MethodDelete,
+		"/documents/1",
+		nil,
+	)
+	request = withUserID(request, testUserID)
+
+	response := httptest.NewRecorder()
+
+	handler.DeleteDocument(
+		response,
+		request,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusNoContent,
+		response.Code,
+	)
+
+	assert.True(
+		t,
+		service.Deleted,
+	)
+
+	assert.Equal(t, testUserID, service.DeleteUserID)
+}
+
+func TestDocumentHandlerDeleteDocument_NotFound(t *testing.T) {
+
+	service := &mocks.FakeDocumentService{
+		Err: sql.ErrNoRows,
+	}
+
+	handler := NewDocumentHandler(service)
+
+	request := httptest.NewRequest(
+		http.MethodDelete,
+		"/documents/1",
+		nil,
+	)
+	request = withUserID(request, testUserID)
+
+	response := httptest.NewRecorder()
+
+	handler.DeleteDocument(
+		response,
+		request,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusNotFound,
+		response.Code,
+	)
+}
+
+func TestDocumentHandlerDeleteDocument_Unauthorized(t *testing.T) {
 
 	service := &mocks.FakeDocumentService{}
 
@@ -198,13 +474,72 @@ func TestDocumentHandlerDeleteDocument(t *testing.T) {
 
 	assert.Equal(
 		t,
-		http.StatusNoContent,
+		http.StatusUnauthorized,
 		response.Code,
 	)
 
-	assert.True(
+	assert.False(
 		t,
 		service.Deleted,
+	)
+}
+
+func TestDocumentHandlerSearchDocuments(t *testing.T) {
+
+	service := &mocks.FakeDocumentService{
+		Documents: []models.Document{
+			{ID: 1, Name: "test.md"},
+		},
+	}
+
+	handler := NewDocumentHandler(service)
+
+	request := httptest.NewRequest(
+		http.MethodGet,
+		"/documents/search?q=test",
+		nil,
+	)
+	request = withUserID(request, testUserID)
+
+	response := httptest.NewRecorder()
+
+	handler.SearchDocuments(
+		response,
+		request,
+	)
+
+	require.Equal(
+		t,
+		http.StatusOK,
+		response.Code,
+	)
+
+	assert.Equal(t, testUserID, service.SearchUserID)
+}
+
+func TestDocumentHandlerSearchDocuments_Unauthorized(t *testing.T) {
+
+	service := &mocks.FakeDocumentService{}
+
+	handler := NewDocumentHandler(service)
+
+	request := httptest.NewRequest(
+		http.MethodGet,
+		"/documents/search?q=test",
+		nil,
+	)
+
+	response := httptest.NewRecorder()
+
+	handler.SearchDocuments(
+		response,
+		request,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		response.Code,
 	)
 }
 
@@ -254,6 +589,7 @@ func TestDocumentHandlerUploadDocument(t *testing.T) {
 		"Content-Type",
 		writer.FormDataContentType(),
 	)
+	request = withUserID(request, testUserID)
 
 	response := httptest.NewRecorder()
 
@@ -289,5 +625,59 @@ func TestDocumentHandlerUploadDocument(t *testing.T) {
 		t,
 		"This is a test document content.",
 		service.Document.Content,
+	)
+
+	assert.Equal(
+		t,
+		testUserID,
+		service.Document.UserID,
+	)
+}
+
+func TestDocumentHandlerUploadDocument_Unauthorized(t *testing.T) {
+
+	service := &mocks.FakeDocumentService{}
+
+	handler := NewDocumentHandler(service)
+
+	var body bytes.Buffer
+
+	writer := multipart.NewWriter(&body)
+
+	_, err := writer.CreateFormFile(
+		"file",
+		"test.txt",
+	)
+	require.NoError(t, err)
+
+	require.NoError(t, writer.Close())
+
+	request := httptest.NewRequest(
+		http.MethodPost,
+		"/documents/upload",
+		&body,
+	)
+
+	request.Header.Set(
+		"Content-Type",
+		writer.FormDataContentType(),
+	)
+
+	response := httptest.NewRecorder()
+
+	handler.UploadDocument(
+		response,
+		request,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusUnauthorized,
+		response.Code,
+	)
+
+	assert.False(
+		t,
+		service.Created,
 	)
 }

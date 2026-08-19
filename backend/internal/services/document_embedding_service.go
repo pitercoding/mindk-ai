@@ -10,7 +10,7 @@ type DocumentEmbeddingRepository interface {
 	Create(documentEmbedding *models.DocumentEmbedding) error
 	CreateMany([]models.DocumentEmbedding) error
 	GetByChunkID(chunkID int) (*models.DocumentEmbedding, error)
-	GetAll() ([]models.DocumentEmbedding, error)
+	GetAll(userID string) ([]models.DocumentEmbedding, error)
 	DeleteByChunkID(chunkID int) error
 }
 
@@ -96,6 +96,6 @@ func (s *DocumentEmbeddingService) GenerateForChunks(
 	return s.repo.CreateMany(embeddings)
 }
 
-func (s *DocumentEmbeddingService) GetAll() ([]models.DocumentEmbedding, error) {
-	return s.repo.GetAll()
+func (s *DocumentEmbeddingService) GetAll(userID string) ([]models.DocumentEmbedding, error) {
+	return s.repo.GetAll(userID)
 }

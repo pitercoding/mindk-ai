@@ -7,10 +7,10 @@ import (
 
 type DocumentRepository interface {
 	Create(document *models.Document) error
-	GetAll() ([]models.Document, error)
-	GetByID(id int) (*models.Document, error)
-	Delete(id int) error
-	Search(query string) ([]models.Document, error)
+	GetAll(userID string) ([]models.Document, error)
+	GetByID(id int, userID string) (*models.Document, error)
+	Delete(id int, userID string) error
+	Search(query string, userID string) ([]models.Document, error)
 }
 
 type ChunkService interface {
@@ -79,7 +79,7 @@ func (s *DocumentService) Create(
 	if err != nil {
 
 		// rollback document creation
-		s.repo.Delete(document.ID)
+		s.repo.Delete(document.ID, document.UserID)
 
 		return err
 	}
@@ -90,7 +90,7 @@ func (s *DocumentService) Create(
 
 		// rollback document creation
 		// cascade deletes chunks and embeddings
-		s.repo.Delete(document.ID)
+		s.repo.Delete(document.ID, document.UserID)
 
 		return err
 	}
@@ -98,27 +98,30 @@ func (s *DocumentService) Create(
 	return nil
 }
 
-func (s *DocumentService) GetAll() ([]models.Document, error) {
-	return s.repo.GetAll()
+func (s *DocumentService) GetAll(userID string) ([]models.Document, error) {
+	return s.repo.GetAll(userID)
 }
 
 func (s *DocumentService) GetByID(
 	id int,
+	userID string,
 ) (*models.Document, error) {
 
-	return s.repo.GetByID(id)
+	return s.repo.GetByID(id, userID)
 }
 
 func (s *DocumentService) Delete(
 	id int,
+	userID string,
 ) error {
 
-	return s.repo.Delete(id)
+	return s.repo.Delete(id, userID)
 }
 
 func (s *DocumentService) Search(
 	query string,
+	userID string,
 ) ([]models.Document, error) {
 
-	return s.repo.Search(query)
+	return s.repo.Search(query, userID)
 }

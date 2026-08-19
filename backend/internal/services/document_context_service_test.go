@@ -16,16 +16,19 @@ type fakeDocumentSearcher struct {
 	Called bool
 	Query  string
 	Limit  int
+	UserID string
 }
 
 func (f *fakeDocumentSearcher) Search(
 	query string,
 	limit int,
+	userID string,
 ) ([]SearchResult, error) {
 
 	f.Called = true
 	f.Query = query
 	f.Limit = limit
+	f.UserID = userID
 
 	if f.Err != nil {
 		return nil, f.Err
@@ -62,6 +65,7 @@ func TestDocumentContextServiceBuildContext(t *testing.T) {
 	context, sources, err := service.BuildContext(
 		"How does Go work?",
 		2,
+		"user_1",
 	)
 
 	require.NoError(
@@ -175,6 +179,7 @@ func TestDocumentContextServiceBuildContext_DedupesSourcesByDocument(t *testing.
 	_, sources, err := service.BuildContext(
 		"How does Go work?",
 		2,
+		"user_1",
 	)
 
 	require.NoError(
@@ -233,6 +238,7 @@ func TestDocumentContextServiceBuildContext_StopsAtCharBudget(t *testing.T) {
 	context, sources, err := service.BuildContext(
 		"test",
 		2,
+		"user_1",
 	)
 
 	require.NoError(
@@ -278,6 +284,7 @@ func TestDocumentContextServiceBuildContext_NoResults(t *testing.T) {
 	context, sources, err := service.BuildContext(
 		"unknown topic",
 		5,
+		"user_1",
 	)
 
 	require.NoError(
@@ -309,6 +316,7 @@ func TestDocumentContextServiceBuildContext_SearchError(t *testing.T) {
 	context, sources, err := service.BuildContext(
 		"test",
 		5,
+		"user_1",
 	)
 
 	assert.Error(

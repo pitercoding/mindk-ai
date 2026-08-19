@@ -10,7 +10,7 @@ import (
 const maxContextChars = 8000
 
 type DocumentSearcher interface {
-	Search(query string, limit int) ([]SearchResult, error)
+	Search(query string, limit int, userID string) ([]SearchResult, error)
 }
 
 type DocumentContextService struct {
@@ -28,11 +28,13 @@ func NewDocumentContextService(searchService DocumentSearcher) *DocumentContextS
 func (s *DocumentContextService) BuildContext(
 	query string,
 	limit int,
+	userID string,
 ) (string, []models.ChatSource, error) {
 
 	results, err := s.searchService.Search(
 		query,
 		limit,
+		userID,
 	)
 
 	if err != nil {

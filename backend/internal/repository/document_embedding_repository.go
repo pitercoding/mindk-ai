@@ -112,7 +112,7 @@ func (r *DocumentEmbeddingRepository) DeleteByChunkID(
 	return err
 }
 
-func (r *DocumentEmbeddingRepository) GetAll() (
+func (r *DocumentEmbeddingRepository) GetAll(userID string) (
 	[]models.DocumentEmbedding,
 	error,
 ) {
@@ -135,10 +135,11 @@ func (r *DocumentEmbeddingRepository) GetAll() (
 			ON dc.id = de.chunk_id
 		INNER JOIN documents d
 			ON d.id = dc.document_id
+		WHERE d.user_id = ?
 		ORDER BY dc.document_id, dc.chunk_index
 	`
 
-	rows, err := r.DB.Query(query)
+	rows, err := r.DB.Query(query, userID)
 	if err != nil {
 		return nil, err
 	}

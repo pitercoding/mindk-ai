@@ -8,19 +8,22 @@ type FakeDocumentContextProvider struct {
 	Err     error
 	Called  bool
 
-	Query string
-	Limit int
+	Query  string
+	Limit  int
+	UserID string
 }
 
 func (f *FakeDocumentContextProvider) BuildContext(
 	query string,
 	limit int,
+	userID string,
 ) (string, []models.ChatSource, error) {
 
 	f.Called = true
 
 	f.Query = query
 	f.Limit = limit
+	f.UserID = userID
 
 	return f.Context, f.Sources, f.Err
 }
