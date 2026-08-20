@@ -28,7 +28,7 @@ func NewClerkAuth(secretKey string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return clerkhttp.WithHeaderAuthorization(clerkhttp.Leeway(clockLeeway))(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			claims, ok := clerk.SessionClaimsFromContext(r.Context())
-			if !ok || claims == nil {
+			if !ok || claims == nil || claims.Subject == "" {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
