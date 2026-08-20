@@ -1,0 +1,216 @@
+package middleware
+
+import (
+	"bytes"
+	"crypto/rsa"
+	"database/sql"
+	"encoding/base64"
+	"encoding/json"
+	"math/big"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/clerk/clerk-sdk-go/v2"
+	"github.com/clerk/clerk-sdk-go/v2/clerktest"
+	"github.com/pitercoding/mindk-ai/backend/internal/handlers"
+	"github.com/pitercoding/mindk-ai/backend/internal/migrations"
+	"github.com/pitercoding/mindk-ai/backend/internal/models"
+	"github.com/pitercoding/mindk-ai/backend/internal/repository"
+	"github.com/pitercoding/mindk-ai/backend/internal/services"
+	"github.com/stretchr/testify/require"
+	_ "modernc.org/sqlite"
+)
+
+// newE2ETestServer wires the real Clerk middleware in front of the real
+// NoteHandler, NoteService and NoteRepository (backed by an in-memory
+// SQLite DB), mirroring exactly how routes.go wires /notes in production.
+// This proves the full chain: JWT -> Clerk -> claims.Subject -> context ->
+// handler -> service -> repository -> SQL ownership filter.
+func newE2ETestServer(t *testing.T) *httptest.Server {
+	t.Helper()
+
+	db, err := sql.Open("sqlite", "file::memory:?cache=shared")
+	require.NoError(t, err)
+	t.Cleanup(func() { db.Close() })
+
+	// A single connection keeps every query on the same in-memory database.
+	db.SetMaxOpenConns(1)
+	require.NoError(t, migrations.Run(db))
+
+	noteRepo := repository.NewNoteRepository(db)
+	noteService := services.NewNoteService(noteRepo)
+	noteHandler := handlers.NewNoteHandler(noteService)
+
+	authMiddleware := NewClerkAuth("test_secret_key")
+
+	mux := http.NewServeMux()
+	mux.Handle("/notes", authMiddleware(http.HandlerFunc(noteHandler.HandleNotes)))
+
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
+
+	return server
+}
+
+// generateToken creates a valid Clerk JWT for the given user, without
+// yet exposing its public key over a JWKS endpoint. Use tokenFor for a
+// single-user test, or startMockJWKSMulti to serve several users' keys
+// from one JWKS endpoint when a test needs more than one live token at
+// once (the Clerk backend is a single global pointer, so only the most
+// recently started mock JWKS server is reachable for verification).
+func generateToken(t *testing.T, userID string) (token, kid string, pub *rsa.PublicKey) {
+	t.Helper()
+
+	kid = "kid-" + t.Name() + "-" + userID
+	tok, rawPub := clerktest.GenerateJWT(t, map[string]any{
+		"sub": userID,
+		"sid": "sess_" + userID,
+		"iss": "https://clerk.test.dev",
+	}, kid)
+
+	rsaPub, ok := rawPub.(*rsa.PublicKey)
+	require.True(t, ok)
+
+	return tok, kid, rsaPub
+}
+
+// tokenFor generates a valid Clerk JWT for the given user and starts the
+// mock JWKS endpoint needed to verify it, exactly like clerk_test.go does.
+// Only use this when a test needs a single live token at a time.
+func tokenFor(t *testing.T, userID string) string {
+	t.Helper()
+
+	token, kid, pub := generateToken(t, userID)
+	startMockJWKS(t, kid, pub)
+
+	return token
+}
+
+// startMockJWKSMulti serves the public keys of several users from one
+// JWKS endpoint, so tokens for all of them can be verified concurrently
+// against the single global Clerk backend pointer.
+func startMockJWKSMulti(t *testing.T, keys map[string]*rsa.PublicKey) {
+	t.Helper()
+
+	type jwk struct {
+		Use string `json:"use"`
+		Kty string `json:"kty"`
+		Kid string `json:"kid"`
+		Alg string `json:"alg"`
+		N   string `json:"n"`
+		E   string `json:"e"`
+	}
+
+	var jwks struct {
+		Keys []jwk `json:"keys"`
+	}
+	for kid, pub := range keys {
+		jwks.Keys = append(jwks.Keys, jwk{
+			Use: "sig",
+			Kty: "RSA",
+			Kid: kid,
+			Alg: "RS256",
+			N:   base64.RawURLEncoding.EncodeToString(pub.N.Bytes()),
+			E:   base64.RawURLEncoding.EncodeToString(big.NewInt(int64(pub.E)).Bytes()),
+		})
+	}
+
+	body, err := json.Marshal(jwks)
+	require.NoError(t, err)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/jwks" && r.Method == http.MethodGet {
+			_, err := w.Write(body)
+			require.NoError(t, err)
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(server.Close)
+
+	clerk.SetBackend(clerk.NewBackend(&clerk.BackendConfig{
+		HTTPClient: server.Client(),
+		URL:        &server.URL,
+	}))
+}
+
+// TestE2E_NotesRequireAuthentication proves that /notes cannot be reached
+// without a valid Clerk token: the middleware rejects the request before
+// the handler (and thus the DB) is ever touched.
+func TestE2E_NotesRequireAuthentication(t *testing.T) {
+	server := newE2ETestServer(t)
+
+	req, err := http.NewRequest(http.MethodPost, server.URL+"/notes", bytes.NewBufferString(`{"title":"t","content":"c"}`))
+	require.NoError(t, err)
+
+	res, err := server.Client().Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+
+	require.Equal(t, http.StatusUnauthorized, res.StatusCode)
+}
+
+// TestE2E_NoteOwnershipComesFromToken_NotBody proves that even when a
+// caller tries to spoof ownership via the request body, the note is always
+// created for the user identified by the JWT - never the body's user_id.
+func TestE2E_NoteOwnershipComesFromToken_NotBody(t *testing.T) {
+	server := newE2ETestServer(t)
+	token := tokenFor(t, "user_a")
+
+	payload := `{"title":"real title","content":"real content","user_id":"user_b_spoofed"}`
+	req, err := http.NewRequest(http.MethodPost, server.URL+"/notes", bytes.NewBufferString(payload))
+	require.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	res, err := server.Client().Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+
+	require.Equal(t, http.StatusCreated, res.StatusCode)
+
+	var created models.Note
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&created))
+	require.Equal(t, "user_a", created.UserID, "the note must belong to the JWT's subject, not the spoofed body field")
+}
+
+// TestE2E_NotesAreIsolatedByAuthenticatedUser proves cross-user isolation
+// through the full stack, driven purely by each caller's own token: user A
+// never sees notes created by user B and vice versa.
+func TestE2E_NotesAreIsolatedByAuthenticatedUser(t *testing.T) {
+	server := newE2ETestServer(t)
+
+	tokenA, kidA, pubA := generateToken(t, "user_a")
+	tokenB, kidB, pubB := generateToken(t, "user_b")
+	startMockJWKSMulti(t, map[string]*rsa.PublicKey{kidA: pubA, kidB: pubB})
+
+	createNote := func(token, title string) {
+		payload := `{"title":"` + title + `","content":"content"}`
+		req, err := http.NewRequest(http.MethodPost, server.URL+"/notes", bytes.NewBufferString(payload))
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+
+		res, err := server.Client().Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+		require.Equal(t, http.StatusCreated, res.StatusCode)
+	}
+
+	createNote(tokenA, "A's note")
+	createNote(tokenB, "B's note")
+
+	req, err := http.NewRequest(http.MethodGet, server.URL+"/notes", nil)
+	require.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+tokenA)
+
+	res, err := server.Client().Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+
+	var notes []models.Note
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&notes))
+	require.Len(t, notes, 1, "user A must only see their own notes")
+	require.Equal(t, "A's note", notes[0].Title)
+	require.Equal(t, "user_a", notes[0].UserID)
+}
