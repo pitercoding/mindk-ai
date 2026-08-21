@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/clerk/clerk-sdk-go/v2"
 	"github.com/clerk/clerk-sdk-go/v2/clerktest"
@@ -30,6 +31,16 @@ import (
 func newE2ETestServer(t *testing.T) *httptest.Server {
 	t.Helper()
 
+	return newE2ETestServerWithRateLimit(t, nil)
+}
+
+// newE2ETestServerWithRateLimit is newE2ETestServer with an optional rate
+// limiter spliced in between Clerk and the NoteHandler, mirroring how
+// routes.go wires /notes in production: Clerk -> RateLimit -> handler.
+// Pass a nil limiter to skip rate limiting entirely.
+func newE2ETestServerWithRateLimit(t *testing.T, rl *RateLimiter) *httptest.Server {
+	t.Helper()
+
 	db, err := sql.Open("sqlite", "file::memory:?cache=shared")
 	require.NoError(t, err)
 	t.Cleanup(func() { db.Close() })
@@ -44,8 +55,13 @@ func newE2ETestServer(t *testing.T) *httptest.Server {
 
 	authMiddleware := NewClerkAuth("test_secret_key")
 
+	var handler http.Handler = http.HandlerFunc(noteHandler.HandleNotes)
+	if rl != nil {
+		handler = rl.Middleware(handler)
+	}
+
 	mux := http.NewServeMux()
-	mux.Handle("/notes", authMiddleware(http.HandlerFunc(noteHandler.HandleNotes)))
+	mux.Handle("/notes", authMiddleware(handler))
 
 	server := httptest.NewServer(mux)
 	t.Cleanup(server.Close)
@@ -213,4 +229,66 @@ func TestE2E_NotesAreIsolatedByAuthenticatedUser(t *testing.T) {
 	require.Len(t, notes, 1, "user A must only see their own notes")
 	require.Equal(t, "A's note", notes[0].Title)
 	require.Equal(t, "user_a", notes[0].UserID)
+}
+
+// TestE2E_RateLimitAppliesAfterAuthentication proves the rate limiter is
+// keyed by the JWT's subject rather than anything the client controls: it
+// runs the real Clerk -> RateLimit -> NoteHandler chain and shows the
+// caller is cut off with 429 once they exceed the limit for their token.
+func TestE2E_RateLimitAppliesAfterAuthentication(t *testing.T) {
+	rl := NewRateLimiter(3, time.Minute)
+	server := newE2ETestServerWithRateLimit(t, rl)
+	token := tokenFor(t, "user_a")
+
+	getNotes := func() *http.Response {
+		req, err := http.NewRequest(http.MethodGet, server.URL+"/notes", nil)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+
+		res, err := server.Client().Do(req)
+		require.NoError(t, err)
+		t.Cleanup(func() { res.Body.Close() })
+
+		return res
+	}
+
+	for i := 0; i < 3; i++ {
+		require.Equal(t, http.StatusOK, getNotes().StatusCode)
+	}
+
+	res := getNotes()
+	require.Equal(t, http.StatusTooManyRequests, res.StatusCode)
+	require.NotEmpty(t, res.Header.Get("Retry-After"))
+}
+
+// TestE2E_RateLimitIsIndependentPerAuthenticatedUser proves the limiter's
+// key comes from claims.Subject, not from the client: two different users
+// hitting the same endpoint through the same limiter never affect each
+// other's quota, even though both requests arrive at the same server.
+func TestE2E_RateLimitIsIndependentPerAuthenticatedUser(t *testing.T) {
+	rl := NewRateLimiter(2, time.Minute)
+	server := newE2ETestServerWithRateLimit(t, rl)
+
+	tokenA, kidA, pubA := generateToken(t, "user_a")
+	tokenB, kidB, pubB := generateToken(t, "user_b")
+	startMockJWKSMulti(t, map[string]*rsa.PublicKey{kidA: pubA, kidB: pubB})
+
+	getNotes := func(token string) *http.Response {
+		req, err := http.NewRequest(http.MethodGet, server.URL+"/notes", nil)
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+
+		res, err := server.Client().Do(req)
+		require.NoError(t, err)
+		t.Cleanup(func() { res.Body.Close() })
+
+		return res
+	}
+
+	require.Equal(t, http.StatusOK, getNotes(tokenA).StatusCode)
+	require.Equal(t, http.StatusOK, getNotes(tokenA).StatusCode)
+	require.Equal(t, http.StatusTooManyRequests, getNotes(tokenA).StatusCode, "user A must now be rate limited")
+
+	require.Equal(t, http.StatusOK, getNotes(tokenB).StatusCode, "user B's quota must be untouched by user A's requests")
+	require.Equal(t, http.StatusOK, getNotes(tokenB).StatusCode)
 }
