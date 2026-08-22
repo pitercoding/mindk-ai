@@ -321,6 +321,55 @@ func TestChatHandlerAsk_ServiceError(t *testing.T) {
 
 }
 
+// TestChatHandlerAsk_ServiceErrorDoesNotLeakDetail proves that whatever the
+// service layer returns (which can wrap raw OpenAI/DB error text) never
+// reaches the client - only the generic message does, while the detail is
+// still logged server-side.
+func TestChatHandlerAsk_ServiceErrorDoesNotLeakDetail(t *testing.T) {
+	sensitive := "sk-fake123: invalid api key"
+	service := &mocks.FakeChatService{
+		Err: errors.New(sensitive),
+	}
+
+	handler := NewChatHandler(service)
+
+	body := `{
+	"session_id": 1,
+	"message": "Hello"
+}`
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/chat",
+		strings.NewReader(body),
+	)
+
+	req.Header.Set(
+		"Content-Type",
+		"application/json",
+	)
+	req = withUserID(req, testUserID)
+
+	recorder := httptest.NewRecorder()
+
+	handler.Ask(
+		recorder,
+		req,
+	)
+
+	assert.Equal(
+		t,
+		http.StatusInternalServerError,
+		recorder.Code,
+	)
+
+	assert.NotContains(
+		t,
+		recorder.Body.String(),
+		sensitive,
+	)
+}
+
 func TestChatHandlerAsk_SessionNotFound(t *testing.T) {
 	service := &mocks.FakeChatService{
 		Err: repository.ErrChatSessionNotFound,
