@@ -13,6 +13,15 @@ import (
 	"github.com/pitercoding/mindk-ai/backend/internal/utils"
 )
 
+const (
+	// maxDocumentBytes bounds both the JSON create path (pasted content) and
+	// the multipart upload path, since both end up as the same document
+	// content and deserve the same generous ceiling.
+	maxDocumentBytes      = 10 << 20 // 10 MiB
+	maxDocumentNameLength = 255
+	maxSearchQueryLength  = 500
+)
+
 type DocumentService interface {
 	Create(document *models.Document) error
 	GetAll(userID string) ([]models.Document, error)
@@ -39,9 +48,7 @@ func (h *DocumentHandler) CreateDocument(w http.ResponseWriter, r *http.Request)
 	var document models.Document
 
 	// 1. Read JSON from body
-	err := json.NewDecoder(r.Body).Decode(&document)
-	if err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+	if err := httputil.DecodeJSON(w, r, maxDocumentBytes, &document); err != nil {
 		return
 	}
 
@@ -51,11 +58,16 @@ func (h *DocumentHandler) CreateDocument(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	if len(document.Name) > maxDocumentNameLength {
+		http.Error(w, "name exceeds maximum length", http.StatusBadRequest)
+		return
+	}
+
 	// 3. The owner is always the authenticated user, never the request body
 	document.UserID = userID
 
 	// 4. DB Saving
-	err = h.Service.Create(&document)
+	err := h.Service.Create(&document)
 
 	if err != nil {
 
@@ -86,8 +98,16 @@ func (h *DocumentHandler) UploadDocument(
 		return
 	}
 
-	err := r.ParseMultipartForm(10 << 20) // 10 MB
+	r.Body = http.MaxBytesReader(w, r.Body, maxDocumentBytes)
+
+	err := r.ParseMultipartForm(maxDocumentBytes)
 	if err != nil {
+
+		var maxBytesErr *http.MaxBytesError
+		if errors.As(err, &maxBytesErr) {
+			http.Error(w, "request body too large", http.StatusRequestEntityTooLarge)
+			return
+		}
 
 		http.Error(
 			w,
@@ -271,6 +291,16 @@ func (h *DocumentHandler) SearchDocuments(
 	}
 
 	query := r.URL.Query().Get("q")
+
+	if query == "" {
+		http.Error(w, "query parameter q is required", http.StatusBadRequest)
+		return
+	}
+
+	if len(query) > maxSearchQueryLength {
+		http.Error(w, "query exceeds maximum length", http.StatusBadRequest)
+		return
+	}
 
 	documents, err := h.Service.Search(query, userID)
 	if err != nil {
