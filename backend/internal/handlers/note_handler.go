@@ -11,6 +11,11 @@ import (
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
 )
 
+const (
+	maxNoteTitleLength   = 200
+	maxNoteContentLength = 50_000
+)
+
 type NoteService interface {
 	Create(note *models.Note) error
 	GetAll(userID string) ([]models.Note, error)
@@ -39,9 +44,7 @@ func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 	var note models.Note
 
 	// 1. Read JSON from body
-	err := json.NewDecoder(r.Body).Decode(&note)
-	if err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+	if err := httputil.DecodeJSON(w, r, httputil.MaxJSONBodyBytes, &note); err != nil {
 		return
 	}
 
@@ -51,11 +54,16 @@ func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(note.Title) > maxNoteTitleLength || len(note.Content) > maxNoteContentLength {
+		http.Error(w, "title or content exceeds maximum length", http.StatusBadRequest)
+		return
+	}
+
 	// 3. The owner is always the authenticated user, never the request body
 	note.UserID = userID
 
 	// 4. DB Saving
-	err = h.Service.Create(&note)
+	err := h.Service.Create(&note)
 
 	if err != nil {
 
@@ -167,9 +175,17 @@ func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 
 	var note models.Note
 
-	err = json.NewDecoder(r.Body).Decode(&note)
-	if err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+	if err := httputil.DecodeJSON(w, r, httputil.MaxJSONBodyBytes, &note); err != nil {
+		return
+	}
+
+	if note.Title == "" || note.Content == "" {
+		http.Error(w, "title and content are required", http.StatusBadRequest)
+		return
+	}
+
+	if len(note.Title) > maxNoteTitleLength || len(note.Content) > maxNoteContentLength {
+		http.Error(w, "title or content exceeds maximum length", http.StatusBadRequest)
 		return
 	}
 
