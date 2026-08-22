@@ -11,6 +11,8 @@ import (
 	"github.com/pitercoding/mindk-ai/backend/internal/repository"
 )
 
+const maxChatMessageContentLength = 8_000
+
 type ChatMessageService interface {
 	Save(message *models.ChatMessage, userID string) error
 	GetBySessionID(sessionID int, userID string) ([]models.ChatMessage, error)
@@ -42,16 +44,7 @@ func (h *ChatMessageHandler) Save(
 
 	var message models.ChatMessage
 
-	err := json.NewDecoder(r.Body).Decode(&message)
-
-	if err != nil {
-
-		http.Error(
-			w,
-			"invalid request body",
-			http.StatusBadRequest,
-		)
-
+	if err := httputil.DecodeJSON(w, r, httputil.MaxJSONBodyBytes, &message); err != nil {
 		return
 	}
 
@@ -66,7 +59,29 @@ func (h *ChatMessageHandler) Save(
 		return
 	}
 
-	err = h.Service.Save(&message, userID)
+	if len(message.Content) > maxChatMessageContentLength {
+
+		http.Error(
+			w,
+			"content exceeds maximum length",
+			http.StatusBadRequest,
+		)
+
+		return
+	}
+
+	if message.Role != "user" && message.Role != "assistant" {
+
+		http.Error(
+			w,
+			"role must be 'user' or 'assistant'",
+			http.StatusBadRequest,
+		)
+
+		return
+	}
+
+	err := h.Service.Save(&message, userID)
 
 	if err != nil {
 
