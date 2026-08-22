@@ -8,6 +8,7 @@ import (
 	"github.com/pitercoding/mindk-ai/backend/internal/app"
 	"github.com/pitercoding/mindk-ai/backend/internal/config"
 	"github.com/pitercoding/mindk-ai/backend/internal/database"
+	"github.com/pitercoding/mindk-ai/backend/internal/middleware"
 	"github.com/pitercoding/mindk-ai/backend/internal/migrations"
 	"github.com/pitercoding/mindk-ai/backend/internal/routes"
 	"github.com/rs/cors"
@@ -36,9 +37,9 @@ func main() {
 	// 5. Register HTTP routes
 	routes.RegisterRoutes(application)
 
-	handler := cors.New(cors.Options{
+	corsHandler := cors.New(cors.Options{
 		AllowedOrigins: []string{
-			"http://localhost:5173",
+			cfg.FrontendOrigin,
 		},
 		AllowedMethods: []string{
 			http.MethodGet,
@@ -51,6 +52,8 @@ func main() {
 			"Authorization",
 		},
 	}).Handler(http.DefaultServeMux)
+
+	handler := middleware.SecurityHeaders(corsHandler)
 
 	fmt.Println("\n============== Mindk AI ==============")
 	fmt.Println("Database connected successfully")
