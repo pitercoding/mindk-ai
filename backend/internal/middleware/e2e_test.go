@@ -55,15 +55,19 @@ func newE2ETestServerWithRateLimit(t *testing.T, rl *RateLimiter) *httptest.Serv
 
 	authMiddleware := NewClerkAuth("test_secret_key")
 
-	var handler http.Handler = http.HandlerFunc(noteHandler.HandleNotes)
-	if rl != nil {
-		handler = rl.Middleware(handler)
+	wrap := func(h http.HandlerFunc) http.Handler {
+		var handler http.Handler = h
+		if rl != nil {
+			handler = rl.Middleware(handler)
+		}
+		return authMiddleware(handler)
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/notes", authMiddleware(handler))
+	mux.Handle("/notes", wrap(noteHandler.HandleNotes))
+	mux.Handle("/notes/", wrap(noteHandler.HandleNote))
 
-	server := httptest.NewServer(mux)
+	server := httptest.NewServer(SecurityHeaders(mux))
 	t.Cleanup(server.Close)
 
 	return server
@@ -291,4 +295,97 @@ func TestE2E_RateLimitIsIndependentPerAuthenticatedUser(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, getNotes(tokenB).StatusCode, "user B's quota must be untouched by user A's requests")
 	require.Equal(t, http.StatusOK, getNotes(tokenB).StatusCode)
+}
+
+// TestE2E_SecurityHeadersPresent proves SecurityHeaders is actually wired in
+// front of the real stack, not just unit-tested in isolation - even an
+// unauthenticated 401 response carries the headers.
+func TestE2E_SecurityHeadersPresent(t *testing.T) {
+	server := newE2ETestServer(t)
+
+	res, err := server.Client().Get(server.URL + "/notes")
+	require.NoError(t, err)
+	defer res.Body.Close()
+
+	require.Equal(t, http.StatusUnauthorized, res.StatusCode)
+	require.Equal(t, "nosniff", res.Header.Get("X-Content-Type-Options"))
+	require.Equal(t, "DENY", res.Header.Get("X-Frame-Options"))
+	require.Equal(t, "no-referrer", res.Header.Get("Referrer-Policy"))
+	require.Equal(t, "default-src 'none'", res.Header.Get("Content-Security-Policy"))
+	require.Equal(t, "no-store", res.Header.Get("Cache-Control"))
+}
+
+// TestE2E_OversizedBodyRejected proves a body bigger than the JSON limit is
+// rejected with 413 before ever reaching the service/DB layer, driven
+// through the real Clerk -> NoteHandler chain.
+func TestE2E_OversizedBodyRejected(t *testing.T) {
+	server := newE2ETestServer(t)
+	token := tokenFor(t, "user_a")
+
+	oversized := bytes.Repeat([]byte("a"), 2<<20) // 2 MiB, over the 1 MiB JSON limit
+	payload := []byte(`{"title":"t","content":"`)
+	payload = append(payload, oversized...)
+	payload = append(payload, []byte(`"}`)...)
+
+	req, err := http.NewRequest(http.MethodPost, server.URL+"/notes", bytes.NewReader(payload))
+	require.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	res, err := server.Client().Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+
+	require.Equal(t, http.StatusRequestEntityTooLarge, res.StatusCode)
+}
+
+// TestE2E_MalformedJSONRejected proves invalid JSON never reaches the
+// service layer and is rejected with 400.
+func TestE2E_MalformedJSONRejected(t *testing.T) {
+	server := newE2ETestServer(t)
+	token := tokenFor(t, "user_a")
+
+	req, err := http.NewRequest(http.MethodPost, server.URL+"/notes", bytes.NewBufferString(`{"title":"t"`))
+	require.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	res, err := server.Client().Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+
+	require.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+// TestE2E_InvalidInputRejected proves a request with an empty required
+// field is rejected with 400 rather than reaching the DB.
+func TestE2E_InvalidInputRejected(t *testing.T) {
+	server := newE2ETestServer(t)
+	token := tokenFor(t, "user_a")
+
+	req, err := http.NewRequest(http.MethodPost, server.URL+"/notes", bytes.NewBufferString(`{"title":"","content":"c"}`))
+	require.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	res, err := server.Client().Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+
+	require.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+// TestE2E_NonexistentResourceReturnsNotFound proves that a well-formed
+// request for a note that doesn't exist resolves to 404, never a 500 that
+// might otherwise leak internal error detail.
+func TestE2E_NonexistentResourceReturnsNotFound(t *testing.T) {
+	server := newE2ETestServer(t)
+	token := tokenFor(t, "user_a")
+
+	req, err := http.NewRequest(http.MethodGet, server.URL+"/notes/999", nil)
+	require.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	res, err := server.Client().Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+
+	require.Equal(t, http.StatusNotFound, res.StatusCode)
 }
