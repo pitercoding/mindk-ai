@@ -11,6 +11,27 @@ import (
 	"github.com/pitercoding/mindk-ai/backend/internal/repository"
 )
 
+const maxChatSessionTitleLength = 200
+
+// validateChatSession returns a client-facing error message, or "" if
+// session is valid. Shared by CreateSession and UpdateSession, which apply
+// the exact same rules to the client-supplied fields.
+func validateChatSession(session models.ChatSession) string {
+	if session.Title == "" || session.Mode == "" {
+		return "title and mode are required"
+	}
+
+	if len(session.Title) > maxChatSessionTitleLength {
+		return "title exceeds maximum length"
+	}
+
+	if session.Mode != "knowledge" && session.Mode != "note" {
+		return "mode must be 'knowledge' or 'note'"
+	}
+
+	return ""
+}
+
 type ChatSessionService interface {
 	Create(session *models.ChatSession) error
 	GetAll(userID string) ([]models.ChatSession, error)
@@ -92,34 +113,19 @@ func (h *ChatSessionHandler) CreateSession(
 
 	var session models.ChatSession
 
-	err := json.NewDecoder(
-		r.Body,
-	).Decode(&session)
-
-	if err != nil {
-		http.Error(
-			w,
-			"invalid request body",
-			http.StatusBadRequest,
-		)
+	if err := httputil.DecodeJSON(w, r, httputil.MaxJSONBodyBytes, &session); err != nil {
 		return
 	}
 
-	if session.Title == "" || session.Mode == "" {
-
-		http.Error(
-			w,
-			"title and mode are required",
-			http.StatusBadRequest,
-		)
-
+	if err := validateChatSession(session); err != "" {
+		http.Error(w, err, http.StatusBadRequest)
 		return
 	}
 
 	// The owner is always the authenticated user, never the request body
 	session.UserID = userID
 
-	err = h.Service.Create(&session)
+	err := h.Service.Create(&session)
 
 	if err != nil {
 
@@ -261,29 +267,12 @@ func (h *ChatSessionHandler) UpdateSession(
 
 	var session models.ChatSession
 
-	err = json.NewDecoder(
-		r.Body,
-	).Decode(&session)
-
-	if err != nil {
-
-		http.Error(
-			w,
-			"invalid request body",
-			http.StatusBadRequest,
-		)
-
+	if err := httputil.DecodeJSON(w, r, httputil.MaxJSONBodyBytes, &session); err != nil {
 		return
 	}
 
-	if session.Title == "" || session.Mode == "" {
-
-		http.Error(
-			w,
-			"title and mode are required",
-			http.StatusBadRequest,
-		)
-
+	if err := validateChatSession(session); err != "" {
+		http.Error(w, err, http.StatusBadRequest)
 		return
 	}
 
