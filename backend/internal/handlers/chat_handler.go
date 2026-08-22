@@ -3,14 +3,16 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/pitercoding/mindk-ai/backend/internal/auth"
+	"github.com/pitercoding/mindk-ai/backend/internal/httputil"
 	"github.com/pitercoding/mindk-ai/backend/internal/models"
 	"github.com/pitercoding/mindk-ai/backend/internal/repository"
 )
+
+const maxChatMessageLength = 8_000
 
 type ChatService interface {
 	Ask(
@@ -42,13 +44,7 @@ func (h *ChatHandler) Ask(w http.ResponseWriter, r *http.Request) {
 
 	var req models.ChatRequest
 
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		http.Error(
-			w,
-			"invalid request",
-			http.StatusBadRequest,
-		)
+	if err := httputil.DecodeJSON(w, r, httputil.MaxJSONBodyBytes, &req); err != nil {
 		return
 	}
 
@@ -56,6 +52,26 @@ func (h *ChatHandler) Ask(w http.ResponseWriter, r *http.Request) {
 		http.Error(
 			w,
 			"message is required",
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	if len(req.Message) > maxChatMessageLength {
+		http.Error(
+			w,
+			"message exceeds maximum length",
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	// Mode is only used to auto-create a session, so it only needs
+	// validating on that path - an existing session already has a mode.
+	if req.SessionID == 0 && req.Mode != "knowledge" && req.Mode != "note" {
+		http.Error(
+			w,
+			"mode must be 'knowledge' or 'note'",
 			http.StatusBadRequest,
 		)
 		return
@@ -87,7 +103,7 @@ func (h *ChatHandler) Ask(w http.ResponseWriter, r *http.Request) {
 
 		http.Error(
 			w,
-			fmt.Sprintf("failed to process chat: %v", err),
+			"failed to process chat request",
 			http.StatusInternalServerError,
 		)
 
