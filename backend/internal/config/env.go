@@ -1,46 +1,98 @@
 package config
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/joho/godotenv"
 )
 
-// defaultFrontendOrigin is used when FRONTEND_ORIGIN is unset, so local
-// development keeps working without every developer having to set it.
-const defaultFrontendOrigin = "http://localhost:5173"
+const (
+	EnvDevelopment = "development"
+	EnvProduction  = "production"
+
+	defaultEnvironment = EnvDevelopment
+
+	// defaultFrontendOrigin and defaultDatabasePath are development-only
+	// conveniences. In production these must be set explicitly.
+	defaultFrontendOrigin = "http://localhost:5173"
+	defaultDatabasePath   = "./data/mindk.db"
+)
 
 type Config struct {
+	Environment    string
 	OpenAIAPIKey   string
 	ClerkSecretKey string
 	FrontendOrigin string
+	DatabasePath   string
 }
 
+func (c *Config) IsProduction() bool {
+	return c.Environment == EnvProduction
+}
+
+// Load reads a .env file (if present) into the process environment, builds
+// the Config, and exits the process if the environment is invalid. A missing
+// .env file is not an error: production deployments are expected to inject
+// real environment variables instead of shipping a .env file.
 func Load() *Config {
-	err := godotenv.Load() // Search and open .env
+	if err := godotenv.Load(); err != nil && !os.IsNotExist(err) {
+		log.Fatalf("failed to load .env file: %v", err)
+	}
+
+	cfg, err := FromEnv(os.Getenv)
 	if err != nil {
-		log.Fatalf("failed to load environment variables: %v", err)
-	}
-
-	frontendOrigin := os.Getenv("FRONTEND_ORIGIN")
-	if frontendOrigin == "" {
-		frontendOrigin = defaultFrontendOrigin
-	}
-
-	cfg := &Config{
-		OpenAIAPIKey:   os.Getenv("OPENAI_API_KEY"),
-		ClerkSecretKey: os.Getenv("CLERK_SECRET_KEY"),
-		FrontendOrigin: frontendOrigin,
-	}
-
-	if cfg.OpenAIAPIKey == "" {
-		log.Fatal("OPENAI_API_KEY is not set")
-	}
-
-	if cfg.ClerkSecretKey == "" {
-		log.Fatal("CLERK_SECRET_KEY is not set")
+		log.Fatal(err)
 	}
 
 	return cfg
+}
+
+// FromEnv builds a Config from an arbitrary env lookup function. It applies
+// development-only defaults and enforces required/production-only variables,
+// but has no process-level side effects (no file I/O, no log.Fatal), so it
+// can be exercised directly in tests.
+func FromEnv(getenv func(string) string) (*Config, error) {
+	environment := getenv("APP_ENV")
+	if environment == "" {
+		environment = defaultEnvironment
+	}
+	if environment != EnvDevelopment && environment != EnvProduction {
+		return nil, fmt.Errorf("APP_ENV must be %q or %q, got %q", EnvDevelopment, EnvProduction, environment)
+	}
+
+	cfg := &Config{
+		Environment:    environment,
+		OpenAIAPIKey:   getenv("OPENAI_API_KEY"),
+		ClerkSecretKey: getenv("CLERK_SECRET_KEY"),
+		FrontendOrigin: getenv("FRONTEND_ORIGIN"),
+		DatabasePath:   getenv("DATABASE_PATH"),
+	}
+
+	if cfg.IsProduction() {
+		if cfg.FrontendOrigin == "" {
+			return nil, errors.New("FRONTEND_ORIGIN must be set explicitly when APP_ENV=production")
+		}
+		if cfg.DatabasePath == "" {
+			return nil, errors.New("DATABASE_PATH must be set explicitly when APP_ENV=production")
+		}
+	} else {
+		if cfg.FrontendOrigin == "" {
+			cfg.FrontendOrigin = defaultFrontendOrigin
+		}
+		if cfg.DatabasePath == "" {
+			cfg.DatabasePath = defaultDatabasePath
+		}
+	}
+
+	if cfg.OpenAIAPIKey == "" {
+		return nil, errors.New("OPENAI_API_KEY is not set")
+	}
+	if cfg.ClerkSecretKey == "" {
+		return nil, errors.New("CLERK_SECRET_KEY is not set")
+	}
+
+	return cfg, nil
 }
