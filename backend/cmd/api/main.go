@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/pitercoding/mindk-ai/backend/internal/app"
 	"github.com/pitercoding/mindk-ai/backend/internal/config"
@@ -14,13 +15,26 @@ import (
 	"github.com/rs/cors"
 )
 
+const (
+	serverAddr = ":8080"
+
+	// Chat requests wait on a full LLM completion and document uploads can
+	// carry up to 10 MiB, so timeouts are generous compared to a typical
+	// JSON API, while still bounding how long a stalled connection can hold
+	// a server resource open.
+	readTimeout       = 30 * time.Second
+	readHeaderTimeout = 10 * time.Second
+	writeTimeout      = 60 * time.Second
+	idleTimeout       = 120 * time.Second
+)
+
 func main() {
 
 	// 1. Load environment configuration
 	cfg := config.Load()
 
 	// 2. Connect to the database
-	err := database.Connect()
+	err := database.Connect(cfg.DatabasePath)
 	if err != nil {
 		log.Fatal("failed to connect database:", err)
 	}
@@ -55,14 +69,23 @@ func main() {
 
 	handler := middleware.SecurityHeaders(corsHandler)
 
+	server := &http.Server{
+		Addr:              serverAddr,
+		Handler:           handler,
+		ReadTimeout:       readTimeout,
+		ReadHeaderTimeout: readHeaderTimeout,
+		WriteTimeout:      writeTimeout,
+		IdleTimeout:       idleTimeout,
+	}
+
 	fmt.Println("\n============== Mindk AI ==============")
-	fmt.Println("Database connected successfully")
-	fmt.Println("Server running on http://localhost:8080")
+	fmt.Printf("Environment: %s\n", cfg.Environment)
+	fmt.Println("Database: connected")
+	fmt.Println("Migrations: applied")
+	fmt.Printf("Server listening on %s\n", server.Addr)
 
 	// 6. Start HTTP server
-	err = http.ListenAndServe(":8080", handler)
-
-	if err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 }
