@@ -3,17 +3,28 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	_ "modernc.org/sqlite"
 )
 
 var DB *sql.DB
 
-func Connect() error {
+func Connect(databasePath string) error {
+
+	if dir := filepath.Dir(databasePath); dir != "." {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return fmt.Errorf(
+				"failed to create database directory %q: %w",
+				dir, err,
+			)
+		}
+	}
 
 	db, err := sql.Open(
 		"sqlite",
-		"file:data/mindk.db?_busy_timeout=5000",
+		fmt.Sprintf("file:%s?_busy_timeout=5000", databasePath),
 	)
 
 	if err != nil {
