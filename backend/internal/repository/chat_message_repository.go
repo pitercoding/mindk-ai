@@ -26,27 +26,20 @@ func (r *ChatMessageRepository) Save(
 			role,
 			content
 		)
-		VALUES (?, ?, ?)
+		VALUES ($1, $2, $3)
+		RETURNING id
 	`
 
-	result, err := r.DB.Exec(
+	err := r.DB.QueryRow(
 		query,
 		message.SessionID,
 		message.Role,
 		message.Content,
-	)
+	).Scan(&message.ID)
 
 	if err != nil {
 		return err
 	}
-
-	id, err := result.LastInsertId()
-
-	if err != nil {
-		return err
-	}
-
-	message.ID = int(id)
 
 	return nil
 }
@@ -63,7 +56,7 @@ func (r *ChatMessageRepository) GetBySessionID(
 			content,
 			created_at
 		FROM chat_messages
-		WHERE session_id = ?
+		WHERE session_id = $1
 		ORDER BY created_at ASC
 	`
 

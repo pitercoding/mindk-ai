@@ -13,7 +13,7 @@ import (
 
 // TestOwnership_NotesAreIsolatedBetweenUsers proves user B cannot read,
 // update or delete a note created by user A - each operation must resolve
-// to 404, matching the repository's "WHERE id = ? AND user_id = ?" filter,
+// to 404, matching the repository's "WHERE id = $1 AND user_id = $2" filter,
 // never a 200 or a 403 that would confirm the note's existence.
 func TestOwnership_NotesAreIsolatedBetweenUsers(t *testing.T) {
 	server := testutil.NewServer(t)

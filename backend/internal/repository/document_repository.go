@@ -18,27 +18,22 @@ func NewDocumentRepository(db *sql.DB) *DocumentRepository {
 func (r *DocumentRepository) Create(document *models.Document) error {
 	query := `
 		INSERT INTO documents (user_id, name, type, content)
-		VALUES (?, ?, ?, ?)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id
 	`
 
-	result, err := r.DB.Exec(
+	err := r.DB.QueryRow(
 		query,
 		document.UserID,
 		document.Name,
 		document.Type,
 		document.Content,
-	)
+	).Scan(&document.ID)
 
 	if err != nil {
 		return err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	document.ID = int(id)
 	document.CreatedAt = time.Now()
 
 	return nil
@@ -54,7 +49,7 @@ func (r *DocumentRepository) GetAll(userID string) ([]models.Document, error) {
 			content,
 			created_at
 		FROM documents
-		WHERE user_id = ?
+		WHERE user_id = $1
 		ORDER BY created_at DESC
 	`
 
@@ -101,7 +96,7 @@ func (r *DocumentRepository) GetByID(id int, userID string) (*models.Document, e
 			content,
 			created_at
 		FROM documents
-		WHERE id = ? AND user_id = ?
+		WHERE id = $1 AND user_id = $2
 	`
 
 	var document models.Document
@@ -125,7 +120,7 @@ func (r *DocumentRepository) GetByID(id int, userID string) (*models.Document, e
 func (r *DocumentRepository) Delete(id int, userID string) error {
 	query := `
 	DELETE FROM documents
-	WHERE id = ? AND user_id = ?
+	WHERE id = $1 AND user_id = $2
 	`
 
 	result, err := r.DB.Exec(query, id, userID)
@@ -155,8 +150,8 @@ func (r *DocumentRepository) Search(term string, userID string) ([]models.Docume
 			content,
 			created_at
 		FROM documents
-		WHERE user_id = ?
-		AND (name LIKE ? OR content LIKE ?)
+		WHERE user_id = $1
+		AND (name LIKE $2 OR content LIKE $3)
 	`
 
 	search := "%" + term + "%"

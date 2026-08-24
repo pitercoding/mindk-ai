@@ -30,28 +30,21 @@ func (r *ChatSessionRepository) Create(
 			mode,
 			note_id
 		)
-		VALUES (?, ?, ?, ?)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id
 	`
 
-	result, err := r.DB.Exec(
+	err := r.DB.QueryRow(
 		query,
 		session.UserID,
 		session.Title,
 		session.Mode,
 		session.NoteID,
-	)
+	).Scan(&session.ID)
 
 	if err != nil {
 		return err
 	}
-
-	id, err := result.LastInsertId()
-
-	if err != nil {
-		return err
-	}
-
-	session.ID = int(id)
 
 	created, err := r.GetByID(session.ID, session.UserID)
 
@@ -79,7 +72,7 @@ func (r *ChatSessionRepository) GetAll(userID string) (
 			created_at,
 			updated_at
 		FROM chat_sessions
-		WHERE user_id = ?
+		WHERE user_id = $1
 		ORDER BY created_at DESC
 	`
 
@@ -139,7 +132,7 @@ func (r *ChatSessionRepository) GetByID(
 			created_at,
 			updated_at
 		FROM chat_sessions
-		WHERE id = ? AND user_id = ?
+		WHERE id = $1 AND user_id = $2
 	`
 
 	var session models.ChatSession
@@ -176,10 +169,10 @@ func (r *ChatSessionRepository) Update(
 	query := `
 		UPDATE chat_sessions
 		SET
-			title = ?,
-			mode = ?,
+			title = $1,
+			mode = $2,
 			updated_at = CURRENT_TIMESTAMP
-		WHERE id = ? AND user_id = ?
+		WHERE id = $3 AND user_id = $4
 	`
 
 	result, err := r.DB.Exec(
@@ -225,7 +218,7 @@ func (r *ChatSessionRepository) Delete(
 
 	query := `
 		DELETE FROM chat_sessions
-		WHERE id = ? AND user_id = ?
+		WHERE id = $1 AND user_id = $2
 	`
 
 	result, err := r.DB.Exec(

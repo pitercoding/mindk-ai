@@ -18,29 +18,24 @@ func NewNoteRepository(db *sql.DB) *NoteRepository {
 func (r *NoteRepository) Create(note *models.Note) error {
 	query := `
 		INSERT INTO notes (user_id, title, content, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id
 	`
 
 	now := time.Now()
 
-	result, err := r.DB.Exec(query,
+	err := r.DB.QueryRow(query,
 		note.UserID,
 		note.Title,
 		note.Content,
 		now,
 		now,
-	)
+	).Scan(&note.ID)
 
 	if err != nil {
 		return err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	note.ID = int(id)
 	note.CreatedAt = now
 	note.UpdatedAt = now
 
@@ -57,7 +52,7 @@ func (r *NoteRepository) GetAll(userID string) ([]models.Note, error) {
 			created_at,
 			updated_at
 		FROM notes
-		WHERE user_id = ?
+		WHERE user_id = $1
 		ORDER BY created_at DESC
 	`
 
@@ -104,7 +99,7 @@ func (r *NoteRepository) GetByID(id int, userID string) (*models.Note, error) {
 			created_at,
 			updated_at
 		FROM notes
-		WHERE id = ? AND user_id = ?
+		WHERE id = $1 AND user_id = $2
 	`
 
 	var note models.Note
@@ -128,8 +123,8 @@ func (r *NoteRepository) GetByID(id int, userID string) (*models.Note, error) {
 func (r *NoteRepository) Update(note *models.Note) error {
 	query := `
 		UPDATE notes
-		SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP
-		WHERE id = ? AND user_id = ?
+		SET title = $1, content = $2, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $3 AND user_id = $4
 	`
 
 	result, err := r.DB.Exec(query, note.Title, note.Content, note.ID, note.UserID)
@@ -152,7 +147,7 @@ func (r *NoteRepository) Update(note *models.Note) error {
 func (r *NoteRepository) Delete(id int, userID string) error {
 	query := `
 		DELETE FROM notes
-		WHERE id = ? AND user_id = ?
+		WHERE id = $1 AND user_id = $2
 	`
 
 	result, err := r.DB.Exec(query, id, userID)

@@ -26,26 +26,21 @@ func (r *DocumentChunkRepository) Create(chunk *models.DocumentChunk) error {
 			chunk_index,
 			content
 		)
-		VALUES (?, ?, ?)
+		VALUES ($1, $2, $3)
+		RETURNING id
 	`
 
-	result, err := r.DB.Exec(
+	err := r.DB.QueryRow(
 		query,
 		chunk.DocumentID,
 		chunk.ChunkIndex,
 		chunk.Content,
-	)
+	).Scan(&chunk.ID)
 
 	if err != nil {
 		return err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	chunk.ID = int(id)
 	chunk.CreatedAt = time.Now()
 
 	return nil
@@ -81,7 +76,7 @@ func (r *DocumentChunkRepository) GetByDocumentID(
 			content,
 			created_at
 		FROM document_chunks
-		WHERE document_id = ?
+		WHERE document_id = $1
 		ORDER BY chunk_index
 	`
 
@@ -134,7 +129,7 @@ func (r *DocumentChunkRepository) DeleteByDocumentID(
 
 	query := `
 		DELETE FROM document_chunks
-		WHERE document_id = ?
+		WHERE document_id = $1
 	`
 
 	_, err := r.DB.Exec(

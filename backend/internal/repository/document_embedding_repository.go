@@ -25,25 +25,20 @@ func (r *DocumentEmbeddingRepository) Create(embedding *models.DocumentEmbedding
 			chunk_id,
 			embedding
 		)
-		VALUES (?, ?)
+		VALUES ($1, $2)
+		RETURNING id
 	`
 
-	result, err := r.DB.Exec(
+	err := r.DB.QueryRow(
 		query,
 		embedding.ChunkID,
 		embedding.Embedding,
-	)
+	).Scan(&embedding.ID)
 
 	if err != nil {
 		return err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	embedding.ID = int(id)
 	embedding.CreatedAt = time.Now()
 
 	return nil
@@ -76,7 +71,7 @@ func (r *DocumentEmbeddingRepository) GetByChunkID(
             embedding,
             created_at
         FROM document_embeddings
-        WHERE chunk_id = ?
+        WHERE chunk_id = $1
     `
 
 	var embedding models.DocumentEmbedding
@@ -101,7 +96,7 @@ func (r *DocumentEmbeddingRepository) DeleteByChunkID(
 
 	query := `
 		DELETE FROM document_embeddings
-		WHERE chunk_id = ?
+		WHERE chunk_id = $1
 	`
 
 	_, err := r.DB.Exec(
@@ -135,7 +130,7 @@ func (r *DocumentEmbeddingRepository) GetAll(userID string) (
 			ON dc.id = de.chunk_id
 		INNER JOIN documents d
 			ON d.id = dc.document_id
-		WHERE d.user_id = ?
+		WHERE d.user_id = $1
 		ORDER BY dc.document_id, dc.chunk_index
 	`
 
