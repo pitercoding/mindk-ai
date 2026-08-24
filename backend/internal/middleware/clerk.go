@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -29,9 +30,13 @@ func NewClerkAuth(secretKey string) func(http.Handler) http.Handler {
 		return clerkhttp.WithHeaderAuthorization(clerkhttp.Leeway(clockLeeway))(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			claims, ok := clerk.SessionClaimsFromContext(r.Context())
 			if !ok || claims == nil || claims.Subject == "" {
+				requestID, _ := auth.RequestIDFromContext(r.Context())
+				slog.Warn("authentication failed", "path", r.URL.Path, "request_id", requestID)
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
+
+			recordUserID(r.Context(), claims.Subject)
 
 			ctx := auth.WithUserID(r.Context(), claims.Subject)
 			next.ServeHTTP(w, r.WithContext(ctx))
