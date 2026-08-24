@@ -67,6 +67,8 @@ func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 
+		httputil.LogError(r, "failed to create note", err)
+
 		http.Error(
 			w,
 			"failed to create note",
@@ -106,6 +108,7 @@ func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
 
 	notes, err := h.Service.GetAll(userID)
 	if err != nil {
+		httputil.LogError(r, "failed to fetch notes", err)
 		http.Error(w, "failed to fetch notes", http.StatusInternalServerError)
 		return
 	}
@@ -135,6 +138,7 @@ func (h *NoteHandler) GetNoteByID(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		httputil.LogError(r, "failed to fetch note", err)
 		http.Error(w, "failed to fetch note", http.StatusInternalServerError)
 		return
 	}
@@ -199,6 +203,7 @@ func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		httputil.LogError(r, "failed to update note", err)
 		http.Error(w, "failed to update note", http.StatusInternalServerError)
 		return
 	}
@@ -227,6 +232,7 @@ func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		httputil.LogError(r, "failed to delete note", err)
 		http.Error(w, "failed to delete note", http.StatusInternalServerError)
 		return
 	}

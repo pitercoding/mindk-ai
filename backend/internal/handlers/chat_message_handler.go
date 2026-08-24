@@ -99,6 +99,8 @@ func (h *ChatMessageHandler) Save(
 			return
 		}
 
+		httputil.LogError(r, "failed to save chat message", err)
+
 		http.Error(
 			w,
 			"failed to save message",
@@ -159,6 +161,8 @@ func (h *ChatMessageHandler) GetBySessionID(
 
 			return
 		}
+
+		httputil.LogError(r, "failed to fetch chat messages", err)
 
 		http.Error(
 			w,

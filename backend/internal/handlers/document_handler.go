@@ -71,6 +71,8 @@ func (h *DocumentHandler) CreateDocument(w http.ResponseWriter, r *http.Request)
 
 	if err != nil {
 
+		httputil.LogError(r, "failed to create document", err)
+
 		http.Error(
 			w,
 			"failed to create document",
@@ -140,6 +142,8 @@ func (h *DocumentHandler) UploadDocument(
 	)
 	if err != nil {
 
+		httputil.LogError(r, "failed to read uploaded file", err)
+
 		http.Error(
 			w,
 			"failed to read file",
@@ -159,6 +163,8 @@ func (h *DocumentHandler) UploadDocument(
 	err = h.Service.Create(&document)
 	if err != nil {
 
+		httputil.LogError(r, "failed to save document", err)
+
 		http.Error(
 			w,
 			"failed to save document",
@@ -167,6 +173,10 @@ func (h *DocumentHandler) UploadDocument(
 
 		return
 	}
+
+	// filename is deliberately omitted: it is user-supplied and may carry
+	// personal information, unlike the size/type of the upload.
+	httputil.LogInfo(r, "document uploaded", "size_bytes", len(content), "extension", extension)
 
 	w.Header().Set(
 		"Content-Type",
@@ -201,6 +211,7 @@ func (h *DocumentHandler) GetDocuments(w http.ResponseWriter, r *http.Request) {
 
 	documents, err := h.Service.GetAll(userID)
 	if err != nil {
+		httputil.LogError(r, "failed to fetch documents", err)
 		http.Error(w, "failed to fetch documents", http.StatusInternalServerError)
 		return
 	}
@@ -230,6 +241,7 @@ func (h *DocumentHandler) GetDocumentByID(w http.ResponseWriter, r *http.Request
 			return
 		}
 
+		httputil.LogError(r, "failed to fetch document", err)
 		http.Error(w, "failed to fetch document", http.StatusInternalServerError)
 		return
 	}
@@ -272,6 +284,7 @@ func (h *DocumentHandler) DeleteDocument(w http.ResponseWriter, r *http.Request)
 			return
 		}
 
+		httputil.LogError(r, "failed to delete document", err)
 		http.Error(w, "failed to delete document", http.StatusInternalServerError)
 		return
 	}
@@ -304,6 +317,10 @@ func (h *DocumentHandler) SearchDocuments(
 
 	documents, err := h.Service.Search(query, userID)
 	if err != nil {
+
+		// The query itself is not logged: it is free-text user input and may
+		// contain the same kind of personal content documents do.
+		httputil.LogError(r, "failed to search documents", err)
 
 		http.Error(
 			w,

@@ -129,6 +129,8 @@ func (h *ChatSessionHandler) CreateSession(
 
 	if err != nil {
 
+		httputil.LogError(r, "failed to create chat session", err)
+
 		http.Error(
 			w,
 			"failed to create session",
@@ -164,6 +166,8 @@ func (h *ChatSessionHandler) GetAllSessions(
 	sessions, err := h.Service.GetAll(userID)
 
 	if err != nil {
+
+		httputil.LogError(r, "failed to fetch chat sessions", err)
 
 		http.Error(
 			w,
@@ -223,6 +227,8 @@ func (h *ChatSessionHandler) GetSessionByID(
 
 			return
 		}
+
+		httputil.LogError(r, "failed to fetch chat session", err)
 
 		http.Error(
 			w,
@@ -297,6 +303,8 @@ func (h *ChatSessionHandler) UpdateSession(
 			return
 		}
 
+		httputil.LogError(r, "failed to update chat session", err)
+
 		http.Error(
 			w,
 			"failed to update session",
@@ -355,6 +363,8 @@ func (h *ChatSessionHandler) DeleteSession(
 
 			return
 		}
+
+		httputil.LogError(r, "failed to delete chat session", err)
 
 		http.Error(
 			w,

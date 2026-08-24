@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/pitercoding/mindk-ai/backend/internal/auth"
@@ -99,7 +98,7 @@ func (h *ChatHandler) Ask(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log.Printf("chat request failed: %v", err)
+		httputil.LogError(r, "chat request failed", err)
 
 		http.Error(
 			w,
