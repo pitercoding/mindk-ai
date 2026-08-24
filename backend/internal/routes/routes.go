@@ -11,35 +11,40 @@ import (
 
 // Rate limits are per authenticated user. Chat is limited more strictly
 // than the rest of the API because it drives RAG lookups and LLM calls,
-// which are far more expensive than a CRUD request.
+// which are far more expensive than a CRUD request. Exported so tests can
+// assert against the real production limits instead of duplicating them.
 const (
-	generalRateLimit = 60
-	chatRateLimit    = 10
-	rateLimitWindow  = time.Minute
+	GeneralRateLimit = 60
+	ChatRateLimit    = 10
+	RateLimitWindow  = time.Minute
 )
 
-func RegisterRoutes(app *app.App) {
+// RegisterRoutes wires every handler in app onto mux, exactly as production
+// serves them. Taking mux explicitly (rather than registering on
+// http.DefaultServeMux) lets each test build its own isolated server without
+// route registrations leaking between tests.
+func RegisterRoutes(mux *http.ServeMux, app *app.App) {
 
 	protected := app.AuthMiddleware
-	general := middleware.NewRateLimiter(generalRateLimit, rateLimitWindow).Middleware
-	chatLimit := middleware.NewRateLimiter(chatRateLimit, rateLimitWindow).Middleware
+	general := middleware.NewRateLimiter(GeneralRateLimit, RateLimitWindow).Middleware
+	chatLimit := middleware.NewRateLimiter(ChatRateLimit, RateLimitWindow).Middleware
 
 	// Public routes
-	http.HandleFunc("/health", handlers.HealthHandler)
+	mux.HandleFunc("/health", handlers.HealthHandler)
 
 	// Protected routes
-	http.Handle("/notes", protected(general(http.HandlerFunc(app.NoteHandler.HandleNotes))))
-	http.Handle("/notes/", protected(general(http.HandlerFunc(app.NoteHandler.HandleNote))))
+	mux.Handle("/notes", protected(general(http.HandlerFunc(app.NoteHandler.HandleNotes))))
+	mux.Handle("/notes/", protected(general(http.HandlerFunc(app.NoteHandler.HandleNote))))
 
-	http.Handle("/chat", protected(chatLimit(http.HandlerFunc(app.ChatHandler.Ask))))
+	mux.Handle("/chat", protected(chatLimit(http.HandlerFunc(app.ChatHandler.Ask))))
 
-	http.Handle("/chat/messages/", protected(general(http.HandlerFunc(app.ChatMessageHandler.HandleMessages))))
+	mux.Handle("/chat/messages/", protected(general(http.HandlerFunc(app.ChatMessageHandler.HandleMessages))))
 
-	http.Handle("/documents", protected(general(http.HandlerFunc(app.DocumentHandler.HandleDocuments))))
-	http.Handle("/documents/upload", protected(general(http.HandlerFunc(app.DocumentHandler.UploadDocument))))
-	http.Handle("/documents/search", protected(general(http.HandlerFunc(app.DocumentHandler.SearchDocuments))))
-	http.Handle("/documents/", protected(general(http.HandlerFunc(app.DocumentHandler.HandleDocument))))
+	mux.Handle("/documents", protected(general(http.HandlerFunc(app.DocumentHandler.HandleDocuments))))
+	mux.Handle("/documents/upload", protected(general(http.HandlerFunc(app.DocumentHandler.UploadDocument))))
+	mux.Handle("/documents/search", protected(general(http.HandlerFunc(app.DocumentHandler.SearchDocuments))))
+	mux.Handle("/documents/", protected(general(http.HandlerFunc(app.DocumentHandler.HandleDocument))))
 
-	http.Handle("/chat/sessions", protected(general(http.HandlerFunc(app.ChatSessionHandler.HandleSessions))))
-	http.Handle("/chat/sessions/", protected(general(http.HandlerFunc(app.ChatSessionHandler.HandleSession))))
+	mux.Handle("/chat/sessions", protected(general(http.HandlerFunc(app.ChatSessionHandler.HandleSessions))))
+	mux.Handle("/chat/sessions/", protected(general(http.HandlerFunc(app.ChatSessionHandler.HandleSession))))
 }

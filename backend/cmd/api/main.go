@@ -9,6 +9,7 @@ import (
 	"github.com/pitercoding/mindk-ai/backend/internal/app"
 	"github.com/pitercoding/mindk-ai/backend/internal/config"
 	"github.com/pitercoding/mindk-ai/backend/internal/database"
+	"github.com/pitercoding/mindk-ai/backend/internal/llm"
 	"github.com/pitercoding/mindk-ai/backend/internal/middleware"
 	"github.com/pitercoding/mindk-ai/backend/internal/migrations"
 	"github.com/pitercoding/mindk-ai/backend/internal/routes"
@@ -54,10 +55,12 @@ func main() {
 	slog.Info("migrations applied")
 
 	// 4. Build application dependencies
-	application := app.New(database.DB, cfg)
+	llmClient := llm.NewOpenAIClient(cfg.OpenAIAPIKey)
+	application := app.New(database.DB, cfg, llmClient)
 
 	// 5. Register HTTP routes
-	routes.RegisterRoutes(application)
+	mux := http.NewServeMux()
+	routes.RegisterRoutes(mux, application)
 
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins: []string{
@@ -73,7 +76,7 @@ func main() {
 			"Content-Type",
 			"Authorization",
 		},
-	}).Handler(http.DefaultServeMux)
+	}).Handler(mux)
 
 	handler := middleware.RequestLogger(middleware.SecurityHeaders(corsHandler))
 

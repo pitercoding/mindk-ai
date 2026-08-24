@@ -24,6 +24,7 @@ type App struct {
 func New(
 	db *sql.DB,
 	cfg *config.Config,
+	llmClient llm.Client,
 ) *App {
 
 	// Repository
@@ -35,8 +36,7 @@ func New(
 	documentEmbeddingRepo := repository.NewDocumentEmbeddingRepository(db)
 
 	// LLM Client
-	openAIClient := llm.NewOpenAIClient(cfg.OpenAIAPIKey)
-	embeddingGenerator := llm.NewOpenAIEmbeddingGenerator(openAIClient)
+	embeddingGenerator := llm.NewOpenAIEmbeddingGenerator(llmClient)
 
 	// Services
 	noteService := services.NewNoteService(noteRepo)
@@ -79,7 +79,7 @@ func New(
 		chatSessionService,
 		documentContextService,
 		chatMessageService,
-		openAIClient,
+		llmClient,
 	)
 
 	// Handlers

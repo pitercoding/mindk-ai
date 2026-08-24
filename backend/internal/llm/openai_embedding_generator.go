@@ -1,11 +1,11 @@
 package llm
 
 type OpenAIEmbeddingGenerator struct {
-	client *OpenAIClient
+	client Client
 }
 
 func NewOpenAIEmbeddingGenerator(
-	client *OpenAIClient,
+	client Client,
 ) *OpenAIEmbeddingGenerator {
 
 	return &OpenAIEmbeddingGenerator{
