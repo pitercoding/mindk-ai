@@ -26,7 +26,14 @@ type Config struct {
 	OpenAIAPIKey   string
 	ClerkSecretKey string
 	FrontendOrigin string
-	DatabasePath   string
+
+	// DatabasePath is the SQLite file used in development. Ignored in
+	// production.
+	DatabasePath string
+
+	// DatabaseURL is the PostgreSQL connection string used in production.
+	// Not used in development.
+	DatabaseURL string
 }
 
 func (c *Config) IsProduction() bool {
@@ -71,14 +78,15 @@ func FromEnv(getenv func(string) string) (*Config, error) {
 		ClerkSecretKey: getenv("CLERK_SECRET_KEY"),
 		FrontendOrigin: getenv("FRONTEND_ORIGIN"),
 		DatabasePath:   getenv("DATABASE_PATH"),
+		DatabaseURL:    getenv("DATABASE_URL"),
 	}
 
 	if cfg.IsProduction() {
 		if cfg.FrontendOrigin == "" {
 			return nil, errors.New("FRONTEND_ORIGIN must be set explicitly when APP_ENV=production")
 		}
-		if cfg.DatabasePath == "" {
-			return nil, errors.New("DATABASE_PATH must be set explicitly when APP_ENV=production")
+		if cfg.DatabaseURL == "" {
+			return nil, errors.New("DATABASE_URL must be set explicitly when APP_ENV=production")
 		}
 	} else {
 		if cfg.FrontendOrigin == "" {

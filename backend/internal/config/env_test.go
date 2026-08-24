@@ -16,7 +16,7 @@ func validProductionEnv() map[string]string {
 		"OPENAI_API_KEY":   "sk-test",
 		"CLERK_SECRET_KEY": "clerk-test",
 		"FRONTEND_ORIGIN":  "https://app.example.com",
-		"DATABASE_PATH":    "/var/lib/mindk/mindk.db",
+		"DATABASE_URL":     "postgres://user:password@localhost:5432/mindk",
 	}
 }
 
@@ -38,6 +38,9 @@ func TestFromEnv_DevelopmentDefaults(t *testing.T) {
 	if cfg.DatabasePath != defaultDatabasePath {
 		t.Errorf("expected default database path %q, got %q", defaultDatabasePath, cfg.DatabasePath)
 	}
+	if cfg.DatabaseURL != "" {
+		t.Errorf("expected empty database URL in development, got %q", cfg.DatabaseURL)
+	}
 	if cfg.IsProduction() {
 		t.Error("expected IsProduction() to be false in development")
 	}
@@ -55,8 +58,8 @@ func TestFromEnv_ValidProduction(t *testing.T) {
 	if cfg.FrontendOrigin != "https://app.example.com" {
 		t.Errorf("unexpected frontend origin %q", cfg.FrontendOrigin)
 	}
-	if cfg.DatabasePath != "/var/lib/mindk/mindk.db" {
-		t.Errorf("unexpected database path %q", cfg.DatabasePath)
+	if cfg.DatabaseURL != "postgres://user:password@localhost:5432/mindk" {
+		t.Errorf("unexpected database URL %q", cfg.DatabaseURL)
 	}
 }
 
@@ -69,12 +72,22 @@ func TestFromEnv_ProductionRequiresFrontendOrigin(t *testing.T) {
 	}
 }
 
-func TestFromEnv_ProductionRequiresDatabasePath(t *testing.T) {
+func TestFromEnv_ProductionRequiresDatabaseURL(t *testing.T) {
 	values := validProductionEnv()
-	delete(values, "DATABASE_PATH")
+	delete(values, "DATABASE_URL")
 
 	if _, err := FromEnv(fakeEnv(values)); err == nil {
-		t.Fatal("expected an error when DATABASE_PATH is missing in production")
+		t.Fatal("expected an error when DATABASE_URL is missing in production")
+	}
+}
+
+func TestFromEnv_ProductionWithDatabasePathButNoDatabaseURL(t *testing.T) {
+	values := validProductionEnv()
+	delete(values, "DATABASE_URL")
+	values["DATABASE_PATH"] = "/var/lib/mindk/mindk.db"
+
+	if _, err := FromEnv(fakeEnv(values)); err == nil {
+		t.Fatal("expected an error when only DATABASE_PATH (not DATABASE_URL) is set in production")
 	}
 }
 
