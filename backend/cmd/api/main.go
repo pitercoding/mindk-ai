@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/pitercoding/mindk-ai/backend/internal/app"
@@ -30,20 +30,28 @@ const (
 
 func main() {
 
+	// slog.Default is set up first so every subsequent step - including
+	// config loading - logs through the same structured JSON handler.
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+
 	// 1. Load environment configuration
 	cfg := config.Load()
 
 	// 2. Connect to the database
 	err := database.Connect(cfg.DatabasePath)
 	if err != nil {
-		log.Fatal("failed to connect database:", err)
+		slog.Error("failed to connect database", "error", err)
+		os.Exit(1)
 	}
+	slog.Info("database connected")
 
 	// 3. Run database migrations
 	err = migrations.Run(database.DB)
 	if err != nil {
-		log.Fatal("failed to run migrations:", err)
+		slog.Error("failed to run migrations", "error", err)
+		os.Exit(1)
 	}
+	slog.Info("migrations applied")
 
 	// 4. Build application dependencies
 	application := app.New(database.DB, cfg)
@@ -67,7 +75,7 @@ func main() {
 		},
 	}).Handler(http.DefaultServeMux)
 
-	handler := middleware.SecurityHeaders(corsHandler)
+	handler := middleware.RequestLogger(middleware.SecurityHeaders(corsHandler))
 
 	server := &http.Server{
 		Addr:              serverAddr,
@@ -78,14 +86,11 @@ func main() {
 		IdleTimeout:       idleTimeout,
 	}
 
-	fmt.Println("\n============== Mindk AI ==============")
-	fmt.Printf("Environment: %s\n", cfg.Environment)
-	fmt.Println("Database: connected")
-	fmt.Println("Migrations: applied")
-	fmt.Printf("Server listening on %s\n", server.Addr)
+	slog.Info("server starting", "environment", cfg.Environment, "addr", server.Addr)
 
 	// 6. Start HTTP server
 	if err := server.ListenAndServe(); err != nil {
-		log.Fatal(err)
+		slog.Error("server failed", "error", err)
+		os.Exit(1)
 	}
 }

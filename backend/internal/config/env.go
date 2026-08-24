@@ -3,7 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -39,12 +39,14 @@ func (c *Config) IsProduction() bool {
 // real environment variables instead of shipping a .env file.
 func Load() *Config {
 	if err := godotenv.Load(); err != nil && !os.IsNotExist(err) {
-		log.Fatalf("failed to load .env file: %v", err)
+		slog.Error("failed to load .env file", "error", err)
+		os.Exit(1)
 	}
 
 	cfg, err := FromEnv(os.Getenv)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("invalid configuration", "error", err)
+		os.Exit(1)
 	}
 
 	return cfg
