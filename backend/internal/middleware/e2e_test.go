@@ -67,7 +67,7 @@ func newE2ETestServerWithRateLimit(t *testing.T, rl *RateLimiter) *httptest.Serv
 	mux.Handle("/notes", wrap(noteHandler.HandleNotes))
 	mux.Handle("/notes/", wrap(noteHandler.HandleNote))
 
-	server := httptest.NewServer(SecurityHeaders(mux))
+	server := httptest.NewServer(RequestLogger(SecurityHeaders(mux)))
 	t.Cleanup(server.Close)
 
 	return server
@@ -388,4 +388,62 @@ func TestE2E_NonexistentResourceReturnsNotFound(t *testing.T) {
 	defer res.Body.Close()
 
 	require.Equal(t, http.StatusNotFound, res.StatusCode)
+}
+
+// TestE2E_RequestIDHeaderPresent proves RequestLogger is actually wired in
+// front of the real stack: even an unauthenticated 401 response carries a
+// correlation ID, so a client-reported error can always be traced server-side.
+func TestE2E_RequestIDHeaderPresent(t *testing.T) {
+	server := newE2ETestServer(t)
+
+	res, err := server.Client().Get(server.URL + "/notes")
+	require.NoError(t, err)
+	defer res.Body.Close()
+
+	require.Equal(t, http.StatusUnauthorized, res.StatusCode)
+	require.NotEmpty(t, res.Header.Get("X-Request-ID"))
+}
+
+// TestE2E_RequestLogIncludesUserIDAndMatchesResponseHeader proves the
+// access log for an authenticated request carries the same request_id
+// returned to the client, plus the user ID resolved from the JWT - not
+// anything client-supplied - and nothing else about the request/response
+// bodies.
+func TestE2E_RequestLogIncludesUserIDAndMatchesResponseHeader(t *testing.T) {
+	buf := captureSlog(t)
+
+	server := newE2ETestServer(t)
+	token := tokenFor(t, "user_a")
+
+	req, err := http.NewRequest(http.MethodGet, server.URL+"/notes", nil)
+	require.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	res, err := server.Client().Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+
+	entry := decodeLastLogLine(t, buf)
+	require.Equal(t, "request completed", entry["msg"])
+	require.Equal(t, res.Header.Get("X-Request-ID"), entry["request_id"])
+	require.Equal(t, "user_a", entry["user_id"])
+	require.Equal(t, "/notes", entry["path"])
+	require.Equal(t, float64(http.StatusOK), entry["status"])
+}
+
+// TestE2E_AuthFailureIsLogged proves a rejected request leaves a trace on
+// the server, even though the client only ever sees a bare 401 - closing the
+// gap where Clerk rejections used to be entirely silent server-side.
+func TestE2E_AuthFailureIsLogged(t *testing.T) {
+	buf := captureSlog(t)
+
+	server := newE2ETestServer(t)
+
+	res, err := server.Client().Get(server.URL + "/notes")
+	require.NoError(t, err)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusUnauthorized, res.StatusCode)
+
+	require.Contains(t, buf.String(), "authentication failed")
 }
