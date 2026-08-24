@@ -47,7 +47,7 @@ func newE2ETestServerWithRateLimit(t *testing.T, rl *RateLimiter) *httptest.Serv
 
 	// A single connection keeps every query on the same in-memory database.
 	db.SetMaxOpenConns(1)
-	require.NoError(t, migrations.Run(db))
+	require.NoError(t, migrations.Run(db, migrations.DialectSQLite))
 
 	noteRepo := repository.NewNoteRepository(db)
 	noteService := services.NewNoteService(noteRepo)

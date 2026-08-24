@@ -22,7 +22,7 @@ func newChatIntegrationTestDB(t *testing.T) *sql.DB {
 	// A single connection keeps every query on the same in-memory database.
 	db.SetMaxOpenConns(1)
 
-	require.NoError(t, migrations.Run(db))
+	require.NoError(t, migrations.Run(db, migrations.DialectSQLite))
 
 	return db
 }

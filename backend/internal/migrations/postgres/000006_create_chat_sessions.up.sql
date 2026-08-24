@@ -1,0 +1,9 @@
+CREATE TABLE chat_sessions (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    mode TEXT NOT NULL,
+    note_id INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (note_id) REFERENCES notes(id) ON DELETE CASCADE
+);

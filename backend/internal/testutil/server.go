@@ -15,11 +15,13 @@ import (
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/clerk/clerk-sdk-go/v2"
 	"github.com/clerk/clerk-sdk-go/v2/clerktest"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/rs/cors"
 	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
@@ -65,7 +67,69 @@ func NewServer(t *testing.T) *Server {
 	t.Cleanup(func() { db.Close() })
 
 	db.SetMaxOpenConns(1)
-	require.NoError(t, migrations.Run(db))
+	require.NoError(t, migrations.Run(db, migrations.DialectSQLite))
+
+	return newServer(t, db, dbPath)
+}
+
+// postgresTestURLEnv names the environment variable NewPostgresServer reads
+// its connection string from. It is opt-in and never read by `go test ./...`
+// unless a caller has explicitly set it, so the default test run never
+// depends on a real PostgreSQL instance being available.
+const postgresTestURLEnv = "POSTGRES_TEST_URL"
+
+// NewPostgresServer builds and starts a Server backed by a real PostgreSQL
+// database at the POSTGRES_TEST_URL environment variable, migrated on
+// startup. It exists to validate the application against real PostgreSQL
+// (placeholder syntax, RETURNING id, migration compatibility) alongside the
+// SQLite-backed NewServer used by the rest of the suite. The test is skipped
+// if POSTGRES_TEST_URL is unset. All application tables are truncated before
+// the server is built so every test starts from an empty database.
+func NewPostgresServer(t *testing.T) *Server {
+	t.Helper()
+
+	url := os.Getenv(postgresTestURLEnv)
+	if url == "" {
+		t.Skipf("%s not set, skipping PostgreSQL integration test", postgresTestURLEnv)
+	}
+
+	db, err := sql.Open("pgx", url)
+	require.NoError(t, err)
+	t.Cleanup(func() { db.Close() })
+
+	require.NoError(t, db.Ping())
+	require.NoError(t, migrations.Run(db, migrations.DialectPostgres))
+	truncateAllTables(t, db)
+
+	return newServer(t, db, "")
+}
+
+// truncateAllTables empties every application table (but keeps the schema
+// migrations golang-migrate already applied) so each PostgreSQL test run
+// starts from a clean, empty database, mirroring the fresh SQLite file
+// NewServer gets from t.TempDir().
+func truncateAllTables(t *testing.T, db *sql.DB) {
+	t.Helper()
+
+	_, err := db.Exec(`
+		TRUNCATE TABLE
+			document_embeddings,
+			document_chunks,
+			documents,
+			chat_messages,
+			chat_sessions,
+			notes
+		RESTART IDENTITY CASCADE
+	`)
+	require.NoError(t, err)
+}
+
+// newServer wires the real application (handlers, services, repositories,
+// middleware, CORS) on top of db and starts it behind an httptest.Server.
+// dbPath is only meaningful for the SQLite config path; PostgreSQL callers
+// pass "".
+func newServer(t *testing.T, db *sql.DB, dbPath string) *Server {
+	t.Helper()
 
 	cfg := &config.Config{
 		Environment:    config.EnvDevelopment,

@@ -39,15 +39,15 @@ func main() {
 	cfg := config.Load()
 
 	// 2. Connect to the database
-	err := database.Connect(cfg.DatabasePath)
+	err := database.Connect(cfg)
 	if err != nil {
 		slog.Error("failed to connect database", "error", err)
 		os.Exit(1)
 	}
-	slog.Info("database connected")
+	slog.Info("database connected", "dialect", database.Dialect)
 
 	// 3. Run database migrations
-	err = migrations.Run(database.DB)
+	err = migrations.Run(database.DB, database.Dialect)
 	if err != nil {
 		slog.Error("failed to run migrations", "error", err)
 		os.Exit(1)
