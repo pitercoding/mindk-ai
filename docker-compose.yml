@@ -1,0 +1,40 @@
+services:
+
+  postgres:
+    image: postgres:18
+    container_name: mindk-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mindk
+      POSTGRES_USER: mindk
+      POSTGRES_PASSWORD: mindk_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - mindk-postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mindk -d mindk"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mindk-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      DATABASE_URL: postgres://mindk:mindk_dev_password@postgres:5432/mindk
+      FRONTEND_ORIGIN: http://localhost:5173
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
+    ports:
+      - "8080:8080"
+
+volumes:
+  mindk-postgres-data:
