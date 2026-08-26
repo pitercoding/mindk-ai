@@ -1,8 +1,6 @@
 import { getToken } from "@clerk/react";
 
-const API_URL =
-    import.meta.env.VITE_API_URL ??
-    "http://localhost:8080";
+import { API_URL } from "@/api/client";
 
 export async function uploadDocument(
     file: File,
