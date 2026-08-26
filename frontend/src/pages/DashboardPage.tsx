@@ -23,6 +23,7 @@ export default function DashboardPage() {
         selected,
         selectNote,
         selectDocument,
+        clearSelection,
     } = useSelectedKnowledge();
 
 
@@ -41,12 +42,34 @@ export default function DashboardPage() {
             setNotes(notesResponse);
             setDocuments(documentsResponse);
 
-            if (!selected) {
-                if (notesResponse.length > 0) {
-                    selectNote(notesResponse[0]);
-                } else if (documentsResponse.length > 0) {
-                    selectDocument(documentsResponse[0]);
+            if (selected?.type === "note") {
+
+                const freshNote = notesResponse.find(
+                    (note) => note.id === selected.item.id
+                );
+
+                if (freshNote) {
+                    selectNote(freshNote);
+                } else {
+                    clearSelection();
                 }
+
+            } else if (selected?.type === "document") {
+
+                const freshDocument = documentsResponse.find(
+                    (document) => document.id === selected.item.id
+                );
+
+                if (freshDocument) {
+                    selectDocument(freshDocument);
+                } else {
+                    clearSelection();
+                }
+
+            } else if (notesResponse.length > 0) {
+                selectNote(notesResponse[0]);
+            } else if (documentsResponse.length > 0) {
+                selectDocument(documentsResponse[0]);
             }
 
         } catch (error) {
