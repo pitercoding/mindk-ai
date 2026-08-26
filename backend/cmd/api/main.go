@@ -17,8 +17,6 @@ import (
 )
 
 const (
-	serverAddr = ":8080"
-
 	// Chat requests wait on a full LLM completion and document uploads can
 	// carry up to 10 MiB, so timeouts are generous compared to a typical
 	// JSON API, while still bounding how long a stalled connection can hold
@@ -81,7 +79,7 @@ func main() {
 	handler := middleware.RequestLogger(middleware.SecurityHeaders(corsHandler))
 
 	server := &http.Server{
-		Addr:              serverAddr,
+		Addr:              ":" + cfg.Port,
 		Handler:           handler,
 		ReadTimeout:       readTimeout,
 		ReadHeaderTimeout: readHeaderTimeout,

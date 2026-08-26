@@ -41,8 +41,34 @@ func TestFromEnv_DevelopmentDefaults(t *testing.T) {
 	if cfg.DatabaseURL != "" {
 		t.Errorf("expected empty database URL in development, got %q", cfg.DatabaseURL)
 	}
+	if cfg.Port != defaultPort {
+		t.Errorf("expected default port %q, got %q", defaultPort, cfg.Port)
+	}
 	if cfg.IsProduction() {
 		t.Error("expected IsProduction() to be false in development")
+	}
+}
+
+func TestFromEnv_PortFromEnv(t *testing.T) {
+	values := validProductionEnv()
+	values["PORT"] = "3000"
+
+	cfg, err := FromEnv(fakeEnv(values))
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if cfg.Port != "3000" {
+		t.Errorf("expected port %q, got %q", "3000", cfg.Port)
+	}
+}
+
+func TestFromEnv_PortDefaultsInProduction(t *testing.T) {
+	cfg, err := FromEnv(fakeEnv(validProductionEnv()))
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if cfg.Port != defaultPort {
+		t.Errorf("expected default port %q, got %q", defaultPort, cfg.Port)
 	}
 }
 

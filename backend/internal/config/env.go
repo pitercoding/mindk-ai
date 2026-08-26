@@ -19,6 +19,10 @@ const (
 	// conveniences. In production these must be set explicitly.
 	defaultFrontendOrigin = "http://localhost:5173"
 	defaultDatabasePath   = "./data/mindk.db"
+
+	// defaultPort is used when the hosting environment (or docker-compose)
+	// does not inject PORT. Render sets PORT itself in production.
+	defaultPort = "8080"
 )
 
 type Config struct {
@@ -26,6 +30,9 @@ type Config struct {
 	OpenAIAPIKey   string
 	ClerkSecretKey string
 	FrontendOrigin string
+
+	// Port is the HTTP port the server listens on.
+	Port string
 
 	// DatabasePath is the SQLite file used in development. Ignored in
 	// production.
@@ -79,6 +86,10 @@ func FromEnv(getenv func(string) string) (*Config, error) {
 		FrontendOrigin: getenv("FRONTEND_ORIGIN"),
 		DatabasePath:   getenv("DATABASE_PATH"),
 		DatabaseURL:    getenv("DATABASE_URL"),
+		Port:           getenv("PORT"),
+	}
+	if cfg.Port == "" {
+		cfg.Port = defaultPort
 	}
 
 	if cfg.IsProduction() {
