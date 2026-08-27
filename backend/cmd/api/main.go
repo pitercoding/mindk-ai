@@ -27,6 +27,17 @@ const (
 	idleTimeout       = 120 * time.Second
 )
 
+// @title MindK AI API
+// @version 1.0
+// @description MindK AI API: notes, documents with semantic search (RAG), and AI chat over that content.
+// @description All endpoints require authentication except /health.
+//
+// @BasePath /
+//
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Clerk session token. Format: "Bearer <token>".
 func main() {
 
 	// slog.Default is set up first so every subsequent step - including

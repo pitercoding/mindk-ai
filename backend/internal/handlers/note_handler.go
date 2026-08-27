@@ -34,6 +34,21 @@ func NewNoteHandler(service NoteService) *NoteHandler {
 	}
 }
 
+// CreateNote creates a note for the authenticated user.
+//
+//	@Summary		Create note
+//	@Description	Creates a note owned by the authenticated user. user_id, id, created_at and updated_at are set by the server; any values sent by the client for them are ignored.
+//	@Tags			notes
+//	@Security		BearerAuth
+//	@Accept			json
+//	@Produce		json
+//	@Param			note	body		models.Note	true	"Note to create (title and content are read; other fields are ignored)"
+//	@Success		201		{object}	models.Note
+//	@Failure		400		{string}	string	"title and content are required, or exceed the maximum length"
+//	@Failure		401		{string}	string	"unauthorized"
+//	@Failure		413		{string}	string	"request body too large"
+//	@Failure		500		{string}	string	"failed to create note"
+//	@Router			/notes [post]
 func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.UserIDFromContext(r.Context())
 	if !ok {
@@ -99,6 +114,17 @@ func (h *NoteHandler) HandleNotes(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetNotes lists every note owned by the authenticated user.
+//
+//	@Summary		List notes
+//	@Description	Returns every note owned by the authenticated user.
+//	@Tags			notes
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Success		200	{array}		models.Note
+//	@Failure		401	{string}	string	"unauthorized"
+//	@Failure		500	{string}	string	"failed to fetch notes"
+//	@Router			/notes [get]
 func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.UserIDFromContext(r.Context())
 	if !ok {
@@ -118,6 +144,20 @@ func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(notes)
 }
 
+// GetNoteByID returns one note owned by the authenticated user.
+//
+//	@Summary		Get note by ID
+//	@Description	Returns a single note, if it exists and is owned by the authenticated user.
+//	@Tags			notes
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			id	path		int	true	"Note ID"
+//	@Success		200	{object}	models.Note
+//	@Failure		400	{string}	string	"invalid note id"
+//	@Failure		401	{string}	string	"unauthorized"
+//	@Failure		404	{string}	string	"note not found"
+//	@Failure		500	{string}	string	"failed to fetch note"
+//	@Router			/notes/{id} [get]
 func (h *NoteHandler) GetNoteByID(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.UserIDFromContext(r.Context())
 	if !ok {
@@ -164,6 +204,24 @@ func (h *NoteHandler) HandleNote(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// UpdateNote replaces the title and content of a note owned by the
+// authenticated user.
+//
+//	@Summary		Update note
+//	@Description	Replaces title and content of an existing note owned by the authenticated user. user_id is taken from the token, not the body.
+//	@Tags			notes
+//	@Security		BearerAuth
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int			true	"Note ID"
+//	@Param			note	body		models.Note	true	"Updated title and content"
+//	@Success		200		{object}	models.Note
+//	@Failure		400		{string}	string	"invalid note id, or title/content missing/too long"
+//	@Failure		401		{string}	string	"unauthorized"
+//	@Failure		404		{string}	string	"note not found"
+//	@Failure		413		{string}	string	"request body too large"
+//	@Failure		500		{string}	string	"failed to update note"
+//	@Router			/notes/{id} [put]
 func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.UserIDFromContext(r.Context())
 	if !ok {
@@ -212,6 +270,19 @@ func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(note)
 }
 
+// DeleteNote deletes a note owned by the authenticated user.
+//
+//	@Summary		Delete note
+//	@Description	Deletes a note owned by the authenticated user.
+//	@Tags			notes
+//	@Security		BearerAuth
+//	@Param			id	path	int	true	"Note ID"
+//	@Success		204	"No Content"
+//	@Failure		400	{string}	string	"invalid note id"
+//	@Failure		401	{string}	string	"unauthorized"
+//	@Failure		404	{string}	string	"note not found"
+//	@Failure		500	{string}	string	"failed to delete note"
+//	@Router			/notes/{id} [delete]
 func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.UserIDFromContext(r.Context())
 	if !ok {

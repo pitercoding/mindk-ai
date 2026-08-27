@@ -31,6 +31,25 @@ func NewChatMessageHandler(
 	}
 }
 
+// Save persists a chat message on a session owned by the authenticated
+// user. The session ID is read from the request body (session_id), not
+// from the path - this is distinct from GetBySessionID below, which reads
+// it from the path.
+//
+//	@Summary		Save chat message
+//	@Description	Saves a message (role "user" or "assistant") on an existing chat session owned by the authenticated user. The session is identified by session_id in the body, not in the URL.
+//	@Tags			chat-messages
+//	@Security		BearerAuth
+//	@Accept			json
+//	@Produce		json
+//	@Param			message	body		models.ChatMessage	true	"Message to save (session_id, role and content are required)"
+//	@Success		201		{object}	models.ChatMessage
+//	@Failure		400		{string}	string	"content is required/too long, or role is invalid"
+//	@Failure		401		{string}	string	"unauthorized"
+//	@Failure		404		{string}	string	"session not found"
+//	@Failure		413		{string}	string	"request body too large"
+//	@Failure		500		{string}	string	"failed to save message"
+//	@Router			/chat/messages/ [post]
 func (h *ChatMessageHandler) Save(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -120,6 +139,22 @@ func (h *ChatMessageHandler) Save(
 	json.NewEncoder(w).Encode(message)
 }
 
+// GetBySessionID lists every message on a chat session owned by the
+// authenticated user. The session ID is read from the path - this is
+// distinct from Save above, which reads it from the request body.
+//
+//	@Summary		List messages in a chat session
+//	@Description	Returns every message on the given chat session, if it exists and is owned by the authenticated user. The session is identified by its ID in the URL.
+//	@Tags			chat-messages
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			sessionId	path		int	true	"Chat session ID"
+//	@Success		200			{array}		models.ChatMessage
+//	@Failure		400			{string}	string	"invalid session id"
+//	@Failure		401			{string}	string	"unauthorized"
+//	@Failure		404			{string}	string	"session not found"
+//	@Failure		500			{string}	string	"failed to fetch chat messages"
+//	@Router			/chat/messages/{sessionId} [get]
 func (h *ChatMessageHandler) GetBySessionID(
 	w http.ResponseWriter,
 	r *http.Request,

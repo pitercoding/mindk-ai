@@ -100,6 +100,21 @@ func (h *ChatSessionHandler) HandleSession(
 	}
 }
 
+// CreateSession creates a chat session owned by the authenticated user.
+//
+//	@Summary		Create chat session
+//	@Description	Creates a chat session. mode must be "knowledge" or "note"; note_id is meaningful only for "note" mode. user_id is taken from the token, not the body.
+//	@Tags			chat-sessions
+//	@Security		BearerAuth
+//	@Accept			json
+//	@Produce		json
+//	@Param			session	body		models.ChatSession	true	"Session to create (title and mode are required)"
+//	@Success		201		{object}	models.ChatSession
+//	@Failure		400		{string}	string	"title and mode are required, title too long, or mode is invalid"
+//	@Failure		401		{string}	string	"unauthorized"
+//	@Failure		413		{string}	string	"request body too large"
+//	@Failure		500		{string}	string	"failed to create session"
+//	@Router			/chat/sessions [post]
 func (h *ChatSessionHandler) CreateSession(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -152,6 +167,17 @@ func (h *ChatSessionHandler) CreateSession(
 	json.NewEncoder(w).Encode(session)
 }
 
+// GetAllSessions lists every chat session owned by the authenticated user.
+//
+//	@Summary		List chat sessions
+//	@Description	Returns every chat session owned by the authenticated user.
+//	@Tags			chat-sessions
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Success		200	{array}		models.ChatSession
+//	@Failure		401	{string}	string	"unauthorized"
+//	@Failure		500	{string}	string	"failed to fetch sessions"
+//	@Router			/chat/sessions [get]
 func (h *ChatSessionHandler) GetAllSessions(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -186,6 +212,20 @@ func (h *ChatSessionHandler) GetAllSessions(
 	json.NewEncoder(w).Encode(sessions)
 }
 
+// GetSessionByID returns one chat session owned by the authenticated user.
+//
+//	@Summary		Get chat session by ID
+//	@Description	Returns a single chat session, if it exists and is owned by the authenticated user.
+//	@Tags			chat-sessions
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			id	path		int	true	"Chat session ID"
+//	@Success		200	{object}	models.ChatSession
+//	@Failure		400	{string}	string	"invalid session id"
+//	@Failure		401	{string}	string	"unauthorized"
+//	@Failure		404	{string}	string	"session not found"
+//	@Failure		500	{string}	string	"failed to fetch session"
+//	@Router			/chat/sessions/{id} [get]
 func (h *ChatSessionHandler) GetSessionByID(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -247,6 +287,24 @@ func (h *ChatSessionHandler) GetSessionByID(
 	json.NewEncoder(w).Encode(session)
 }
 
+// UpdateSession replaces the title/mode/note_id of a chat session owned by
+// the authenticated user.
+//
+//	@Summary		Update chat session
+//	@Description	Replaces title, mode and note_id of an existing chat session owned by the authenticated user.
+//	@Tags			chat-sessions
+//	@Security		BearerAuth
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int					true	"Chat session ID"
+//	@Param			session	body		models.ChatSession	true	"Updated title and mode"
+//	@Success		200		{object}	models.ChatSession
+//	@Failure		400		{string}	string	"invalid session id, title/mode missing, title too long, or mode is invalid"
+//	@Failure		401		{string}	string	"unauthorized"
+//	@Failure		404		{string}	string	"session not found"
+//	@Failure		413		{string}	string	"request body too large"
+//	@Failure		500		{string}	string	"failed to update session"
+//	@Router			/chat/sessions/{id} [put]
 func (h *ChatSessionHandler) UpdateSession(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -322,6 +380,20 @@ func (h *ChatSessionHandler) UpdateSession(
 	json.NewEncoder(w).Encode(session)
 }
 
+// DeleteSession deletes a chat session (and its messages) owned by the
+// authenticated user.
+//
+//	@Summary		Delete chat session
+//	@Description	Deletes a chat session owned by the authenticated user.
+//	@Tags			chat-sessions
+//	@Security		BearerAuth
+//	@Param			id	path	int	true	"Chat session ID"
+//	@Success		204	"No Content"
+//	@Failure		400	{string}	string	"invalid session id"
+//	@Failure		401	{string}	string	"unauthorized"
+//	@Failure		404	{string}	string	"session not found"
+//	@Failure		500	{string}	string	"failed to delete session"
+//	@Router			/chat/sessions/{id} [delete]
 func (h *ChatSessionHandler) DeleteSession(
 	w http.ResponseWriter,
 	r *http.Request,
