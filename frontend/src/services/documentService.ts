@@ -39,7 +39,7 @@ export async function searchDocuments(
 
     const response =
         await apiClient<Document[]>(
-            `/documents/search?q=${query}`
+            `/documents/search?q=${encodeURIComponent(query)}`
         );
 
     return response ?? [];
