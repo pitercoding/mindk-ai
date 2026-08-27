@@ -31,10 +31,6 @@ export async function uploadDocument(
         throw new Error(
             errorMessage,
         );
-
-        // throw new Error(
-        //     `Upload failed (${response.status})`,
-        // );
     }
 
     return response.json();
