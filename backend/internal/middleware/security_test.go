@@ -23,6 +23,7 @@ func TestSecurityHeaders(t *testing.T) {
 	assert.Equal(t, "no-referrer", recorder.Header().Get("Referrer-Policy"))
 	assert.Equal(t, "default-src 'none'", recorder.Header().Get("Content-Security-Policy"))
 	assert.Equal(t, "no-store", recorder.Header().Get("Cache-Control"))
+	assert.Equal(t, "max-age=63072000; includeSubDomains", recorder.Header().Get("Strict-Transport-Security"))
 }
 
 // TestSecurityHeaders_SwaggerPathGetsRelaxedCSP proves the Swagger UI (which

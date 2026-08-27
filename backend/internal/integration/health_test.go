@@ -27,4 +27,5 @@ func TestHealth_OKWithSecurityAndTracingHeaders(t *testing.T) {
 	require.Equal(t, "no-referrer", res.Header.Get("Referrer-Policy"))
 	require.Equal(t, "default-src 'none'", res.Header.Get("Content-Security-Policy"))
 	require.Equal(t, "no-store", res.Header.Get("Cache-Control"))
+	require.Equal(t, "max-age=63072000; includeSubDomains", res.Header.Get("Strict-Transport-Security"))
 }

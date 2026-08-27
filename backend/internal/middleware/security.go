@@ -23,6 +23,7 @@ func SecurityHeaders(next http.Handler) http.Handler {
 		h.Set("X-Frame-Options", "DENY")
 		h.Set("Referrer-Policy", "no-referrer")
 		h.Set("Cache-Control", "no-store")
+		h.Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 
 		if strings.HasPrefix(r.URL.Path, "/swagger/") {
 			h.Set("Content-Security-Policy", swaggerCSP)
