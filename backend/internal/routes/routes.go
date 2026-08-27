@@ -4,7 +4,11 @@ import (
 	"net/http"
 	"time"
 
+	httpSwagger "github.com/swaggo/http-swagger/v2"
+
+	_ "github.com/pitercoding/mindk-ai/backend/docs"
 	"github.com/pitercoding/mindk-ai/backend/internal/app"
+	"github.com/pitercoding/mindk-ai/backend/internal/config"
 	"github.com/pitercoding/mindk-ai/backend/internal/handlers"
 	"github.com/pitercoding/mindk-ai/backend/internal/middleware"
 )
@@ -47,4 +51,11 @@ func RegisterRoutes(mux *http.ServeMux, app *app.App) {
 
 	mux.Handle("/chat/sessions", protected(general(http.HandlerFunc(app.ChatSessionHandler.HandleSessions))))
 	mux.Handle("/chat/sessions/", protected(general(http.HandlerFunc(app.ChatSessionHandler.HandleSession))))
+
+	// Swagger UI is a development aid only. It is never registered in
+	// production, so /swagger/ simply 404s there instead of needing its own
+	// auth story.
+	if app.Environment == config.EnvDevelopment {
+		mux.Handle("/swagger/", httpSwagger.WrapHandler)
+	}
 }

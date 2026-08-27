@@ -19,6 +19,11 @@ type App struct {
 	ChatSessionHandler *handlers.ChatSessionHandler
 	DocumentHandler    *handlers.DocumentHandler
 	AuthMiddleware     func(http.Handler) http.Handler
+
+	// Environment mirrors config.Config.Environment, so route registration
+	// (e.g. the Swagger UI, which is development-only) can make
+	// environment-based decisions without every caller needing a *config.Config.
+	Environment string
 }
 
 func New(
@@ -99,5 +104,6 @@ func New(
 		ChatSessionHandler: chatSessionHandler,
 		DocumentHandler:    documentHandler,
 		AuthMiddleware:     authMiddleware,
+		Environment:        cfg.Environment,
 	}
 }
