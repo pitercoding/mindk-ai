@@ -6,9 +6,9 @@ type FakeLLMClient struct {
 	LastPrompt string
 }
 
-func (c *FakeLLMClient) Chat(prompt string) (string, error) {
-	c.LastPrompt = prompt
-	return c.Response, c.Err
+func (f *FakeLLMClient) Chat(prompt string) (string, error) {
+	f.LastPrompt = prompt
+	return f.Response, f.Err
 }
 
 func (f *FakeLLMClient) CreateEmbedding(
