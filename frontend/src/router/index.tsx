@@ -9,7 +9,7 @@ import DocumentsPage from "@/pages/DocumentsPage";
 
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
-export const router = createBrowserRouter([
+const router = createBrowserRouter([
     {
         path: "/auth",
         element: <AuthPage />,
