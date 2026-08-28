@@ -9,28 +9,6 @@ export async function getSessions(): Promise<ChatSession[]> {
 }
 
 
-export async function getSession(
-    id: number,
-): Promise<ChatSession> {
-
-    return apiClient<ChatSession>(`/chat/sessions/${id}`);
-}
-
-
-export async function createSession(
-    session: Pick<ChatSession, "title" | "mode" | "note_id">,
-): Promise<ChatSession> {
-
-    return apiClient<ChatSession>(
-        "/chat/sessions",
-        {
-            method: "POST",
-            body: JSON.stringify(session),
-        },
-    );
-}
-
-
 export async function updateSession(
     id: number,
     session: Pick<ChatSession, "title" | "mode">,
