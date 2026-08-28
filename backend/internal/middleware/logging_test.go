@@ -100,8 +100,7 @@ func TestRequestLogger_IncludesUserIDWhenClerkRecordsIt(t *testing.T) {
 	// then also put it in context the normal way for the handler itself.
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		recordUserID(r.Context(), "user_abc")
-		ctx := auth.WithUserID(r.Context(), "user_abc")
-		r = r.WithContext(ctx)
+		auth.WithUserID(r.Context(), "user_abc")
 		w.WriteHeader(http.StatusOK)
 	})
 
