@@ -60,53 +60,6 @@ func (r *DocumentEmbeddingRepository) CreateMany(
 	return nil
 }
 
-func (r *DocumentEmbeddingRepository) GetByChunkID(
-	chunkID int,
-) (*models.DocumentEmbedding, error) {
-
-	query := `
-        SELECT
-            id,
-            chunk_id,
-            embedding,
-            created_at
-        FROM document_embeddings
-        WHERE chunk_id = $1
-    `
-
-	var embedding models.DocumentEmbedding
-
-	err := r.DB.QueryRow(query, chunkID).Scan(
-		&embedding.ID,
-		&embedding.ChunkID,
-		&embedding.Embedding,
-		&embedding.CreatedAt,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &embedding, nil
-}
-
-func (r *DocumentEmbeddingRepository) DeleteByChunkID(
-	chunkID int,
-) error {
-
-	query := `
-		DELETE FROM document_embeddings
-		WHERE chunk_id = $1
-	`
-
-	_, err := r.DB.Exec(
-		query,
-		chunkID,
-	)
-
-	return err
-}
-
 func (r *DocumentEmbeddingRepository) GetAll(userID string) (
 	[]models.DocumentEmbedding,
 	error,

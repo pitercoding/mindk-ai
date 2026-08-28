@@ -9,9 +9,7 @@ import (
 type DocumentEmbeddingRepository interface {
 	Create(documentEmbedding *models.DocumentEmbedding) error
 	CreateMany([]models.DocumentEmbedding) error
-	GetByChunkID(chunkID int) (*models.DocumentEmbedding, error)
 	GetAll(userID string) ([]models.DocumentEmbedding, error)
-	DeleteByChunkID(chunkID int) error
 }
 
 type DocumentEmbeddingService struct {
@@ -42,20 +40,6 @@ func (s *DocumentEmbeddingService) CreateMany(
 ) error {
 
 	return s.repo.CreateMany(embeddings)
-}
-
-func (s *DocumentEmbeddingService) GetByChunkID(
-	chunkID int,
-) (*models.DocumentEmbedding, error) {
-
-	return s.repo.GetByChunkID(chunkID)
-}
-
-func (s *DocumentEmbeddingService) DeleteByChunkID(
-	chunkID int,
-) error {
-
-	return s.repo.DeleteByChunkID(chunkID)
 }
 
 func (s *DocumentEmbeddingService) GenerateForChunks(

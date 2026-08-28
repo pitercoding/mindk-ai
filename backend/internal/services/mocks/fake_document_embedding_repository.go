@@ -40,31 +40,6 @@ func (f *FakeDocumentEmbeddingRepository) CreateMany(
 	return nil
 }
 
-func (f *FakeDocumentEmbeddingRepository) GetByChunkID(
-	chunkID int,
-) (*models.DocumentEmbedding, error) {
-
-	if f.Err != nil {
-		return nil, f.Err
-	}
-
-	for _, embedding := range f.Embeddings {
-
-		if embedding.ChunkID == chunkID {
-			return &embedding, nil
-		}
-	}
-
-	return nil, nil
-}
-
-func (f *FakeDocumentEmbeddingRepository) DeleteByChunkID(
-	chunkID int,
-) error {
-
-	return f.Err
-}
-
 func (f *FakeDocumentEmbeddingRepository) GetAll(userID string) (
 	[]models.DocumentEmbedding,
 	error,

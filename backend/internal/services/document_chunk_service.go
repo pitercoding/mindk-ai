@@ -5,8 +5,6 @@ import "github.com/pitercoding/mindk-ai/backend/internal/models"
 type DocumentChunkRepository interface {
 	Create(documentChunk *models.DocumentChunk) error
 	CreateMany([]models.DocumentChunk) error
-	GetByDocumentID(documentID int) ([]models.DocumentChunk, error)
-	DeleteByDocumentID(documentID int) error
 }
 
 type DocumentChunkService struct {
@@ -23,12 +21,4 @@ func (s *DocumentChunkService) Create(documentChunk *models.DocumentChunk) error
 
 func (s *DocumentChunkService) CreateMany(chunks []models.DocumentChunk) error {
 	return s.repo.CreateMany(chunks)
-}
-
-func (s *DocumentChunkService) GetByDocumentID(documentID int) ([]models.DocumentChunk, error) {
-	return s.repo.GetByDocumentID(documentID)
-}
-
-func (s *DocumentChunkService) DeleteByDocumentID(documentID int) error {
-	return s.repo.DeleteByDocumentID(documentID)
 }

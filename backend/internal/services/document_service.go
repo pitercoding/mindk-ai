@@ -15,7 +15,6 @@ type DocumentRepository interface {
 
 type ChunkService interface {
 	CreateMany(chunks []models.DocumentChunk) error
-	DeleteByDocumentID(documentID int) error
 }
 
 type EmbeddingCreator interface {
