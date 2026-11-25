@@ -505,7 +505,7 @@ button:focus-visible,
 .dashboard-grid {
     display: grid;
     grid-template-columns:
-        minmax(260px, 300px) minmax(420px, 1fr) minmax(420px, 520px);
+        minmax(220px, 280px) minmax(320px, 1.2fr) minmax(340px, 1fr);
     gap: var(--space-4);
     height: 100%;
 }
@@ -888,6 +888,30 @@ button:focus-visible,
     transform: translateY(-6px) rotate(-45deg);
 }
 
+/* Not enough room for three columns: chat moves below knowledge + note */
+@media (max-width: 1280px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: minmax(300px, 1fr) minmax(440px, 1fr);
+        grid-template-areas:
+            "knowledge current"
+            "chat chat";
+        overflow-y: auto;
+    }
+
+    .knowledge-panel {
+        grid-area: knowledge;
+    }
+
+    .current-note-panel {
+        grid-area: current;
+    }
+
+    .chat-panel {
+        grid-area: chat;
+    }
+}
+
 @media (max-width: 1024px) {
     .dashboard-layout {
         margin: 0;
@@ -948,27 +972,6 @@ button:focus-visible,
 
     .dashboard-content>main {
         overflow-y: auto;
-    }
-
-    .dashboard-grid {
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: minmax(300px, 1fr) minmax(440px, 1fr);
-        grid-template-areas:
-            "knowledge current"
-            "chat chat";
-        overflow-y: auto;
-    }
-
-    .knowledge-panel {
-        grid-area: knowledge;
-    }
-
-    .current-note-panel {
-        grid-area: current;
-    }
-
-    .chat-panel {
-        grid-area: chat;
     }
 }
 
