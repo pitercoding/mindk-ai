@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 
 import { useChatSession } from "@/context/ChatSessionContext";
 
@@ -178,7 +178,9 @@ export default function Sidebar() {
 
             <header className="sidebar-header">
                 <h1>
-                    🧠 MindK AI
+                    <Link to="/" className="sidebar-logo" aria-label="MindK AI - go to dashboard">
+                        🧠 MindK AI
+                    </Link>
                 </h1>
             </header>
 
