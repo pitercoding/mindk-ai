@@ -651,17 +651,67 @@ button:focus-visible,
     color: var(--text);
 }
 
-.chat-empty-state {
-    display: grid;
-    place-items: center;
-    flex: 1;
-    min-height: 190px;
-    padding: var(--space-5);
+
+/*
+    Chat: suggestions, hint and loading
+*/
+
+.suggestion-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.suggestion-chip {
+    width: 100%;
+    min-height: 38px;
+    padding: var(--space-2) var(--space-4);
     color: var(--muted);
-    text-align: center;
-    background: rgba(13, 22, 36, 0.3);
-    border: 1px dashed var(--line);
+    font-size: var(--text-base);
+    text-align: left;
+    background: rgba(138, 160, 187, 0.08);
+    border: 1px solid var(--line);
     border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition-interactive);
+}
+
+.suggestion-chip:hover {
+    color: var(--text);
+    background: var(--accent-tint-weak);
+    border-color: var(--accent-border);
+}
+
+.suggestion-chip:disabled {
+    cursor: not-allowed;
+    opacity: var(--opacity-disabled);
+    pointer-events: none;
+}
+
+.chat-hint {
+    margin: var(--space-2) 0 0;
+    color: var(--soft);
+    font-size: var(--text-xs);
+    text-align: right;
+}
+
+/* Touch keyboards have no Shift+Enter shortcut to explain */
+@media (pointer: coarse) {
+    .chat-hint {
+        display: none;
+    }
+}
+
+.chat-skeleton {
+    padding-top: var(--space-2);
+}
+
+.chat-skeleton .skeleton-row {
+    height: 64px;
 }
 
 .chat-content {

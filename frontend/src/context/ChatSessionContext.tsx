@@ -141,6 +141,9 @@ export function ChatSessionProvider({
     function newChat() {
         ++activeContextRef.current;
         setIsSending(false);
+        // A history request still in flight is now stale and will be ignored,
+        // so it can no longer clear the loading flag on its own.
+        setIsLoadingMessages(false);
         setCurrentSessionId(null);
         setMessages([]);
     }
