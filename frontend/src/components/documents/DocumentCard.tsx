@@ -35,8 +35,8 @@ export default function DocumentCard({
                 <button
                     className={
                         isDeleting
-                            ? "document-action-button document-action-button-busy"
-                            : "document-action-button document-action-button-danger"
+                            ? "btn btn-secondary btn-sm"
+                            : "btn btn-secondary btn-icon btn-danger-hover"
                     }
                     type="button"
                     aria-label={`Delete ${document.name}`}

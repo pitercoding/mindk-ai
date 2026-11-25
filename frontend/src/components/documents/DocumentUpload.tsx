@@ -63,7 +63,7 @@ export default function DocumentUpload({
 
             <div className="document-upload-actions">
 
-                <label className="file-upload-button">
+                <label className="btn btn-secondary">
 
                     Choose file
 
@@ -78,6 +78,7 @@ export default function DocumentUpload({
 
 
                 <button
+                    className="btn btn-primary"
                     onClick={handleUpload}
                     disabled={uploading}
                 >

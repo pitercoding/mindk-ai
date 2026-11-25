@@ -278,7 +278,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 </div>
 
                 <button
-                    className="sidebar-new-chat-button"
+                    className="btn btn-primary btn-block sidebar-new-chat-button"
                     onClick={handleNewChat}
                 >
                     + New Chat
@@ -385,7 +385,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             <footer className="sidebar-footer">
 
-                <button onClick={() => { navigate("/documents"); onClose(); }}>
+                <button
+                    className="btn btn-secondary btn-block"
+                    onClick={() => { navigate("/documents"); onClose(); }}
+                >
                     <UploadIcon size={16} />
                     <span>Upload</span>
                 </button>

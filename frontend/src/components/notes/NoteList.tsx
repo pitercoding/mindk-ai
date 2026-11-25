@@ -54,7 +54,7 @@ export default function NoteList({
                             <h3>{note.title}</h3>
 
                             <button
-                                className="note-action-button"
+                                className="btn btn-secondary btn-icon"
                                 type="button"
                                 aria-label={`Edit ${note.title}`}
                                 title="Edit"
@@ -67,8 +67,8 @@ export default function NoteList({
                             <button
                                 className={
                                     isDeleting
-                                        ? "note-action-button note-action-button-busy"
-                                        : "note-action-button note-action-button-danger"
+                                        ? "btn btn-secondary btn-sm"
+                                        : "btn btn-secondary btn-icon btn-danger-hover"
                                 }
                                 type="button"
                                 aria-label={`Delete ${note.title}`}

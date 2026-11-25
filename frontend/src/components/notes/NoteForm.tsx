@@ -78,7 +78,11 @@ export default function NoteForm({
                 }
             />
 
-            <button type="submit" disabled={isSaving}>
+            <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={isSaving}
+            >
 
                 {
                     isSaving
