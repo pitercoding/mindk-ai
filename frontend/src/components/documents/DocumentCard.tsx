@@ -1,5 +1,7 @@
 import { TrashIcon } from "@/components/common/icons";
 
+import { formatDate, toPlainText } from "@/utils/text";
+
 import type { Document } from "@/types/document";
 
 interface DocumentCardProps {
@@ -13,6 +15,10 @@ export default function DocumentCard({
     isDeleting,
     onDelete,
 }: DocumentCardProps) {
+
+    const preview = toPlainText(document.content);
+    const typeLabel = document.type.replace(/^\./, "").toUpperCase();
+    const date = formatDate(document.created_at);
 
     return (
         <article className={
@@ -42,14 +48,19 @@ export default function DocumentCard({
                 </button>
             </header>
 
-            <span>
-                {document.type}
-            </span>
+            {preview ? (
+                <p className="card-preview">{preview}</p>
+            ) : (
+                <p className="card-preview card-preview-empty">
+                    No content yet
+                </p>
+            )}
 
-            <p>
-                {document.content.slice(0, 120)}
-                {document.content.length > 120 && "..."}
-            </p>
+            <footer className="card-meta">
+                <span className="document-card-type">{typeLabel}</span>
+
+                {date && <time dateTime={document.created_at}>{date}</time>}
+            </footer>
 
         </article>
     );

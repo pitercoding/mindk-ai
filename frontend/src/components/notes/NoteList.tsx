@@ -1,5 +1,7 @@
 import { EditIcon, TrashIcon } from "@/components/common/icons";
 
+import { countWords, stripTitleHeading, toPlainText } from "@/utils/text";
+
 import type { Note } from "@/types/note";
 
 interface NoteListProps {
@@ -31,6 +33,11 @@ export default function NoteList({
             {notes.map((note) => {
 
                 const isDeleting = deletingId === note.id;
+
+                const preview = toPlainText(
+                    stripTitleHeading(note.content, note.title),
+                );
+                const words = countWords(preview);
 
                 return (
                     <article
@@ -74,7 +81,17 @@ export default function NoteList({
 
                         </div>
 
-                        <p>{note.content}</p>
+                        {preview ? (
+                            <p className="card-preview">{preview}</p>
+                        ) : (
+                            <p className="card-preview card-preview-empty">
+                                No content yet
+                            </p>
+                        )}
+
+                        <footer className="card-meta">
+                            {words} {words === 1 ? "word" : "words"}
+                        </footer>
 
                     </article>
                 );

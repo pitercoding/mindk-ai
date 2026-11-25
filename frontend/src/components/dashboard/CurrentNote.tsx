@@ -1,5 +1,7 @@
 import MarkdownViewer from "@/components/common/MarkdownViewer";
 
+import { stripTitleHeading } from "@/utils/text";
+
 import type { KnowledgeSelection } from "@/types/knowledge";
 
 interface CurrentNoteProps {
@@ -72,15 +74,4 @@ export default function CurrentNote({
 
         </section>
     );
-}
-
-function stripTitleHeading(content: string, title: string) {
-    return content.replace(
-        new RegExp(`^#\\s+${escapeRegExp(title)}\\s*\\n+`),
-        "",
-    );
-}
-
-function escapeRegExp(value: string) {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
