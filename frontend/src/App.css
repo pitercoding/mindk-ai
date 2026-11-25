@@ -671,6 +671,7 @@ button:focus-visible,
 
 .message {
     max-width: min(85%, 760px);
+    overflow-wrap: anywhere;
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-md);
 }
@@ -748,6 +749,7 @@ button:focus-visible,
 }
 
 .message-source-score {
+    flex: 0 0 auto;
     color: var(--soft);
     font-size: var(--text-sm);
 }
@@ -796,7 +798,7 @@ button:focus-visible,
 }
 
 .notes-grid {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
     gap: var(--space-4);
 }
 
@@ -1077,8 +1079,13 @@ button:focus-visible,
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
+    overflow-x: hidden;
     overflow-y: auto;
     min-height: 0;
+}
+
+.knowledge-group {
+    min-width: 0;
 }
 
 .knowledge-group-title {
@@ -1120,9 +1127,14 @@ button:focus-visible,
     color: var(--accent);
 }
 
+.knowledge-item {
+    min-width: 0;
+}
+
 .knowledge-item h3 {
     margin: 0 0 8px;
     font-size: 15px;
+    overflow-wrap: anywhere;
 }
 
 .knowledge-item p {
@@ -1157,6 +1169,7 @@ button:focus-visible,
 
 .current-note-title h3 {
     margin: 0;
+    overflow-wrap: anywhere;
     color: var(--text);
     font-size: var(--text-xl);
     font-weight: 800;
@@ -1231,14 +1244,25 @@ button:focus-visible,
     text-decoration-color: currentColor;
 }
 
-.markdown-viewer table {
-    width: 100%;
+.markdown-table-wrapper {
+    max-width: 100%;
     margin: 0 0 18px;
-    overflow: hidden;
-    border-collapse: collapse;
-    color: var(--muted);
+    overflow-x: auto;
     border: 1px solid var(--line);
     border-radius: var(--radius-sm);
+}
+
+.markdown-viewer table {
+    width: 100%;
+    min-width: max-content;
+    margin: 0;
+    border-collapse: collapse;
+    color: var(--muted);
+}
+
+.markdown-viewer th,
+.markdown-viewer td {
+    min-width: 96px;
 }
 
 .markdown-viewer th,
@@ -1246,6 +1270,24 @@ button:focus-visible,
     padding: 9px 11px;
     text-align: left;
     border: 1px solid var(--line);
+}
+
+.markdown-viewer th:first-child,
+.markdown-viewer td:first-child {
+    border-left: 0;
+}
+
+.markdown-viewer th:last-child,
+.markdown-viewer td:last-child {
+    border-right: 0;
+}
+
+.markdown-viewer tr:first-child th {
+    border-top: 0;
+}
+
+.markdown-viewer tr:last-child td {
+    border-bottom: 0;
 }
 
 .markdown-viewer th {
@@ -1276,6 +1318,7 @@ button:focus-visible,
 }
 
 .note-card {
+    min-width: 0;
     padding: var(--space-5);
     color: var(--muted);
     background: rgba(25, 38, 58, 0.78);
@@ -1299,10 +1342,22 @@ button:focus-visible,
 
 .note-card-header h3 {
     flex: 1;
+    min-width: 0;
     font-size: 15px;
+    overflow-wrap: anywhere;
+}
+
+.note-card p {
+    display: -webkit-box;
+    line-clamp: 4;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
 }
 
 .note-action-button {
+    flex: 0 0 auto;
     display: grid;
     width: 30px;
     height: 30px;
@@ -1457,11 +1512,12 @@ button:focus-visible,
 
 .document-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
     gap: var(--space-4);
 }
 
 .document-card {
+    min-width: 0;
     padding: var(--space-5);
     color: var(--muted);
     background: rgba(25, 38, 58, 0.78);
@@ -1484,7 +1540,9 @@ button:focus-visible,
 
 .document-card h3 {
     flex: 1;
+    min-width: 0;
     margin: 0;
+    overflow-wrap: anywhere;
     color: var(--text);
     font-size: 15px;
 }
@@ -1540,6 +1598,7 @@ button:focus-visible,
 .document-card p {
     margin-top: var(--space-4);
     line-height: 1.5;
+    overflow-wrap: anywhere;
 }
 
 /*

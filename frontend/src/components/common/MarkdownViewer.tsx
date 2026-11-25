@@ -30,6 +30,18 @@ export default function MarkdownViewer({
                 </a>
             );
         },
+        table({
+            children,
+            ...props
+        }) {
+            return (
+                <div className="markdown-table-wrapper">
+                    <table {...props}>
+                        {children}
+                    </table>
+                </div>
+            );
+        },
         code({
             children,
             className,
