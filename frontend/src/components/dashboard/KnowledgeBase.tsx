@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
+
+import { DocumentsIcon, NotesIcon } from "@/components/common/icons";
 
 import { useSelectedKnowledge } from "@/context/SelectedKnowledgeContext";
 
@@ -110,7 +112,7 @@ export default function KnowledgeBase({
                             {filteredNotes.map((note) => (
                                 <KnowledgeItem
                                     key={`note-${note.id}`}
-                                    icon="📄"
+                                    icon={<NotesIcon size={16} />}
                                     label={note.title}
                                     isActive={
                                         selected?.type === "note" &&
@@ -134,7 +136,7 @@ export default function KnowledgeBase({
                             {filteredDocuments.map((document) => (
                                 <KnowledgeItem
                                     key={`document-${document.id}`}
-                                    icon="📑"
+                                    icon={<DocumentsIcon size={16} />}
                                     label={document.name}
                                     isActive={
                                         selected?.type === "document" &&
@@ -157,7 +159,7 @@ export default function KnowledgeBase({
 }
 
 interface KnowledgeItemProps {
-    icon: string;
+    icon: ReactNode;
     label: string;
     isActive: boolean;
     onSelect: () => void;
@@ -190,7 +192,10 @@ function KnowledgeItem({
             }}
         >
 
-            <h3>{icon} {label}</h3>
+            <h3>
+                <span className="knowledge-item-icon">{icon}</span>
+                <span className="knowledge-item-label">{label}</span>
+            </h3>
 
         </article>
     );

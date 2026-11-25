@@ -4,6 +4,8 @@ import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
+import { AlertIcon, DocumentsIcon } from "@/components/common/icons";
+
 import type { Message } from "@/types/message";
 
 
@@ -27,8 +29,9 @@ export default function ChatMessage({
                 }${isError ? " message-error" : ""}`}
         >
 
-            <strong>
-                {isError ? "⚠ System" : isUser ? "You" : "AI"}
+            <strong className="message-author">
+                {isError && <AlertIcon size={14} />}
+                {isError ? "System" : isUser ? "You" : "AI"}
             </strong>
 
             <div className="markdown-viewer">
@@ -86,7 +89,10 @@ export default function ChatMessage({
                     <ul>
                         {message.sources.map((source) => (
                             <li key={source.document_id}>
-                                📄 {source.name}
+                                <span className="message-source-name">
+                                    <DocumentsIcon size={14} />
+                                    {source.name}
+                                </span>
 
                                 <span className="message-source-score">
                                     {Math.round(source.score * 100)}%

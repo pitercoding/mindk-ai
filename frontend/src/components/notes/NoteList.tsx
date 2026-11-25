@@ -1,3 +1,5 @@
+import { EditIcon, TrashIcon } from "@/components/common/icons";
+
 import type { Note } from "@/types/note";
 
 interface NoteListProps {
@@ -47,23 +49,27 @@ export default function NoteList({
                             <button
                                 className="note-action-button"
                                 type="button"
+                                aria-label={`Edit ${note.title}`}
+                                title="Edit"
                                 disabled={isDeleting}
                                 onClick={() => onEdit(note)}
                             >
-                                ✏️
+                                <EditIcon size={16} />
                             </button>
 
                             <button
                                 className={
                                     isDeleting
                                         ? "note-action-button note-action-button-busy"
-                                        : "note-action-button"
+                                        : "note-action-button note-action-button-danger"
                                 }
                                 type="button"
+                                aria-label={`Delete ${note.title}`}
+                                title="Delete"
                                 disabled={isDeleting}
                                 onClick={() => onDelete(note.id)}
                             >
-                                {isDeleting ? "Deleting..." : "🗑️"}
+                                {isDeleting ? "Deleting..." : <TrashIcon size={16} />}
                             </button>
 
                         </div>

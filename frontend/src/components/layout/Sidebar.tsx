@@ -4,13 +4,15 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import {
+    CloseIcon,
     DocumentsIcon,
     HomeIcon,
     LinksIcon,
     NotesIcon,
     PdfIcon,
     SettingsIcon,
-} from "@/components/layout/icons";
+    UploadIcon,
+} from "@/components/common/icons";
 
 import { useChatSession } from "@/context/ChatSessionContext";
 
@@ -204,7 +206,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <header className="sidebar-header">
                 <h1>
                     <Link to="/" className="sidebar-logo" aria-label="MindK AI - go to dashboard">
-                        🧠 MindK AI
+                        MindK AI
                     </Link>
                 </h1>
 
@@ -214,7 +216,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     aria-label="Close menu"
                     onClick={onClose}
                 >
-                    ✕
+                    <CloseIcon />
                 </button>
             </header>
 
@@ -384,7 +386,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <footer className="sidebar-footer">
 
                 <button onClick={() => { navigate("/documents"); onClose(); }}>
-                    ⬆ Upload
+                    <UploadIcon size={16} />
+                    <span>Upload</span>
                 </button>
 
             </footer>

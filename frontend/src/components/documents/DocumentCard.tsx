@@ -1,3 +1,5 @@
+import { TrashIcon } from "@/components/common/icons";
+
 import type { Document } from "@/types/document";
 
 interface DocumentCardProps {
@@ -28,13 +30,15 @@ export default function DocumentCard({
                     className={
                         isDeleting
                             ? "document-action-button document-action-button-busy"
-                            : "document-action-button"
+                            : "document-action-button document-action-button-danger"
                     }
                     type="button"
+                    aria-label={`Delete ${document.name}`}
+                    title="Delete"
                     disabled={isDeleting}
                     onClick={() => onDelete(document.id)}
                 >
-                    {isDeleting ? "Deleting..." : "🗑️"}
+                    {isDeleting ? "Deleting..." : <TrashIcon size={16} />}
                 </button>
             </header>
 
