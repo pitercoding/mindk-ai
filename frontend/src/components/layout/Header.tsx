@@ -25,16 +25,6 @@ export default function Header({
 
             <div className="header-actions">
 
-                <button
-                    className="notification-button"
-                    type="button"
-                    aria-label="Notifications"
-                    title="Coming soon"
-                    disabled
-                >
-                    🔔
-                </button>
-
                 <UserButton
                     appearance={{
                         elements: {

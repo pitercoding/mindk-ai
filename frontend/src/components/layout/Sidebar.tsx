@@ -2,38 +2,48 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
+import ConfirmDialog from "@/components/common/ConfirmDialog";
+import {
+    DocumentsIcon,
+    HomeIcon,
+    LinksIcon,
+    NotesIcon,
+    PdfIcon,
+    SettingsIcon,
+} from "@/components/layout/icons";
+
 import { useChatSession } from "@/context/ChatSessionContext";
 
 const menuItems = [
     {
         label: "Dashboard",
         path: "/",
-        icon: "⌂",
+        icon: <HomeIcon />,
         end: true,
     },
     {
         label: "All Notes",
         path: "/notes",
-        icon: "▤",
+        icon: <NotesIcon />,
     },
     {
         label: "Documents",
         path: "/documents",
-        icon: "□",
+        icon: <DocumentsIcon />,
     },
     {
         label: "Links",
-        icon: "∞",
+        icon: <LinksIcon />,
         soon: true as const,
     },
     {
         label: "PDFs",
-        icon: "⌑",
+        icon: <PdfIcon />,
         soon: true as const,
     },
     {
         label: "Settings",
-        icon: "⚙",
+        icon: <SettingsIcon />,
         soon: true as const,
     },
 ];
@@ -69,6 +79,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const [editingTitle, setEditingTitle] = useState("");
     const [actionError, setActionError] = useState<string | null>(null);
     const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
     useEffect(() => {
 
@@ -155,14 +166,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         }
     }
 
+    function requestDelete(id: number) {
+        setMenu(null);
+        setConfirmDeleteId(id);
+    }
+
     async function handleDelete(id: number) {
 
-        setMenu(null);
-
-        if (!window.confirm("Delete this conversation?")) {
-            return;
-        }
-
+        setConfirmDeleteId(null);
         setActionError(null);
         setPendingDeleteId(id);
 
@@ -175,6 +186,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             setPendingDeleteId(null);
         }
     }
+
+    const confirmSession =
+        confirmDeleteId !== null
+            ? sessions.find(session => session.id === confirmDeleteId)
+            : undefined;
 
     const activeMenuSession =
         menu && sessions.find(session => session.id === menu.sessionId);
@@ -211,11 +227,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                         <div
                             key={item.label}
-                            data-icon={item.icon}
                             className="sidebar-link sidebar-link-disabled"
                             aria-disabled="true"
                             title="Coming soon"
                         >
+                            {item.icon}
+
                             <span>
                                 {item.label}
                             </span>
@@ -229,7 +246,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                         <NavLink
                             key={item.label}
-                            data-icon={item.icon}
                             to={item.path}
                             end={item.end}
                             className={({ isActive }) =>
@@ -238,6 +254,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     : "sidebar-link"
                             }
                         >
+                            {item.icon}
+
                             <span>
                                 {item.label}
                             </span>
@@ -371,6 +389,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             </footer>
 
+            {confirmSession && (
+                <ConfirmDialog
+                    title="Delete conversation?"
+                    message={`"${confirmSession.title}" and all its messages will be permanently deleted.`}
+                    onConfirm={() => handleDelete(confirmSession.id)}
+                    onCancel={() => setConfirmDeleteId(null)}
+                />
+            )}
+
             {menu && activeMenuSession && createPortal(
 
                 <div
@@ -388,7 +415,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     </button>
 
                     <button
-                        onClick={() => handleDelete(activeMenuSession.id)}
+                        onClick={() => requestDelete(activeMenuSession.id)}
                     >
                         Delete
                     </button>

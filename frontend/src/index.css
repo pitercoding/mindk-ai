@@ -9,8 +9,3 @@ body,
     margin: 0;
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-
-body {
-    background: #070d18;
-    min-width: 320px;
-}

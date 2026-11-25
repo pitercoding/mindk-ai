@@ -23,7 +23,12 @@ export default function ChatInput({
 
         el.style.height = "auto";
         // scrollHeight excludes borders (border-box), so add them back.
-        el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`;
+        const height = el.scrollHeight + el.offsetHeight - el.clientHeight;
+        el.style.height = `${height}px`;
+
+        // Only show a scrollbar once the text outgrows the CSS max-height.
+        const maxHeight = parseFloat(getComputedStyle(el).maxHeight);
+        el.style.overflowY = height > maxHeight ? "auto" : "hidden";
     }, [message]);
 
     // Return focus once sending/loading finishes, so typing the next
