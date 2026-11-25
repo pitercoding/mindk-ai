@@ -118,6 +118,7 @@ export function ChatSessionProvider({
                     id: message.id,
                     role: message.role,
                     content: message.content,
+                    createdAt: message.created_at,
                 })),
             );
 
@@ -156,6 +157,7 @@ export function ChatSessionProvider({
             id: crypto.randomUUID(),
             role: "user",
             content: text,
+            createdAt: new Date().toISOString(),
         };
 
         setMessages(previous => [...previous, userMessage]);
@@ -182,6 +184,7 @@ export function ChatSessionProvider({
                     role: "assistant",
                     content: response.answer,
                     sources: response.sources,
+                    createdAt: new Date().toISOString(),
                 },
             ]);
 
@@ -205,6 +208,7 @@ export function ChatSessionProvider({
                     role: "assistant",
                     content: "Unable to process your request. Please try again.",
                     status: "error",
+                    createdAt: new Date().toISOString(),
                 },
             ]);
 

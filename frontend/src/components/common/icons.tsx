@@ -171,3 +171,30 @@ export function PlusIcon(props: IconProps) {
         </Icon>
     );
 }
+
+export function UserIcon(props: IconProps) {
+    return (
+        <Icon {...props}>
+            <circle cx="12" cy="8.5" r="3.5" />
+            <path d="M5 20c.6-3.6 3.4-5.5 7-5.5s6.4 1.9 7 5.5" />
+        </Icon>
+    );
+}
+
+export function SparkIcon(props: IconProps) {
+    return (
+        <Icon {...props}>
+            <path d="M12 3.5 13.8 9l5.7 1.8-5.7 1.8L12 18l-1.8-5.4L4.5 10.8 10.2 9z" />
+            <path d="M19 3.5v3M17.5 5h3" />
+        </Icon>
+    );
+}
+
+export function CopyIcon(props: IconProps) {
+    return (
+        <Icon {...props}>
+            <rect x="8.5" y="8.5" width="11" height="11" rx="2" />
+            <path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5" />
+        </Icon>
+    );
+}

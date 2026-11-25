@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 
+import MessageAvatar from "@/components/chat/MessageAvatar";
+
 import ChatMessage from "./ChatMessage";
 
 import type { Message } from "@/types/message";
@@ -33,9 +35,20 @@ export default function ChatMessageList({
             ))}
 
             {isSending && (
-                <div className="message message-assistant message-pending">
-                    <strong>AI</strong>
-                    <span className="message-thinking">Thinking...</span>
+                <div
+                    className="message message-assistant message-pending"
+                    role="status"
+                    aria-label="MindK AI is thinking"
+                >
+                    <MessageAvatar role="assistant" />
+
+                    <div className="message-body">
+                        <span className="typing-indicator" aria-hidden="true">
+                            <span />
+                            <span />
+                            <span />
+                        </span>
+                    </div>
                 </div>
             )}
 
