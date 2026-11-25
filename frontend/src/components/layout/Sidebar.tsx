@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
+import BrandMark from "@/components/common/BrandMark";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { RowSkeletons } from "@/components/common/Skeleton";
 import {
@@ -206,7 +207,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <header className="sidebar-header">
                 <h1>
                     <Link to="/" className="sidebar-logo" aria-label="MindK AI - go to dashboard">
-                        MindK AI
+                        <BrandMark size={28} />
+                        <span>MindK AI</span>
                     </Link>
                 </h1>
 

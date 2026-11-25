@@ -1,8 +1,9 @@
-import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import DashboardPage from "@/pages/DashboardPage";
 import NotesPage from "@/pages/NotesPage";
 import AuthPage from "@/pages/AuthPage";
+import NotFoundPage from "@/pages/NotFoundPage";
 
 import DashboardLayout from "@/layouts/DashboardLayout";
 import DocumentsPage from "@/pages/DocumentsPage";
@@ -35,7 +36,7 @@ const router = createBrowserRouter([
                     },
                     {
                         path: "*",
-                        element: <Navigate to="/" replace />,
+                        element: <NotFoundPage />,
                     },
                 ],
             },

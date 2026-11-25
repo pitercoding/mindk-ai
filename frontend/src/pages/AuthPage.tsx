@@ -1,5 +1,9 @@
 import { SignIn } from "@clerk/react";
 
+import BrandMark from "@/components/common/BrandMark";
+
+import { clerkAppearance } from "@/config/clerkAppearance";
+
 export default function AuthPage() {
     return (
         <main className="auth-page">
@@ -7,29 +11,18 @@ export default function AuthPage() {
             <div className="auth-card">
 
                 <div className="auth-brand">
-                    <span className="auth-brand-mark" />
+                    <BrandMark size={32} />
                     <span className="auth-brand-name">MindK AI</span>
                 </div>
+
+                <p className="auth-tagline">
+                    Your second brain: notes and documents, searchable with AI.
+                </p>
 
                 <SignIn
                     withSignUp
                     forceRedirectUrl="/"
-                    appearance={{
-                        variables: {
-                            colorPrimary: "#36e5ce",
-                            colorBackground: "#141f30",
-                            colorForeground: "#f4f8fb",
-                            colorMutedForeground: "#a9b7c6",
-                            colorInput: "rgba(15, 25, 40, 0.92)",
-                            colorInputForeground: "#f4f8fb",
-                            colorDanger: "#ff6172",
-                            borderRadius: "8px",
-                        },
-                        elements: {
-                            rootBox: "auth-clerk-root",
-                            cardBox: "auth-clerk-card",
-                        },
-                    }}
+                    appearance={clerkAppearance}
                 />
 
             </div>
