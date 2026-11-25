@@ -15,6 +15,7 @@ import {
 } from "@/components/common/icons";
 
 import { useChatSession } from "@/context/ChatSessionContext";
+import { useToast } from "@/context/toast-context";
 
 const menuItems = [
     {
@@ -79,7 +80,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const [menu, setMenu] = useState<MenuState | null>(null);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editingTitle, setEditingTitle] = useState("");
-    const [actionError, setActionError] = useState<string | null>(null);
+    const toast = useToast();
     const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
     const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
@@ -158,13 +159,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             return;
         }
 
-        setActionError(null);
-
         try {
             await renameSession(id, title);
         } catch (error) {
             console.error("Failed to rename conversation:", error);
-            setActionError("Unable to rename conversation.");
+            toast.error("Unable to rename conversation.");
         }
     }
 
@@ -176,14 +175,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     async function handleDelete(id: number) {
 
         setConfirmDeleteId(null);
-        setActionError(null);
         setPendingDeleteId(id);
 
         try {
             await deleteSession(id);
+            toast.success("Conversation deleted.");
         } catch (error) {
             console.error("Failed to delete conversation:", error);
-            setActionError("Unable to delete conversation.");
+            toast.error("Unable to delete conversation.");
         } finally {
             setPendingDeleteId(null);
         }
@@ -283,12 +282,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 >
                     + New Chat
                 </button>
-
-                {actionError && (
-                    <p className="sidebar-status sidebar-status-error">
-                        {actionError}
-                    </p>
-                )}
 
                 {isLoadingSessions ? (
 

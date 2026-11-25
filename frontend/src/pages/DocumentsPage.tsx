@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 import DocumentList from "@/components/documents/DocumentList";
 import DocumentUpload from "@/components/documents/DocumentUpload";
+
+import { useToast } from "@/context/toast-context";
 
 import {
     deleteDocument,
@@ -14,18 +17,19 @@ import type { Document } from "@/types/document";
 
 export default function DocumentsPage() {
 
+    const toast = useToast();
+
     const [documents, setDocuments] = useState<Document[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [actionError, setActionError] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null);
     const [search, setSearch] = useState("");
 
 
     async function loadDocuments() {
         setIsLoading(true);
         setError(null);
-        setActionError(null);
 
         try {
 
@@ -54,7 +58,6 @@ export default function DocumentsPage() {
     ) {
 
         setSearch(value);
-        setActionError(null);
 
         if (!value.trim()) {
 
@@ -78,28 +81,33 @@ export default function DocumentsPage() {
                 error,
             );
 
-            setActionError("Failed to search documents.");
+            toast.error("Failed to search documents.");
 
         }
     }
 
 
-    async function handleDelete(id: number) {
+    function requestDelete(id: number) {
+        setDocumentToDelete(
+            documents.find((document) => document.id === id) ?? null,
+        );
+    }
 
-        if (!confirm("Delete this document?")) {
-            return;
-        }
 
-        setActionError(null);
-        setDeletingId(id);
+    async function handleDelete(target: Document) {
+
+        setDocumentToDelete(null);
+        setDeletingId(target.id);
 
         try {
 
-            await deleteDocument(id);
+            await deleteDocument(target.id);
 
             setDocuments((previous) =>
-                previous.filter((document) => document.id !== id)
+                previous.filter((document) => document.id !== target.id)
             );
+
+            toast.success("Document deleted.");
 
         } catch (error) {
 
@@ -108,7 +116,7 @@ export default function DocumentsPage() {
                 error,
             );
 
-            setActionError("Failed to delete document.");
+            toast.error("Failed to delete document.");
 
         } finally {
             setDeletingId(null);
@@ -159,12 +167,6 @@ export default function DocumentsPage() {
                 onUploadSuccess={loadDocuments}
             />
 
-            {actionError && (
-                <p className="documents-error">
-                    {actionError}
-                </p>
-            )}
-
             {
                 isLoading ? (
                     <p>
@@ -178,10 +180,19 @@ export default function DocumentsPage() {
                     <DocumentList
                         documents={documents}
                         deletingId={deletingId}
-                        onDelete={handleDelete}
+                        onDelete={requestDelete}
                     />
                 )
             }
+
+            {documentToDelete && (
+                <ConfirmDialog
+                    title="Delete document?"
+                    message={`"${documentToDelete.name}" will be permanently deleted.`}
+                    onConfirm={() => handleDelete(documentToDelete)}
+                    onCancel={() => setDocumentToDelete(null)}
+                />
+            )}
 
         </section>
     );
