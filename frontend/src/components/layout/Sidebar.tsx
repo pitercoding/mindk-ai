@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
 import ConfirmDialog from "@/components/common/ConfirmDialog";
+import { RowSkeletons } from "@/components/common/Skeleton";
 import {
     CloseIcon,
     DocumentsIcon,
@@ -285,9 +286,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                 {isLoadingSessions ? (
 
-                    <p className="sidebar-status">
-                        Loading conversations...
-                    </p>
+                    <RowSkeletons
+                        count={3}
+                        label="Loading conversations"
+                        className="sidebar-skeleton"
+                    />
 
                 ) : sessionsError ? (
 

@@ -1,4 +1,5 @@
-import { EditIcon, TrashIcon } from "@/components/common/icons";
+import EmptyState from "@/components/common/EmptyState";
+import { EditIcon, NotesIcon, PlusIcon, TrashIcon } from "@/components/common/icons";
 
 import { countWords, stripTitleHeading, toPlainText } from "@/utils/text";
 
@@ -9,6 +10,7 @@ interface NoteListProps {
     deletingId: number | null;
     onDelete: (id: number) => void;
     onEdit: (note: Note) => void;
+    onCreate: () => void;
 }
 
 export default function NoteList({
@@ -16,14 +18,27 @@ export default function NoteList({
     deletingId,
     onDelete,
     onEdit,
+    onCreate,
 }: NoteListProps) {
 
     if (notes.length === 0) {
 
         return (
-            <p>
-                No notes yet.
-            </p>
+            <EmptyState
+                icon={<NotesIcon size={20} />}
+                title="No notes yet"
+                description="Capture ideas, meeting notes or study material. Everything you write can be searched and used in chat."
+                actions={
+                    <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={onCreate}
+                    >
+                        <PlusIcon size={16} />
+                        Write your first note
+                    </button>
+                }
+            />
         );
     }
 

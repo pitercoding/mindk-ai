@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 
 import ConfirmDialog from "@/components/common/ConfirmDialog";
+import EmptyState from "@/components/common/EmptyState";
+import { AlertIcon } from "@/components/common/icons";
+import { CardSkeletons } from "@/components/common/Skeleton";
 import DocumentList from "@/components/documents/DocumentList";
 import DocumentUpload from "@/components/documents/DocumentUpload";
 
@@ -169,18 +172,29 @@ export default function DocumentsPage() {
 
             {
                 isLoading ? (
-                    <p>
-                        Loading documents...
-                    </p>
+                    <CardSkeletons label="Loading documents" />
                 ) : error ? (
-                    <p className="documents-error">
-                        {error}
-                    </p>
+                    <EmptyState
+                        tone="error"
+                        icon={<AlertIcon size={20} />}
+                        title={error}
+                        description="Check your connection and try again."
+                        actions={
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={loadDocuments}
+                            >
+                                Try again
+                            </button>
+                        }
+                    />
                 ) : (
                     <DocumentList
                         documents={documents}
                         deletingId={deletingId}
                         onDelete={requestDelete}
+                        search={search}
                     />
                 )
             }

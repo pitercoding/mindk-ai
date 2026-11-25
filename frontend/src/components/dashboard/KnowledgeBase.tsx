@@ -1,6 +1,15 @@
 import { useMemo, useState, type ReactNode } from "react";
 
-import { DocumentsIcon, NotesIcon } from "@/components/common/icons";
+import { Link } from "react-router-dom";
+
+import EmptyState from "@/components/common/EmptyState";
+import {
+    AlertIcon,
+    DocumentsIcon,
+    NotesIcon,
+    SearchIcon,
+} from "@/components/common/icons";
+import { RowSkeletons } from "@/components/common/Skeleton";
 
 import { useSelectedKnowledge } from "@/context/SelectedKnowledgeContext";
 
@@ -13,6 +22,7 @@ interface KnowledgeBaseProps {
     isLoading: boolean;
     error: string | null;
     onItemSelected?: () => void;
+    onRetry?: () => void;
 }
 
 export default function KnowledgeBase({
@@ -21,6 +31,7 @@ export default function KnowledgeBase({
     isLoading,
     error,
     onItemSelected,
+    onRetry,
 }: KnowledgeBaseProps) {
 
     const {
@@ -77,27 +88,59 @@ export default function KnowledgeBase({
 
             {isLoading ? (
 
-                <p className="knowledge-status">
-                    Loading knowledge base...
-                </p>
+                <RowSkeletons
+                    count={5}
+                    label="Loading knowledge base"
+                />
 
             ) : error ? (
 
-                <p className="knowledge-status knowledge-status-error">
-                    {error}
-                </p>
+                <EmptyState
+                    compact
+                    tone="error"
+                    icon={<AlertIcon size={18} />}
+                    title={error}
+                    actions={
+                        onRetry && (
+                            <button
+                                type="button"
+                                className="btn btn-secondary btn-sm"
+                                onClick={onRetry}
+                            >
+                                Try again
+                            </button>
+                        )
+                    }
+                />
 
             ) : isEmpty ? (
 
-                <p className="knowledge-status">
-                    No notes or documents yet.
-                </p>
+                <EmptyState
+                    compact
+                    icon={<NotesIcon size={18} />}
+                    title="Nothing here yet"
+                    description="Add a note or upload a document to start building your knowledge base."
+                    actions={
+                        <>
+                            <Link to="/notes" className="btn btn-primary btn-sm">
+                                New note
+                            </Link>
+
+                            <Link to="/documents" className="btn btn-secondary btn-sm">
+                                Upload
+                            </Link>
+                        </>
+                    }
+                />
 
             ) : hasNoResults ? (
 
-                <p className="knowledge-status">
-                    No results for "{search}".
-                </p>
+                <EmptyState
+                    compact
+                    icon={<SearchIcon size={18} />}
+                    title="No results"
+                    description={`Nothing matches "${search.trim()}".`}
+                />
 
             ) : (
 

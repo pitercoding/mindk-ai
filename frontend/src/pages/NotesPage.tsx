@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 
 import ConfirmDialog from "@/components/common/ConfirmDialog";
+import EmptyState from "@/components/common/EmptyState";
+import { AlertIcon } from "@/components/common/icons";
+import { CardSkeletons } from "@/components/common/Skeleton";
 import NoteList from "@/components/notes/NoteList";
 import NoteForm from "@/components/notes/NoteForm";
 
@@ -159,6 +162,12 @@ export default function NotesPage() {
         }
     }
 
+    function focusNoteForm() {
+        document
+            .querySelector<HTMLInputElement>(".notes-form-section input")
+            ?.focus();
+    }
+
     function handleEditNote(note: Note) {
         setSelectedNote(note);
 
@@ -195,19 +204,30 @@ export default function NotesPage() {
 
                 {
                     isLoading ? (
-                        <p>
-                            Loading notes...
-                        </p>
+                        <CardSkeletons label="Loading notes" />
                     ) : loadError ? (
-                        <p className="notes-error">
-                            {loadError}
-                        </p>
+                        <EmptyState
+                            tone="error"
+                            icon={<AlertIcon size={20} />}
+                            title={loadError}
+                            description="Check your connection and try again."
+                            actions={
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={loadNotes}
+                                >
+                                    Try again
+                                </button>
+                            }
+                        />
                     ) : (
                         <NoteList
                             notes={notes}
                             deletingId={deletingId}
                             onDelete={requestDeleteNote}
                             onEdit={handleEditNote}
+                            onCreate={focusNoteForm}
                         />
                     )
                 }
