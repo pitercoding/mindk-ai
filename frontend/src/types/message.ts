@@ -8,4 +8,6 @@ export interface Message {
     content: string;
     sources?: ChatSource[];
     status?: "error";
+    /** ISO timestamp; absent for legacy messages. */
+    createdAt?: string;
 }

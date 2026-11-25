@@ -132,6 +132,7 @@ export default function DashboardPage() {
                     isLoading={isLoading}
                     error={error}
                     onItemSelected={() => setActiveTab("note")}
+                    onRetry={loadKnowledgeBase}
                 />
 
                 <CurrentNote

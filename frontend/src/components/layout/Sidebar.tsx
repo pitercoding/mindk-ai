@@ -2,17 +2,22 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
+import BrandMark from "@/components/common/BrandMark";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
+import { RowSkeletons } from "@/components/common/Skeleton";
 import {
+    CloseIcon,
     DocumentsIcon,
     HomeIcon,
     LinksIcon,
     NotesIcon,
     PdfIcon,
     SettingsIcon,
-} from "@/components/layout/icons";
+    UploadIcon,
+} from "@/components/common/icons";
 
 import { useChatSession } from "@/context/ChatSessionContext";
+import { useToast } from "@/context/toast-context";
 
 const menuItems = [
     {
@@ -77,7 +82,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const [menu, setMenu] = useState<MenuState | null>(null);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editingTitle, setEditingTitle] = useState("");
-    const [actionError, setActionError] = useState<string | null>(null);
+    const toast = useToast();
     const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
     const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
@@ -156,13 +161,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             return;
         }
 
-        setActionError(null);
-
         try {
             await renameSession(id, title);
         } catch (error) {
             console.error("Failed to rename conversation:", error);
-            setActionError("Unable to rename conversation.");
+            toast.error("Unable to rename conversation.");
         }
     }
 
@@ -174,14 +177,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     async function handleDelete(id: number) {
 
         setConfirmDeleteId(null);
-        setActionError(null);
         setPendingDeleteId(id);
 
         try {
             await deleteSession(id);
+            toast.success("Conversation deleted.");
         } catch (error) {
             console.error("Failed to delete conversation:", error);
-            setActionError("Unable to delete conversation.");
+            toast.error("Unable to delete conversation.");
         } finally {
             setPendingDeleteId(null);
         }
@@ -204,7 +207,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <header className="sidebar-header">
                 <h1>
                     <Link to="/" className="sidebar-logo" aria-label="MindK AI - go to dashboard">
-                        🧠 MindK AI
+                        <BrandMark size={28} />
+                        <span>MindK AI</span>
                     </Link>
                 </h1>
 
@@ -214,7 +218,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     aria-label="Close menu"
                     onClick={onClose}
                 >
-                    ✕
+                    <CloseIcon />
                 </button>
             </header>
 
@@ -276,23 +280,19 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 </div>
 
                 <button
-                    className="sidebar-new-chat-button"
+                    className="btn btn-primary btn-block sidebar-new-chat-button"
                     onClick={handleNewChat}
                 >
                     + New Chat
                 </button>
 
-                {actionError && (
-                    <p className="sidebar-status sidebar-status-error">
-                        {actionError}
-                    </p>
-                )}
-
                 {isLoadingSessions ? (
 
-                    <p className="sidebar-status">
-                        Loading conversations...
-                    </p>
+                    <RowSkeletons
+                        count={3}
+                        label="Loading conversations"
+                        className="sidebar-skeleton"
+                    />
 
                 ) : sessionsError ? (
 
@@ -383,8 +383,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             <footer className="sidebar-footer">
 
-                <button onClick={() => { navigate("/documents"); onClose(); }}>
-                    ⬆ Upload
+                <button
+                    className="btn btn-secondary btn-block"
+                    onClick={() => { navigate("/documents"); onClose(); }}
+                >
+                    <UploadIcon size={16} />
+                    <span>Upload</span>
                 </button>
 
             </footer>

@@ -1,5 +1,7 @@
 import { UserButton } from "@clerk/react";
 
+import { clerkAppearance } from "@/config/clerkAppearance";
+
 interface HeaderProps {
     isMenuOpen: boolean;
     onMenuClick: () => void;
@@ -25,13 +27,7 @@ export default function Header({
 
             <div className="header-actions">
 
-                <UserButton
-                    appearance={{
-                        elements: {
-                            userButtonAvatarBox: "auth-user-avatar",
-                        },
-                    }}
-                />
+                <UserButton appearance={clerkAppearance} />
 
             </div>
 

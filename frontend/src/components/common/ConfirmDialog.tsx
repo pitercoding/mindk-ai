@@ -74,7 +74,7 @@ export default function ConfirmDialog({
                     <button
                         ref={cancelRef}
                         type="button"
-                        className="confirm-button"
+                        className="btn btn-secondary"
                         onClick={onCancel}
                     >
                         {cancelLabel}
@@ -82,7 +82,7 @@ export default function ConfirmDialog({
 
                     <button
                         type="button"
-                        className="confirm-button confirm-button-danger"
+                        className="btn btn-danger"
                         onClick={onConfirm}
                     >
                         {confirmLabel}

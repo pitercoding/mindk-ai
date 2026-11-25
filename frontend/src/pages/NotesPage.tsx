@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 
+import ConfirmDialog from "@/components/common/ConfirmDialog";
+import EmptyState from "@/components/common/EmptyState";
+import { AlertIcon } from "@/components/common/icons";
+import { CardSkeletons } from "@/components/common/Skeleton";
 import NoteList from "@/components/notes/NoteList";
 import NoteForm from "@/components/notes/NoteForm";
+
+import { useToast } from "@/context/toast-context";
 
 import { createNote, deleteNote, getNotes, updateNote } from "@/services/noteService";
 
@@ -9,14 +15,16 @@ import type { Note } from "@/types/note";
 
 export default function NotesPage() {
 
+    const toast = useToast();
+
     const [notes, setNotes] = useState<Note[]>([]);
     const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
-    const [actionError, setActionError] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
 
     async function loadNotes() {
         setIsLoading(true);
@@ -48,7 +56,6 @@ export default function NotesPage() {
         note: Omit<Note, "id">
     ): Promise<boolean> {
 
-        setActionError(null);
         setIsSaving(true);
 
         try {
@@ -63,6 +70,8 @@ export default function NotesPage() {
                 ...previousNotes,
             ]);
 
+            toast.success("Note created.");
+
             return true;
 
         } catch (error) {
@@ -71,7 +80,7 @@ export default function NotesPage() {
                 error
             );
 
-            setActionError("Failed to create note.");
+            toast.error("Failed to create note.");
 
             return false;
 
@@ -80,27 +89,29 @@ export default function NotesPage() {
         }
     }
 
-    async function handleDeleteNote(id: number) {
+    function requestDeleteNote(id: number) {
+        setNoteToDelete(notes.find((note) => note.id === id) ?? null);
+    }
 
-        if (!confirm("Delete this note?")) {
-            return;
-        }
+    async function handleDeleteNote(note: Note) {
 
-        setActionError(null);
-        setDeletingId(id);
+        setNoteToDelete(null);
+        setDeletingId(note.id);
 
         try {
 
-            await deleteNote(id);
+            await deleteNote(note.id);
 
             setNotes(previous =>
-                previous.filter(note => note.id !== id)
+                previous.filter(item => item.id !== note.id)
             );
+
+            toast.success("Note deleted.");
 
         } catch (error) {
             console.error("Failed to delete note:", error,);
 
-            setActionError("Failed to delete note.");
+            toast.error("Failed to delete note.");
 
         } finally {
             setDeletingId(null);
@@ -112,7 +123,6 @@ export default function NotesPage() {
         note: Omit<Note, "id">
     ): Promise<boolean> {
 
-        setActionError(null);
         setIsSaving(true);
 
         try {
@@ -132,6 +142,8 @@ export default function NotesPage() {
 
             setSelectedNote(null);
 
+            toast.success("Note updated.");
+
             return true;
 
         } catch (error) {
@@ -141,7 +153,7 @@ export default function NotesPage() {
                 error
             );
 
-            setActionError("Failed to update note.");
+            toast.error("Failed to update note.");
 
             return false;
 
@@ -150,9 +162,14 @@ export default function NotesPage() {
         }
     }
 
+    function focusNoteForm() {
+        document
+            .querySelector<HTMLInputElement>(".notes-form-section input")
+            ?.focus();
+    }
+
     function handleEditNote(note: Note) {
         setSelectedNote(note);
-        setActionError(null);
 
         window.scrollTo({
             top: 0,
@@ -179,12 +196,6 @@ export default function NotesPage() {
 
             </section>
 
-            {actionError && (
-                <p className="notes-error">
-                    {actionError}
-                </p>
-            )}
-
             <section className="notes-list-section">
 
                 <h2>
@@ -193,24 +204,44 @@ export default function NotesPage() {
 
                 {
                     isLoading ? (
-                        <p>
-                            Loading notes...
-                        </p>
+                        <CardSkeletons label="Loading notes" />
                     ) : loadError ? (
-                        <p className="notes-error">
-                            {loadError}
-                        </p>
+                        <EmptyState
+                            tone="error"
+                            icon={<AlertIcon size={20} />}
+                            title={loadError}
+                            description="Check your connection and try again."
+                            actions={
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={loadNotes}
+                                >
+                                    Try again
+                                </button>
+                            }
+                        />
                     ) : (
                         <NoteList
                             notes={notes}
                             deletingId={deletingId}
-                            onDelete={handleDeleteNote}
+                            onDelete={requestDeleteNote}
                             onEdit={handleEditNote}
+                            onCreate={focusNoteForm}
                         />
                     )
                 }
 
             </section>
+
+            {noteToDelete && (
+                <ConfirmDialog
+                    title="Delete note?"
+                    message={`"${noteToDelete.title}" will be permanently deleted.`}
+                    onConfirm={() => handleDeleteNote(noteToDelete)}
+                    onCancel={() => setNoteToDelete(null)}
+                />
+            )}
 
         </main>
     );

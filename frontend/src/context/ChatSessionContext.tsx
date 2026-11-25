@@ -118,6 +118,7 @@ export function ChatSessionProvider({
                     id: message.id,
                     role: message.role,
                     content: message.content,
+                    createdAt: message.created_at,
                 })),
             );
 
@@ -140,6 +141,9 @@ export function ChatSessionProvider({
     function newChat() {
         ++activeContextRef.current;
         setIsSending(false);
+        // A history request still in flight is now stale and will be ignored,
+        // so it can no longer clear the loading flag on its own.
+        setIsLoadingMessages(false);
         setCurrentSessionId(null);
         setMessages([]);
     }
@@ -156,6 +160,7 @@ export function ChatSessionProvider({
             id: crypto.randomUUID(),
             role: "user",
             content: text,
+            createdAt: new Date().toISOString(),
         };
 
         setMessages(previous => [...previous, userMessage]);
@@ -182,6 +187,7 @@ export function ChatSessionProvider({
                     role: "assistant",
                     content: response.answer,
                     sources: response.sources,
+                    createdAt: new Date().toISOString(),
                 },
             ]);
 
@@ -205,6 +211,7 @@ export function ChatSessionProvider({
                     role: "assistant",
                     content: "Unable to process your request. Please try again.",
                     status: "error",
+                    createdAt: new Date().toISOString(),
                 },
             ]);
 

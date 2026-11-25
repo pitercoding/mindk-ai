@@ -88,6 +88,7 @@ export default function ChatInput({
 
             <button
                 type="submit"
+                className="btn btn-primary"
                 disabled={disabled}
             >
                 Send

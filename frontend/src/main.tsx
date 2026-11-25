@@ -6,7 +6,9 @@ import App from "./App";
 
 import { SelectedKnowledgeProvider } from "@/context/SelectedKnowledgeContext";
 import { ChatSessionProvider } from "@/context/ChatSessionContext";
+import ToastProvider from "@/components/common/ToastProvider";
 
+import "@fontsource-variable/inter";
 import "./index.css";
 
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -22,15 +24,19 @@ createRoot(
 
     <ClerkProvider publishableKey={publishableKey} afterSignOutUrl="/auth">
 
-      <SelectedKnowledgeProvider>
+      <ToastProvider>
 
-        <ChatSessionProvider>
+        <SelectedKnowledgeProvider>
 
-          <App />
+          <ChatSessionProvider>
 
-        </ChatSessionProvider>
+            <App />
 
-      </SelectedKnowledgeProvider>
+          </ChatSessionProvider>
+
+        </SelectedKnowledgeProvider>
+
+      </ToastProvider>
 
     </ClerkProvider>
 
