@@ -7,6 +7,7 @@ import App from "./App";
 import { SelectedKnowledgeProvider } from "@/context/SelectedKnowledgeContext";
 import { ChatSessionProvider } from "@/context/ChatSessionContext";
 
+import "@fontsource-variable/inter";
 import "./index.css";
 
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
