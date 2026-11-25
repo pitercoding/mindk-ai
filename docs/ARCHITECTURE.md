@@ -43,13 +43,76 @@ MindK AI is a **monolithic, modular Go backend** paired with a separate single-p
 
 ### Frontend
 
-- **Stack**: React 19 + Vite + TypeScript, React Router v7 (`createBrowserRouter`) for routing, `@clerk/react` for authentication ([`frontend/package.json`](../frontend/package.json)).
-- **Auth**: the whole app is wrapped in `<ClerkProvider>` ([`frontend/src/main.tsx`](../frontend/src/main.tsx)). `ProtectedRoute` ([`frontend/src/components/auth/ProtectedRoute.tsx`](../frontend/src/components/auth/ProtectedRoute.tsx)) uses Clerk's `useAuth()` to redirect unauthenticated users to `/auth` and gate every route under `/`.
+- **Stack**: React 19 + Vite + TypeScript, React Router v7 (`createBrowserRouter`) for routing, `@clerk/react` for authentication, `react-markdown` + `remark-gfm` + `react-syntax-highlighter` for rendering Markdown, and the self-hosted `@fontsource-variable/inter` font ([`frontend/package.json`](../frontend/package.json)). There is no UI component library and no CSS framework: styling is one hand-written stylesheet driven by CSS custom properties (see [Design System](#design-system)).
+- **Auth**: the whole app is wrapped in `<ClerkProvider>` ([`frontend/src/main.tsx`](../frontend/src/main.tsx)). `ProtectedRoute` ([`frontend/src/components/auth/ProtectedRoute.tsx`](../frontend/src/components/auth/ProtectedRoute.tsx)) uses Clerk's `useAuth()` to redirect unauthenticated users to `/auth` and gate every route under `/`. One shared Clerk `appearance` object ([`frontend/src/config/clerkAppearance.ts`](../frontend/src/config/clerkAppearance.ts)) themes both the sign-in page and the user menu so they match the app palette.
 - **API communication**: a single `apiClient()` helper ([`frontend/src/api/client.ts`](../frontend/src/api/client.ts)) reads the Clerk session token via `getToken()` and attaches it as `Authorization: Bearer <token>` on every JSON request. The multipart upload path (`documentUploadService.ts`) does the same outside the shared helper, since it needs `FormData` instead of a JSON body.
-- **Organization**: `pages/` (route-level screens: Dashboard, Notes, Documents, Auth), `components/` grouped by domain (`chat/`, `documents/`, `notes/`, `dashboard/`, `layout/`, `auth/`, `common/`), `services/` (one file per backend resource, each a thin wrapper around `apiClient`), `context/` (`ChatSessionContext`, `SelectedKnowledgeContext` — React Context + hooks, no external state library), `types/` (TypeScript mirrors of the backend JSON contracts).
-- **Data flow**: pages fetch data through services on mount, hold it in local `useState`, and pass it down as props; the two contexts hold cross-page state (active chat session, currently-selected note/document) that multiple components need without prop-drilling.
+- **Organization** (`frontend/src/`):
+  - `pages/` — route-level screens: Dashboard, Notes, Documents, Auth, NotFound.
+  - `layouts/` — `DashboardLayout` (sidebar + header + routed content).
+  - `components/` grouped by domain: `chat/`, `documents/`, `notes/`, `dashboard/`, `layout/` (Sidebar, Header), `auth/`, and `common/` (shared building blocks: `icons`, `BrandMark`, `EmptyState`, `Skeleton`, `ConfirmDialog`, `ToastProvider`, `MarkdownViewer`).
+  - `services/` — one file per backend resource, each a thin wrapper around `apiClient`.
+  - `context/` — `ChatSessionContext`, `SelectedKnowledgeContext` and the toast context (`toast-context.ts`): React Context + hooks, no external state library.
+  - `config/` (Clerk theme), `utils/` (text helpers), `types/` (TypeScript mirrors of the backend JSON contracts).
+- **Data flow**: pages fetch data through services on mount, hold it in local `useState`, and pass it down as props; the contexts hold cross-page state (active chat session, currently-selected note/document, toast queue) that multiple components need without prop-drilling.
 
-### Routing
+#### Provider tree and routes
+
+```mermaid
+flowchart TB
+    Main["main.tsx"] --> Clerk["ClerkProvider"]
+    Clerk --> Toast["ToastProvider"]
+    Toast --> Sel["SelectedKnowledgeProvider"]
+    Sel --> Chat["ChatSessionProvider"]
+    Chat --> Router["App → RouterProvider"]
+
+    Router --> Auth["/auth → AuthPage (Clerk SignIn)"]
+    Router --> PR["ProtectedRoute"]
+    PR --> Layout["DashboardLayout<br/>Sidebar + Header"]
+    Layout --> Dash["/ → DashboardPage"]
+    Layout --> Notes["/notes → NotesPage"]
+    Layout --> Docs["/documents → DocumentsPage"]
+    Layout --> NF["* → NotFoundPage"]
+```
+
+`ToastProvider` sits above the data providers so any component or context consumer can raise a notification with `useToast()`. Unknown URLs inside the authenticated area render a dedicated not-found page (inside the layout, so navigation stays available) instead of silently redirecting.
+
+#### Responsive layout
+
+The layout is fluid and adapts at three breakpoints ([`frontend/src/App.css`](../frontend/src/App.css)):
+
+| Viewport width | Dashboard layout | Navigation |
+|---|---|---|
+| above 1280px | three columns: Knowledge Base, Current Note, Chat | fixed sidebar |
+| 1025–1280px | Knowledge Base and Current Note side by side, Chat below (scrolls inside the main area) | fixed sidebar |
+| up to 1024px | same two-column + chat layout, using the full width | sidebar becomes an off-canvas **drawer** opened from a hamburger button in the header; closes with the backdrop, the close button, `Esc`, or by navigating |
+| up to 640px | one panel at a time, switched by **Knowledge / Note / Chat tabs** (selecting an item jumps to the Note tab) | drawer |
+
+Supporting details: the layout uses `100dvh` so mobile browser toolbars do not clip content; interactive controls reach 44px touch targets and form fields use 16px text (avoiding iOS focus zoom) under `(max-width: 1024px), (pointer: coarse)`; the chat's copy button is always visible on devices without hover; and animations respect `prefers-reduced-motion`.
+
+#### Design System
+
+All visual decisions live in CSS custom properties on `:root` and a small set of shared classes — no component library:
+
+- **Tokens**: a dark navy palette with a single teal accent (`--accent`), neutral text tones, semantic `--success` / `--warning` / `--info` / `--danger` colors (with `-tint` and `-border` variants), a spacing scale, a type scale, radii and shared transitions. The teal accent is reserved for primary actions and active states.
+- **Typography**: Inter Variable, self-hosted through `@fontsource-variable/inter` (no external font CDN); 14px body, 24px/600 page titles, 12px uppercase section labels, tabular numerals for counts, dates and scores.
+- **Buttons**: one `.btn` base with `primary`, `secondary`, `ghost` and `danger` variants and `sm`, `block`, `icon` modifiers.
+- **Icons**: inline SVG components in [`components/common/icons.tsx`](../frontend/src/components/common/icons.tsx), stroke-based and colored with `currentColor`, so there are no emoji or font glyphs in the UI. The brand mark is also an SVG component, reused by the favicon.
+- **Feedback and state patterns**:
+  - `ToastProvider` — success / error / info / warning toasts that auto-dismiss, de-duplicate identical messages and announce themselves through live regions (`role="alert"` for errors).
+  - `ConfirmDialog` — one accessible `alertdialog` used for every destructive action (notes, documents and conversations) instead of the browser's native `confirm()`.
+  - `EmptyState` and `Skeleton` — first-use call-to-action states, "no results" states, error states with a **Try again** action, and shimmer skeletons while lists load.
+- **Accessibility**: visible focus rings, accessible names on icon-only buttons, `aria-live` / `aria-busy` on loading placeholders, and labelled landmarks. The sign-in page and user menu share the same theme.
+
+#### Chat UI
+
+- `ChatMessage` renders each message as an avatar + bubble row with author, local time (formatted with a fixed `en-US` locale, since the interface is English-only) and, for assistant answers, a **copy** button. Answers render through the shared `MarkdownViewer` (tables scroll horizontally inside a wrapper, code is syntax highlighted).
+- **Sources** are rendered as compact chips (document name + relevance percentage). They come from the `/chat` response of the live request; the message-history endpoint does not return them, so chips are not shown when an older conversation is reopened (see [Issues Found](#issues-found-recommendations--not-implemented)).
+- The empty chat offers **suggested questions** for the active mode (knowledge base or current note); sending shows an animated typing indicator; loading a stored conversation shows a skeleton.
+- `ChatSessionContext` guards against stale responses with a context counter, so a slow history request that finishes after the user starts a new chat is ignored.
+
+![Responsive layout: tabbed dashboard and navigation drawer on a phone-sized viewport](screenshots/mobile.png)
+
+### Backend Routing
 
 - The backend uses Go's standard-library `http.ServeMux` ([`backend/internal/routes/routes.go`](../backend/internal/routes/routes.go)) — no external HTTP framework (no Gin, Echo, Chi, etc.) is a dependency of the module ([`backend/go.mod`](../backend/go.mod)).
 - Routes are registered explicitly in `RegisterRoutes(mux, app)`, called once from `main.go`. Each handler is wrapped inline with the middleware it needs: `mux.Handle("/chat", protected(chatLimit(http.HandlerFunc(app.ChatHandler.Ask))))`.
@@ -181,9 +244,13 @@ Chat response + sources — ChatService persists the assistant message, then
   it as the /chat response body
       ↓
 Frontend — ChatSessionContext.sendMessage stores response.sources on the
-  message; ChatMessage.tsx renders a "Sources" list (document name + a
-  rounded relevance percentage) beneath the assistant's Markdown answer
+  message; ChatMessage.tsx renders them as "Sources" chips (document name +
+  a rounded relevance percentage) beneath the assistant's Markdown answer
 ```
+
+In the live demo, a question about the pipeline itself is answered from an uploaded `mindk-ai-overview.md`, with the matching documents and their relevance scores shown under the answer:
+
+![Chat answer grounded in uploaded documents, with cited sources and relevance scores](screenshots/chat-rag.png)
 
 Two details worth calling out explicitly because they shape how the system behaves:
 
@@ -257,7 +324,7 @@ ChatHandler                     — writes {answer, session_id, sources} as JSON
 middleware.RequestLogger        — logs method/path/status/duration/request_id/user_id
       ↓
 React frontend (ChatSessionContext) — updates message list; ChatMessage renders
-                                       Markdown + source citations
+                                       Markdown + source chips
 ```
 
 The user's message is saved to the database **before** the OpenAI call, specifically so a failed or slow LLM request never loses what the user typed (`chat_service.go` comment: "Saved before calling the LLM so the user's input is never lost if the request to OpenAI fails afterwards").
@@ -319,27 +386,6 @@ Beyond the middleware table above:
 - **PostgreSQL-specific integration tests** (`postgres_test.go`) reuse the same harness against a real PostgreSQL instance when the `POSTGRES_TEST_URL` environment variable is set, and are skipped otherwise — an opt-in check for dialect compatibility (placeholders, `RETURNING`, migrations) that doesn't slow down or complicate the default `go test ./...` run.
 - **Swagger/OpenAPI**: every handler carries `swaggo` annotations; `backend/docs/` contains the generated `docs.go`, `swagger.json`, and `swagger.yaml`. The UI is served at `/swagger/` only when `APP_ENV=development`.
 
-## README Integration Notes
-
-For stage 8.7 (README rewrite), reusing this audit without re-deriving it:
-
-**Belongs in the README (short, visual, portfolio-facing):**
-- The Mermaid architecture diagram from this document (it's already GitHub-renderable and compact).
-- A one-paragraph version of the RAG pipeline (upload → chunk → embed → search → context → LLM → cited answer) — the full step-by-step file-by-file version belongs only in this document.
-- The five-line list from "What to Highlight for Portfolio": layered Go backend, native `http.ServeMux`, dependency-injected LLM client, real RAG with semantic search, multi-user ownership isolation, SQLite/PostgreSQL environment strategy.
-- A single link to `docs/ARCHITECTURE.md` for anyone who wants the full detail.
-
-**Should stay only in `docs/ARCHITECTURE.md` (too detailed for a first-page README):**
-- The full middleware ordering table and rationale.
-- The complete request-flow trace for `POST /chat`.
-- Repository-layer details (placeholder syntax, `RETURNING id`, cascade deletes).
-- The testing architecture section (unit vs. integration vs. Postgres-opt-in).
-- The "Issues Found" section below — these are recommendations, not currently-true facts, and don't belong on a page meant to describe the shipped system.
-
-**Best diagram for the README's first page**: the Mermaid flowchart above (`FE → API → MW → H → S → R → DB`, plus `S → LLM → OAI`) — it's the smallest diagram that still shows the layering and the two external dependents (the database and OpenAI), which is what a recruiter skimming the README needs to see in one glance.
-
-**Points that deserve visual emphasis in the README**: the RAG pipeline (it's the most technically interesting part of the project and often what distinguishes this from a CRUD-with-a-chatbot-bolted-on project) and the multi-user data isolation guarantee (it's a correctness property, not just a feature, and is proven by tests — worth stating that explicitly, e.g. "cross-user access returns 404, verified by integration tests").
-
 ## Issues Found (Recommendations — Not Implemented)
 
 These are observations from the audit, listed for awareness only, per the task's instruction not to implement architectural changes at this stage.
@@ -356,13 +402,47 @@ Recommendation: If document volume grows significantly, consider a vector
 ```
 
 ```text
-Issue:          README.md is a single line ("# mindk-ai") with no
-                architecture, setup, or usage content.
-File:           README.md
-Impact:         None for this stage (8.5 is documentation-only and
-                explicitly defers README changes to stage 8.7).
-Recommendation: Addressed in stage 8.7, using the "README Integration
-                Notes" section above.
+Issue:          Source citations are not persisted with chat history. The
+                /chat response includes sources, but the message-history
+                endpoint (GET /chat/messages/{session_id}) returns only the
+                message fields (id, role, content, timestamps), not sources.
+File:           backend/internal/handlers/chat_message_handler.go,
+                frontend/src/context/ChatSessionContext.tsx
+Impact:         Source chips appear for answers received live, but not when
+                a stored conversation is reopened.
+Recommendation: Store the sources with the assistant message (or derive them
+                again) and return them from the history endpoint.
+```
+
+```text
+Issue:          Source chips are not interactive.
+File:           frontend/src/components/chat/ChatMessage.tsx
+Impact:         A cited document cannot be opened from the chat; the full
+                document list lives in DashboardPage state, outside the
+                chat's reach.
+Recommendation: Lift the documents list into a shared context so a chip can
+                select the document in the Current Note panel.
+```
+
+```text
+Issue:          The frontend has no automated tests, and ESLint reports
+                react-hooks/set-state-in-effect errors in several pages and
+                contexts (data-fetching effects call setState directly), plus
+                react-refresh/only-export-components in two context files.
+File:           frontend/src/pages/*.tsx, frontend/src/context/*.tsx
+Impact:         No functional bug observed; the lint rules flag patterns
+                that can cause extra renders.
+Recommendation: Move data fetching to a small query hook or a data library,
+                split context hooks from providers, and add component tests.
+```
+
+```text
+Issue:          The production bundle is a single JavaScript chunk above
+                500 kB (Vite warns about it), mainly the Markdown and syntax
+                highlighting dependencies.
+File:           frontend/vite.config.ts
+Impact:         Slower first load on slow connections.
+Recommendation: Code-split routes and lazy-load the syntax highlighter.
 ```
 
 ```text
@@ -381,4 +461,3 @@ Recommendation: No change proposed; documented here so it isn't mistaken
                 SQLite/PostgreSQL section.
 ```
 
-No other inconsistency between the architecture described in the task prompt's expected diagram and the actual code was found — the expected shape (Frontend → API → Middleware → Handlers → Services → {Repositories, LLM Client} → {Database, OpenAI}) matches the real call graph.
