@@ -19,6 +19,7 @@ That's what motivated building a real retrieval-augmented generation (RAG) pipel
 - **Chat with an AI assistant**, either grounded in a single note or in the entire document knowledge base
 - Chat responses include **cited sources** with relevance scores
 - **Authentication** and per-user data isolation — every user only ever sees their own notes, documents, and conversations
+- A **responsive, accessible interface** that works from a phone to a wide desktop: navigation drawer, tabbed dashboard on small screens, toast notifications, skeleton loaders, and in-app confirmations
 
 ## RAG in Action
 
@@ -26,7 +27,7 @@ When a chat is in "knowledge base" mode, MindK AI embeds the question, searches 
 
 ![RAG chat with cited sources](docs/screenshots/chat-rag.png)
 
-In the screenshot above, the assistant answers a question about the RAG pipeline itself, grounded in an uploaded `mindk-ai-overview.md` document, and shows the source document with its relevance score beneath the answer.
+In the screenshot above, the assistant answers "How does the RAG pipeline work in MindK AI?" grounded in an uploaded `mindk-ai-overview.md` document, and shows the source documents as chips with their relevance scores (74% and 41%) beneath the answer. The answer is rendered as Markdown, and a copy button appears next to each assistant message.
 
 For the complete technical flow (chunking, embeddings, prompt assembly), see [Architecture](docs/ARCHITECTURE.md).
 
@@ -43,6 +44,17 @@ For the complete technical flow (chunking, embeddings, prompt assembly), see [Ar
 - AI chat assistant
 - RAG-based contextual answers over the document knowledge base
 - Per-response source references with relevance scores
+
+### User Experience
+
+- Responsive layout: three columns on wide screens, two columns plus chat on laptops, an off-canvas navigation drawer up to 1024px, and a **Knowledge / Note / Chat** tab view on phones
+- Notes and answers rendered as Markdown (tables, task lists, syntax-highlighted code)
+- Suggested questions, an animated typing indicator, copy-to-clipboard and cited sources in the chat
+- Clean previews on note and document cards (Markdown stripped, word count, file type and date)
+- Toast notifications, skeleton loaders, empty states with a call to action, and "Try again" on load errors
+- In-app confirmation dialogs for every delete action
+- Accessible by design: keyboard focus rings, labelled icon buttons, live regions for status messages, 44px touch targets, and `prefers-reduced-motion` support
+- Consistent look: dark theme with a single teal accent, self-hosted Inter font, inline SVG icons (no emoji), and a themed Clerk sign-in and user menu
 
 ### Security
 
@@ -63,6 +75,8 @@ For the complete technical flow (chunking, embeddings, prompt assembly), see [Ar
 - React 19 + TypeScript
 - Vite
 - React Router v7
+- `react-markdown`, `remark-gfm` and `react-syntax-highlighter` for Markdown rendering
+- Plain CSS with design tokens (no UI framework), `@fontsource-variable/inter` for the typeface
 
 ### Backend
 
@@ -90,19 +104,35 @@ For the complete technical flow (chunking, embeddings, prompt assembly), see [Ar
 
 ## Screenshots
 
+Captured from the [live demo](https://mindk-ai-frontend.onrender.com/) with sample notes and documents.
+
 ### Dashboard
 
-Notes, documents, and chat side by side.
+Knowledge base, the selected note and the AI chat side by side, with suggested questions to get started.
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
-### Documents
+### Chat with cited sources
 
-![Documents](docs/screenshots/documents.png)
+![Chat with cited sources](docs/screenshots/chat-rag.png)
 
 ### Notes
 
+Markdown notes with clean previews and word counts.
+
 ![Notes](docs/screenshots/notes.png)
+
+### Documents
+
+Uploaded files with their type and upload date.
+
+![Documents](docs/screenshots/documents.png)
+
+### Mobile
+
+On small screens the dashboard becomes Knowledge / Note / Chat tabs and the sidebar turns into a drawer.
+
+![Mobile layout](docs/screenshots/mobile.png)
 
 ### API (Swagger)
 
@@ -126,10 +156,14 @@ mindk-ai/
 │   └── Dockerfile
 ├── frontend/
 │   ├── src/
-│   │   ├── pages/          # Dashboard, Notes, Documents, Auth
-│   │   ├── components/     # UI grouped by domain (chat, notes, documents, ...)
+│   │   ├── pages/          # Dashboard, Notes, Documents, Auth, NotFound
+│   │   ├── layouts/        # DashboardLayout (sidebar drawer + header)
+│   │   ├── components/     # UI by domain (chat, notes, documents, ...) + common/
+│   │   │                   #   common/: icons, toasts, dialogs, empty states, skeletons
 │   │   ├── services/       # API client wrappers
-│   │   └── context/        # chat session / selected knowledge state
+│   │   ├── context/        # chat session, selected knowledge, toasts
+│   │   ├── config/         # Clerk theme
+│   │   └── utils/          # text helpers (Markdown stripping, dates)
 │   └── package.json
 ├── docs/
 │   ├── ARCHITECTURE.md
@@ -259,15 +293,16 @@ MindK AI is a portfolio/demo project. It has automated tests and a documented ar
 
 - Frontend component tests (none currently exist)
 - CI pipeline (e.g. GitHub Actions) to run backend tests automatically
-- Improved presentation of semantic search results in the UI
+- Persist cited sources with the chat history (today they are shown for live answers only) and make the source chips open the document
 - A vector index (e.g. pgvector) if per-user document volume grows large enough to make full-scan cosine similarity a bottleneck
-- Frontend performance work (code splitting, etc.) as the app grows
+- Frontend performance work: the production bundle is a single chunk above 500 kB, so route-level code splitting and lazy-loading the syntax highlighter are next
 
 ## Portfolio / Engineering Highlights
 
 - A real RAG pipeline (chunking, embeddings, semantic search, cited sources) rather than a simple LLM wrapper
 - Authenticated, multi-user data isolation enforced in SQL and verified by integration tests
 - Layered Go backend with dependency-injected LLM client, testable without hitting OpenAI
+- A responsive, accessible React interface built on a small hand-written design system (tokens, button variants, SVG icons, toasts, dialogs, skeletons)
 - Automated backend unit and integration tests
 - Swagger/OpenAPI documentation generated from code
 - Docker support and a dev/production database strategy (SQLite → PostgreSQL)
