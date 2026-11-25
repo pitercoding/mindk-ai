@@ -10,6 +10,7 @@ interface KnowledgeBaseProps {
     documents: Document[];
     isLoading: boolean;
     error: string | null;
+    onItemSelected?: () => void;
 }
 
 export default function KnowledgeBase({
@@ -17,6 +18,7 @@ export default function KnowledgeBase({
     documents,
     isLoading,
     error,
+    onItemSelected,
 }: KnowledgeBaseProps) {
 
     const {
@@ -116,7 +118,10 @@ export default function KnowledgeBase({
                                         selected?.type === "note" &&
                                         selected.item.id === note.id
                                     }
-                                    onSelect={() => selectNote(note)}
+                                    onSelect={() => {
+                                        selectNote(note);
+                                        onItemSelected?.();
+                                    }}
                                 />
                             ))}
                         </div>
@@ -137,7 +142,10 @@ export default function KnowledgeBase({
                                         selected?.type === "document" &&
                                         selected.item.id === document.id
                                     }
-                                    onSelect={() => selectDocument(document)}
+                                    onSelect={() => {
+                                        selectDocument(document);
+                                        onItemSelected?.();
+                                    }}
                                 />
                             ))}
                         </div>

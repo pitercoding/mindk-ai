@@ -118,6 +118,9 @@ button:focus-visible,
 }
 
 .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 28px;
     padding: 0 10px;
 }
@@ -251,24 +254,6 @@ button:focus-visible,
 
 .sidebar-conversations-header .sidebar-section-title {
     margin-bottom: 10px;
-}
-
-.sidebar-conversations-toggle {
-    display: none;
-    width: 22px;
-    height: 22px;
-    margin-bottom: 10px;
-    color: var(--soft);
-    background: none;
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: var(--transition-interactive);
-}
-
-.sidebar-conversations-toggle:hover {
-    color: var(--text);
-    background: rgba(154, 171, 188, 0.18);
 }
 
 .sidebar-new-chat-button {
@@ -438,6 +423,7 @@ button:focus-visible,
     flex: 1;
     flex-direction: column;
     min-width: 0;
+    min-height: 0;
 }
 
 .app-header {
@@ -829,16 +815,144 @@ button:focus-visible,
     line-height: 1.5;
 }
 
+/*
+    Responsive: drawer navigation (<= 1024px) and tabbed dashboard (<= 640px)
+*/
+
+.menu-button,
+.sidebar-close-button,
+.sidebar-backdrop,
+.dashboard-tabs {
+    display: none;
+}
+
+.menu-button,
+.sidebar-close-button {
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition-interactive);
+}
+
+.menu-button:hover,
+.sidebar-close-button:hover {
+    background: rgba(154, 171, 188, 0.18);
+}
+
+/* Hamburger icon drawn with a single element */
+.menu-button span,
+.menu-button span::before,
+.menu-button span::after {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: currentColor;
+    border-radius: var(--radius-pill);
+    transition: transform var(--transition-fast), background-color var(--transition-fast);
+}
+
+.menu-button span {
+    position: relative;
+}
+
+.menu-button span::before,
+.menu-button span::after {
+    content: "";
+    position: absolute;
+    left: 0;
+}
+
+.menu-button span::before {
+    top: -6px;
+}
+
+.menu-button span::after {
+    top: 6px;
+}
+
+.menu-button[aria-expanded="true"] span {
+    background: transparent;
+}
+
+.menu-button[aria-expanded="true"] span::before {
+    transform: translateY(6px) rotate(45deg);
+}
+
+.menu-button[aria-expanded="true"] span::after {
+    transform: translateY(-6px) rotate(-45deg);
+}
+
 @media (max-width: 1024px) {
     .dashboard-layout {
         margin: 0;
         height: 100vh;
+        height: 100dvh;
         border-radius: 0;
+        border-width: 0;
+    }
+
+    /* Sidebar becomes an off-canvas drawer */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 900;
+        width: min(300px, 85vw);
+        visibility: hidden;
+        background: #0b1320;
+        box-shadow: none;
+        transform: translateX(-100%);
+        transition:
+            transform 0.22s ease,
+            visibility 0s linear 0.22s,
+            box-shadow 0.22s ease;
+    }
+
+    .sidebar.sidebar-open {
+        visibility: visible;
+        box-shadow: var(--shadow);
+        transform: translateX(0);
+        transition:
+            transform 0.22s ease,
+            visibility 0s,
+            box-shadow 0.22s ease;
+    }
+
+    .sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 800;
+        display: block;
+        background: rgba(3, 8, 16, 0.6);
+    }
+
+    .sidebar-close-button {
+        display: grid;
+    }
+
+    .menu-button {
+        display: grid;
+    }
+
+    .app-header {
+        justify-content: space-between;
+        padding-left: var(--space-3);
+    }
+
+    .dashboard-content>main {
+        overflow-y: auto;
     }
 
     .dashboard-grid {
         grid-template-columns: 1fr 1fr;
-        grid-template-rows: auto auto;
+        grid-template-rows: minmax(300px, 1fr) minmax(440px, 1fr);
         grid-template-areas:
             "knowledge current"
             "chat chat";
@@ -855,71 +969,81 @@ button:focus-visible,
 
     .chat-panel {
         grid-area: chat;
-        min-height: 480px;
-    }
-
-    .dashboard-panel {
-        min-height: 260px;
     }
 }
 
 @media (max-width: 640px) {
-    .dashboard-layout {
+    .app-header {
+        height: 56px;
+        padding-inline: var(--space-2) var(--space-4);
+    }
+
+    .dashboard-content>main {
+        padding: 0 var(--space-3) var(--space-3);
+    }
+
+    /* One dashboard panel at a time, switched by the tab bar */
+    .dashboard-page {
+        display: flex;
         flex-direction: column;
+        gap: var(--space-3);
+    }
+
+    .dashboard-tabs {
+        display: flex;
+        flex: 0 0 auto;
+        gap: var(--space-1);
+        padding: var(--space-1);
+        background: rgba(13, 22, 36, 0.7);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+    }
+
+    .dashboard-tab {
+        flex: 1;
+        min-height: 40px;
+        color: var(--muted);
+        font-weight: 600;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: var(--transition-interactive);
+    }
+
+    .dashboard-tab:hover {
+        color: var(--text);
+    }
+
+    .dashboard-tab.active {
+        color: var(--accent);
+        background: var(--accent-tint);
+        border-color: var(--accent-border-soft);
     }
 
     .dashboard-grid {
-        grid-template-columns: 1fr;
-        grid-template-areas:
-            "knowledge"
-            "current"
-            "chat";
+        flex: 1;
+        min-height: 0;
+        height: auto;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr);
+        grid-template-areas: "panel";
+        overflow: hidden;
     }
 
-    .chat-panel {
-        min-height: 420px;
+    .dashboard-grid>.dashboard-panel {
+        grid-area: panel;
     }
 
-    .sidebar {
-        flex: 0 0 auto;
-        width: 100%;
-        padding: var(--space-4);
-        border-right: 0;
-        border-bottom: 1px solid var(--line);
-    }
-
-    .sidebar-menu {
-        flex-direction: row;
-        overflow-x: auto;
-    }
-
-    .sidebar-link {
-        flex: 0 0 auto;
-        padding-right: 14px;
-    }
-
-    .sidebar-footer {
+    .dashboard-grid[data-active-tab="knowledge"]>:not(.knowledge-panel),
+    .dashboard-grid[data-active-tab="note"]>:not(.current-note-panel),
+    .dashboard-grid[data-active-tab="chat"]>:not(.chat-panel) {
         display: none;
     }
 
-    .sidebar-conversations-toggle {
-        display: grid;
-        place-items: center;
-    }
-
-    .sidebar-conversations:not(.sidebar-conversations-open) .sidebar-new-chat-button,
-    .sidebar-conversations:not(.sidebar-conversations-open) .conversation-list,
-    .sidebar-conversations:not(.sidebar-conversations-open) .sidebar-status {
-        display: none;
-    }
-
-    .sidebar-conversations.sidebar-conversations-open .conversation-list {
-        max-height: 40vh;
-    }
-
-    .app-header {
-        gap: 12px;
-        padding-inline: var(--space-4);
+    .notes-page,
+    .documents-page {
+        padding: var(--space-3);
     }
 
     .chat-content {

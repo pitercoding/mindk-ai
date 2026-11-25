@@ -12,12 +12,21 @@ import { getNotes } from "@/services/noteService";
 import type { Document } from "@/types/document";
 import type { Note } from "@/types/note";
 
+type DashboardTab = "knowledge" | "note" | "chat";
+
+const dashboardTabs: { id: DashboardTab; label: string }[] = [
+    { id: "knowledge", label: "Knowledge" },
+    { id: "note", label: "Note" },
+    { id: "chat", label: "Chat" },
+];
+
 export default function DashboardPage() {
 
     const [notes, setNotes] = useState<Note[]>([]);
     const [documents, setDocuments] = useState<Document[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<DashboardTab>("knowledge");
 
     const {
         selected,
@@ -95,13 +104,34 @@ export default function DashboardPage() {
     return (
         <section className="dashboard-page">
 
-            <div className="dashboard-grid">
+            {/* Mobile only: one panel at a time (hidden by CSS on larger screens) */}
+            <div className="dashboard-tabs" role="tablist" aria-label="Dashboard sections">
+                {dashboardTabs.map((tab) => (
+                    <button
+                        key={tab.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={activeTab === tab.id}
+                        className={
+                            activeTab === tab.id
+                                ? "dashboard-tab active"
+                                : "dashboard-tab"
+                        }
+                        onClick={() => setActiveTab(tab.id)}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            <div className="dashboard-grid" data-active-tab={activeTab}>
 
                 <KnowledgeBase
                     notes={notes}
                     documents={documents}
                     isLoading={isLoading}
                     error={error}
+                    onItemSelected={() => setActiveTab("note")}
                 />
 
                 <CurrentNote

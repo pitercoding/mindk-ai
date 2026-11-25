@@ -44,7 +44,12 @@ interface MenuState {
     left: number;
 }
 
-export default function Sidebar() {
+interface SidebarProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     const navigate = useNavigate();
 
@@ -64,7 +69,6 @@ export default function Sidebar() {
     const [editingTitle, setEditingTitle] = useState("");
     const [actionError, setActionError] = useState<string | null>(null);
     const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
-    const [conversationsOpen, setConversationsOpen] = useState(false);
 
     useEffect(() => {
 
@@ -92,12 +96,14 @@ export default function Sidebar() {
         setMenu(null);
         newChat();
         navigate("/");
+        onClose();
     }
 
     async function handleSelect(id: number) {
         setMenu(null);
         await selectSession(id);
         navigate("/");
+        onClose();
     }
 
     function toggleMenu(
@@ -174,7 +180,10 @@ export default function Sidebar() {
         menu && sessions.find(session => session.id === menu.sessionId);
 
     return (
-        <aside className="sidebar">
+        <aside
+            id="app-sidebar"
+            className={isOpen ? "sidebar sidebar-open" : "sidebar"}
+        >
 
             <header className="sidebar-header">
                 <h1>
@@ -182,6 +191,15 @@ export default function Sidebar() {
                         🧠 MindK AI
                     </Link>
                 </h1>
+
+                <button
+                    type="button"
+                    className="sidebar-close-button"
+                    aria-label="Close menu"
+                    onClick={onClose}
+                >
+                    ✕
+                </button>
             </header>
 
 
@@ -231,28 +249,12 @@ export default function Sidebar() {
             </nav>
 
 
-            <div
-                className={
-                    conversationsOpen
-                        ? "sidebar-conversations sidebar-conversations-open"
-                        : "sidebar-conversations"
-                }
-            >
+            <div className="sidebar-conversations">
 
                 <div className="sidebar-conversations-header">
                     <span className="sidebar-section-title">
                         Conversations
                     </span>
-
-                    <button
-                        type="button"
-                        className="sidebar-conversations-toggle"
-                        aria-expanded={conversationsOpen}
-                        aria-label="Toggle conversations"
-                        onClick={() => setConversationsOpen((open) => !open)}
-                    >
-                        {conversationsOpen ? "▲" : "▼"}
-                    </button>
                 </div>
 
                 <button
@@ -363,7 +365,7 @@ export default function Sidebar() {
 
             <footer className="sidebar-footer">
 
-                <button onClick={() => navigate("/documents")}>
+                <button onClick={() => { navigate("/documents"); onClose(); }}>
                     ⬆ Upload
                 </button>
 
