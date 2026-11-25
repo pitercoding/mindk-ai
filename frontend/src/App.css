@@ -257,6 +257,7 @@ button:focus-visible,
 }
 
 .sidebar-new-chat-button {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -566,22 +567,11 @@ button:focus-visible,
     place-items: center;
     flex: 1;
     min-height: 190px;
-    position: relative;
+    padding: var(--space-5);
     color: var(--muted);
     text-align: center;
     background: rgba(13, 22, 36, 0.3);
     border: 1px dashed var(--line);
-    border-radius: var(--radius-md);
-}
-
-.chat-empty-state::after {
-    content: "";
-    position: absolute;
-    left: 16px;
-    right: 16px;
-    bottom: 16px;
-    height: 40px;
-    border: 1px solid var(--line);
     border-radius: var(--radius-md);
 }
 
@@ -1060,6 +1050,77 @@ button:focus-visible,
     }
 }
 
+/*
+    Touch-friendly targets (>= 44px) on small screens and touch devices
+*/
+
+@media (max-width: 1024px), (pointer: coarse) {
+    .sidebar-logo,
+    .sidebar-link,
+    .sidebar-new-chat-button,
+    .sidebar-footer button,
+    .conversation-title {
+        min-height: 44px;
+    }
+
+    .conversation-title {
+        height: 44px;
+    }
+
+    .conversation-menu-toggle {
+        width: 44px;
+        height: 44px;
+    }
+
+    .conversation-menu button {
+        min-height: 44px;
+        padding: 0 var(--space-3);
+    }
+
+    .note-action-button,
+    .document-action-button {
+        width: 44px;
+        height: 44px;
+    }
+
+    .note-action-button-busy,
+    .document-action-button-busy {
+        width: auto;
+    }
+
+    .chat-mode-button {
+        min-height: 44px;
+        padding-inline: var(--space-5);
+    }
+
+    .header-actions button,
+    .header-actions .cl-userButtonTrigger {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .dashboard-tab {
+        min-height: 44px;
+    }
+
+    .chat-input button,
+    .file-upload-button,
+    .document-upload-actions button,
+    .documents-search input {
+        min-height: 44px;
+    }
+
+    /* 16px avoids the automatic zoom iOS applies when focusing smaller inputs */
+    .chat-input textarea,
+    .chat-input input,
+    .documents-search input,
+    .notes-form-section input,
+    .notes-form-section textarea,
+    .conversation-rename-input {
+        font-size: 16px;
+    }
+}
+
 .knowledge-panel .knowledge-search {
     margin-bottom: var(--space-4);
 }
@@ -1193,6 +1254,11 @@ button:focus-visible,
     margin: 0;
     padding: var(--space-7);
     color: var(--muted);
+}
+
+.current-note-empty-inline {
+    padding: 0;
+    font-style: italic;
 }
 
 .markdown-viewer {

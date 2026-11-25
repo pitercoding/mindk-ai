@@ -59,8 +59,6 @@ export default function ChatPanel() {
                             : "Ask questions about the selected note."}
                     </span>
                 </div>
-
-                <button>...</button>
             </header>
 
             <div className="chat-mode-selector">

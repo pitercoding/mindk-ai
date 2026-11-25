@@ -22,7 +22,8 @@ export default function ChatInput({
         }
 
         el.style.height = "auto";
-        el.style.height = `${el.scrollHeight}px`;
+        // scrollHeight excludes borders (border-box), so add them back.
+        el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`;
     }, [message]);
 
     // Return focus once sending/loading finishes, so typing the next

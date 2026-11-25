@@ -34,11 +34,6 @@ export default function CurrentNote({
             <header className="panel-header">
 
                 <h2>{heading}</h2>
-
-                <button>
-                    ...
-                </button>
-
             </header>
 
             <div className="current-note-content">
@@ -56,9 +51,15 @@ export default function CurrentNote({
                         </div>
 
                         <div className="current-note-scroll">
-                            <MarkdownViewer
-                                content={content}
-                            />
+                            {content.trim() ? (
+                                <MarkdownViewer
+                                    content={content}
+                                />
+                            ) : (
+                                <p className="current-note-empty current-note-empty-inline">
+                                    This {selection.type} has no content yet.
+                                </p>
+                            )}
                         </div>
                     </>
                 ) : (

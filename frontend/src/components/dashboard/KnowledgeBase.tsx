@@ -62,8 +62,6 @@ export default function KnowledgeBase({
 
                     <span>Recent</span>
                 </div>
-
-                <button>...</button>
             </header>
 
             <div className="documents-search knowledge-search">
