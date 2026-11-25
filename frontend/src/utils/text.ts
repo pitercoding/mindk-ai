@@ -38,6 +38,9 @@ export function countWords(text: string): number {
     return trimmed ? trimmed.split(/\s+/).length : 0;
 }
 
+/** The interface is English-only, so dates and times use a fixed locale. */
+export const APP_LOCALE = "en-US";
+
 export function formatDate(value: string): string {
 
     const date = new Date(value);
@@ -46,7 +49,7 @@ export function formatDate(value: string): string {
         return "";
     }
 
-    return date.toLocaleDateString(undefined, {
+    return date.toLocaleDateString(APP_LOCALE, {
         day: "2-digit",
         month: "short",
         year: "numeric",

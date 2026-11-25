@@ -11,6 +11,8 @@ import {
 
 import { useToast } from "@/context/toast-context";
 
+import { APP_LOCALE } from "@/utils/text";
+
 import type { Message } from "@/types/message";
 
 
@@ -30,7 +32,7 @@ function formatTime(value?: string): string {
         return "";
     }
 
-    return date.toLocaleTimeString(undefined, {
+    return date.toLocaleTimeString(APP_LOCALE, {
         hour: "2-digit",
         minute: "2-digit",
     });
