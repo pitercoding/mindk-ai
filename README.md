@@ -71,7 +71,7 @@ For the complete technical flow (chunking, embeddings, prompt assembly), see [Ar
 ### Data
 
 - SQLite (development)
-- PostgreSQL (production)
+- PostgreSQL (production, hosted on [Neon](https://neon.com))
 
 ### AI Stack
 
@@ -81,6 +81,8 @@ For the complete technical flow (chunking, embeddings, prompt assembly), see [Ar
 ### Infrastructure
 
 - Docker / Docker Compose
+- [Render](https://render.com) (backend as a Docker web service, frontend as a static site)
+- [Neon](https://neon.com) (serverless PostgreSQL)
 
 ### Authentication
 
@@ -210,6 +212,22 @@ OPENAI_API_KEY=your_key CLERK_SECRET_KEY=your_key docker compose up
 
 This starts PostgreSQL and the backend API on `http://localhost:8080`. The frontend is not part of the compose setup and is run separately with `npm run dev` as shown above, pointed at `VITE_API_URL=http://localhost:8080`.
 
+## Deployment
+
+| Component | Host | Notes |
+| --------- | ---- | ----- |
+| Backend (Go API) | Render — Docker web service, Frankfurt | Health check at `/health` |
+| Frontend (React) | Render — static site | Built with Vite — [live demo](https://mindk-ai-frontend.onrender.com/) |
+| Database | Neon — serverless PostgreSQL | Free tier |
+
+The backend runs with `APP_ENV=production`, which requires `DATABASE_URL` (the Neon connection string) and `FRONTEND_ORIGIN` to be set in the Render service's environment variables. Migrations are applied automatically on every startup, so pointing `DATABASE_URL` at an empty database is enough to create the full schema.
+
+Notes on the free tiers:
+
+- Use Neon's **direct** connection string (host without `-pooler`). The migration library takes advisory locks, which are not reliable behind a transaction-mode connection pooler.
+- Neon suspends idle databases and Render spins down idle free web services, so the first request after a period of inactivity can take a few seconds (database) to about a minute (backend) to respond.
+- The database was previously a Render PostgreSQL instance. Render's free PostgreSQL expires after 30 days, which is why it was moved to Neon. Never commit the real `DATABASE_URL`; set it only in the hosting dashboard.
+
 ## API Documentation
 
 The backend exposes a REST API. Interactive Swagger/OpenAPI documentation is served at `/swagger/` when running in the `development` environment (it is intentionally not registered in production).
@@ -235,7 +253,7 @@ For a detailed explanation of the application architecture, RAG pipeline, authen
 
 ## Project Status
 
-MindK AI is a portfolio/demo project. It has automated tests and a documented architecture, but it hasn't been deployed as a public live demo.
+MindK AI is a portfolio/demo project. It has automated tests and a documented architecture, and is deployed on Render (backend and frontend) with a Neon PostgreSQL database. Live demo: [mindk-ai-frontend.onrender.com](https://mindk-ai-frontend.onrender.com/) — see [Deployment](#deployment). Because it runs on free tiers, the first request after inactivity may be slow.
 
 ## Next Improvements
 

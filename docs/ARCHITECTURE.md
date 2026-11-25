@@ -116,6 +116,7 @@ Located in `backend/internal/repository/`, one per table-ish concern (`note_repo
 
 - **Development**: SQLite via `modernc.org/sqlite` (a pure-Go driver, no CGo), file path from `DATABASE_PATH` (default `./data/mindk.db`). Connection is capped at `SetMaxOpenConns(1)` and opened with `PRAGMA foreign_keys = ON`, since SQLite does not enforce foreign keys by default and this project relies on `ON DELETE CASCADE`.
 - **Production**: PostgreSQL via `jackc/pgx/v5`, connection string from `DATABASE_URL`. Selected automatically when `APP_ENV=production` ([`backend/internal/database/db.go`](../backend/internal/database/db.go)); `docker-compose.yml` also runs the backend in production mode locally against a containerized Postgres.
+- **Hosting**: the production database is a [Neon](https://neon.com) serverless PostgreSQL instance; the backend (Docker web service) and the frontend (static site) run on Render. The backend reaches Neon over TLS (`sslmode=require` in the connection string). The **direct** (non-pooler) Neon connection string must be used, because `golang-migrate` takes advisory locks on startup, which are not reliable behind a transaction-mode pooler. See [Deployment](#deployment).
 - **Environment selection**: `config.Config.IsProduction()` drives both the database dialect and which environment variables are required vs. defaulted ([`backend/internal/config/env.go`](../backend/internal/config/env.go)). In production, `FRONTEND_ORIGIN` and `DATABASE_URL` must be set explicitly — there is no silent localhost/file fallback.
 - **Migrations**: `golang-migrate/migrate` with SQL files embedded at compile time (`//go:embed`) under two parallel trees, `backend/internal/migrations/sqlite/` and `backend/internal/migrations/postgres/`, kept in sync migration-by-migration (same numbering, dialect-appropriate syntax — e.g. `INTEGER PRIMARY KEY AUTOINCREMENT` vs `SERIAL`). Migrations run automatically on every backend startup (`migrations.Run` in `main.go`), before the HTTP server starts accepting requests.
 - **Cascade deletes**: `document_chunks.document_id` and `document_embeddings.chunk_id` are both declared `ON DELETE CASCADE`. Deleting a document deletes its chunks and their embeddings in one operation — this is also how `DocumentService.Create` rolls back a partially-created document if chunking or embedding generation fails.
@@ -278,6 +279,18 @@ The concrete OpenAI implementation is constructed exactly once, in `main.go`, an
 ### SQLite → PostgreSQL
 
 Development uses an embedded, zero-setup SQLite database; production uses PostgreSQL, matched by hosting-provider expectations (a managed Postgres instance, not a mounted file). The two are kept compatible deliberately: identical placeholder syntax (`$1, $2, ...`), identical use of `RETURNING id`, and two parallel migration trees applied through the same `golang-migrate` code path. A dedicated opt-in integration test suite (`postgres_test.go`, gated by the `POSTGRES_TEST_URL` environment variable) runs the full test scenarios against a real PostgreSQL instance specifically to catch any dialect drift.
+
+### Deployment
+
+| Component | Host |
+| --------- | ---- |
+| Backend (Go API, `backend/Dockerfile`) | Render web service (Docker, Frankfurt) |
+| Frontend (React + Vite) | Render static site |
+| PostgreSQL | Neon (free tier) |
+
+Production configuration is entirely environment-driven (`APP_ENV=production`, `DATABASE_URL`, `FRONTEND_ORIGIN`, plus the OpenAI and Clerk keys), set in the Render dashboard and never committed. Render injects `PORT`. On startup the backend connects to the database, applies migrations, and only then starts listening; if the database is unreachable it logs `failed to connect database` and exits, so Render restarts it in a loop until the database is reachable again. `GET /health` returns `{"status":"ok"}` but does not query the database, so a healthy `/health` alone does not prove database connectivity — the `database connected` and `migrations applied` log lines do.
+
+The database previously ran on Render PostgreSQL, whose free tier expires after 30 days; it was moved to Neon by changing only `DATABASE_URL`, with no code changes — the schema was recreated by the startup migrations. Both free tiers idle out (Neon suspends the database, Render spins the web service down), so cold-start latency on the first request is expected.
 
 ### Monolithic Modular Architecture
 
