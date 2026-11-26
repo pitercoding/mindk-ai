@@ -19,7 +19,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o mindk-api ./cmd/api
 # Stage 2 — Runtime
 # =========================
 
-FROM alpine:3.22
+FROM alpine:3.24
 
 WORKDIR /app
 
