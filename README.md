@@ -1,217 +1,111 @@
 # MindK AI
 
-MindK AI is a knowledge-management app that lets you write notes, upload documents, and chat with an AI assistant that answers questions grounded in that content — instead of relying only on the model's general knowledge.
+[![CI](https://github.com/pitercoding/mindk-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/pitercoding/mindk-ai/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Live demo](https://img.shields.io/badge/Live%20demo-Render-46E3B7?logo=render&logoColor=white)](https://mindk-ai-frontend.onrender.com/)
+
+![Go](https://img.shields.io/badge/Go-00ADD8?logo=go&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?logo=openai&logoColor=white)
+![Clerk](https://img.shields.io/badge/Clerk-6C47FF?logo=clerk&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-6E9F18?logo=vitest&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
+![Swagger](https://img.shields.io/badge/Swagger-85EA2D?logo=swagger&logoColor=black)
+
+MindK AI is an app where you write notes, upload documents, and chat with an AI assistant that answers **using your own content** instead of guessing from general knowledge.
 
 ![MindK AI Dashboard](docs/screenshots/dashboard.png)
 
-## Project Motivation
+## What it does
 
-Most personal AI chat tools have no memory of what you actually know — they answer from general training data, not from your own notes and documents. MindK AI was built to close that gap: a place to keep notes and documents, and a chat assistant that can actually search that knowledge base and answer using it, citing which sources it drew from.
+- Write and edit **notes** (Markdown supported).
+- Upload **documents** (PDF, Markdown or plain text, up to 10 MB).
+- **Chat with the AI** about one note or about all your documents.
+- Answers show the **sources** they used, with a relevance score.
+- **Sign in** with Clerk. Each person only sees their own data.
+- Works on phone and desktop, with toasts, loading placeholders and confirmation dialogs.
 
-That's what motivated building a real retrieval-augmented generation (RAG) pipeline rather than a thin wrapper around a chat API — documents are chunked, embedded, and semantically searched so the assistant's answers can be traced back to something the user actually wrote or uploaded.
+## How the chat finds answers (RAG)
 
-## What MindK AI Does
+When you ask a question in "knowledge base" mode:
 
-- Create, edit, and organize personal **notes**
-- Upload **documents** (PDF, Markdown, plain text) to a personal knowledge base
-- Automatic **chunking and embedding** of uploaded documents
-- **Semantic search** over stored document chunks (cosine similarity)
-- **Chat with an AI assistant**, either grounded in a single note or in the entire document knowledge base
-- Chat responses include **cited sources** with relevance scores
-- **Authentication** and per-user data isolation — every user only ever sees their own notes, documents, and conversations
-- A **responsive, accessible interface** that works from a phone to a wide desktop: navigation drawer, tabbed dashboard on small screens, toast notifications, skeleton loaders, and in-app confirmations
-
-## RAG in Action
-
-When a chat is in "knowledge base" mode, MindK AI embeds the question, searches the user's stored document chunks by cosine similarity, and feeds the best-matching passages into the prompt as context — so the assistant answers from the user's own documents rather than guessing.
-
-![RAG chat with cited sources](docs/screenshots/chat-rag.png)
-
-In the screenshot above, the assistant answers "How does the RAG pipeline work in MindK AI?" grounded in an uploaded `mindk-ai-overview.md` document, and shows the source documents as chips with their relevance scores (74% and 41%) beneath the answer. The answer is rendered as Markdown, and a copy button appears next to each assistant message.
-
-For the complete technical flow (chunking, embeddings, prompt assembly), see [Architecture](docs/ARCHITECTURE.md).
-
-## Key Features
-
-### Knowledge Management
-
-- Notes (create, edit, browse)
-- Document upload (PDF / Markdown / text)
-- Automatic document chunking and embedding on upload
-
-### AI
-
-- AI chat assistant
-- RAG-based contextual answers over the document knowledge base
-- Per-response source references with relevance scores
-
-### User Experience
-
-- Responsive layout: three columns on wide screens, two columns plus chat on laptops, an off-canvas navigation drawer up to 1024px, and a **Knowledge / Note / Chat** tab view on phones
-- Notes and answers rendered as Markdown (tables, task lists, syntax-highlighted code)
-- Suggested questions, an animated typing indicator, copy-to-clipboard and cited sources in the chat
-- Clean previews on note and document cards (Markdown stripped, word count, file type and date)
-- Toast notifications, skeleton loaders, empty states with a call to action, and "Try again" on load errors
-- In-app confirmation dialogs for every delete action
-- Accessible by design: keyboard focus rings, labelled icon buttons, live regions for status messages, 44px touch targets, and `prefers-reduced-motion` support
-- Consistent look: dark theme with a single teal accent, self-hosted Inter font, inline SVG icons (no emoji), and a themed Clerk sign-in and user menu
-
-### Security
-
-- Authentication via Clerk
-- Per-user data isolation enforced at the database layer (cross-user access returns 404, verified by integration tests)
-- Rate limiting, security headers, and request size limits on the API
-
-### Developer Experience
-
-- REST API with Swagger/OpenAPI documentation (development environment)
-- Automated backend unit and integration tests
-- Docker support for the backend + PostgreSQL
-
-## Technologies
-
-### Frontend
-
-- React 19 + TypeScript
-- Vite
-- React Router v7
-- `react-markdown`, `remark-gfm` and `react-syntax-highlighter` for Markdown rendering
-- Plain CSS with design tokens (no UI framework), `@fontsource-variable/inter` for the typeface
-
-### Backend
-
-- Go (`net/http`, standard library `http.ServeMux` — no external web framework)
-
-### Data
-
-- SQLite (development)
-- PostgreSQL (production, hosted on [Neon](https://neon.com))
-
-### AI Stack
-
-- OpenAI (chat completions + embeddings)
-- Custom RAG pipeline (chunking, embeddings, cosine-similarity search)
-
-### Infrastructure
-
-- Docker / Docker Compose
-- [Render](https://render.com) (backend as a Docker web service, frontend as a static site)
-- [Neon](https://neon.com) (serverless PostgreSQL)
-
-### Authentication
-
-- Clerk
-
-## Screenshots
-
-Captured from the [live demo](https://mindk-ai-frontend.onrender.com/) with sample notes and documents.
-
-### Dashboard
-
-Knowledge base, the selected note and the AI chat side by side, with suggested questions to get started.
-
-![Dashboard](docs/screenshots/dashboard.png)
-
-### Chat with cited sources
+1. Your documents were already split into small pieces and turned into numbers (embeddings) when you uploaded them.
+2. The question is turned into numbers too, and the app finds the pieces that are most similar to it.
+3. Those pieces are sent to the AI together with your question, so it answers from your documents.
 
 ![Chat with cited sources](docs/screenshots/chat-rag.png)
 
-### Notes
+The full technical flow is in [Architecture](docs/ARCHITECTURE.md).
 
-Markdown notes with clean previews and word counts.
+## Try it online
 
-![Notes](docs/screenshots/notes.png)
+The app is live, no installation needed: [mindk-ai-frontend.onrender.com](https://mindk-ai-frontend.onrender.com/)
 
-### Documents
+1. **Open the link and wait.** It runs on free hosting, so the first visit after a while of inactivity can take up to about a minute to wake up. If you see an error, wait a few seconds and refresh.
+2. **Create an account** (or sign in) on the sign-in screen.
+3. **Add a note.** Go to **Notes**, type a title and some content, and click **Save Note**.
+4. **Upload a document.** Go to **Documents**, choose a `.md`, `.txt` or `.pdf` file, and upload it. Wait for the "uploaded successfully" message.
+5. **Ask a question.** Go back to the **Dashboard**, pick the knowledge base or a note, and ask something about what you added. The answer appears with the sources below it.
+6. **Check the extras.** Try the search box in **Documents**, delete something (a confirmation appears first), and resize the window to see the mobile layout.
 
-Uploaded files with their type and upload date.
+If it does not work, see [Quick checks](#quick-checks-if-something-fails).
 
-![Documents](docs/screenshots/documents.png)
+## Technologies
 
-### Mobile
+| Area | What is used |
+| --- | --- |
+| Frontend | React 19, TypeScript, Vite, React Router, `react-markdown` |
+| Backend | Go (standard library `net/http`, no web framework) |
+| Database | SQLite in development, PostgreSQL in production |
+| AI | OpenAI (chat and embeddings) with a custom RAG pipeline |
+| Login | Clerk |
+| Tests | Go `testing` + testify, Vitest + Testing Library |
+| CI | GitHub Actions, Dependabot |
+| Hosting | Render (backend and frontend), Neon (PostgreSQL), Docker |
 
-On small screens the dashboard becomes Knowledge / Note / Chat tabs and the sidebar turns into a drawer.
+## Run it on your computer
 
-![Mobile layout](docs/screenshots/mobile.png)
+You need [Go](https://go.dev/), [Node.js](https://nodejs.org/) 22 or newer, and your own [OpenAI](https://platform.openai.com/) and [Clerk](https://clerk.com/) keys. No keys are provided in this repository.
 
-### API (Swagger)
-
-![Swagger UI](docs/screenshots/swagger.png)
-
-## Project Structure
-
-```text
-mindk-ai/
-├── backend/
-│   ├── cmd/api/            # main.go — entry point
-│   ├── internal/
-│   │   ├── handlers/       # HTTP handlers (one per resource)
-│   │   ├── services/       # business logic (notes, chat, documents, RAG)
-│   │   ├── repository/     # SQL data access, user-scoped queries
-│   │   ├── llm/            # OpenAI client (chat + embeddings)
-│   │   ├── middleware/     # auth, rate limiting, security headers, logging
-│   │   ├── migrations/     # SQLite + PostgreSQL migrations
-│   │   └── ...
-│   ├── docs/               # generated Swagger/OpenAPI files
-│   └── Dockerfile
-├── frontend/
-│   ├── src/
-│   │   ├── pages/          # Dashboard, Notes, Documents, Auth, NotFound
-│   │   ├── layouts/        # DashboardLayout (sidebar drawer + header)
-│   │   ├── components/     # UI by domain (chat, notes, documents, ...) + common/
-│   │   │                   #   common/: icons, toasts, dialogs, empty states, skeletons
-│   │   ├── services/       # API client wrappers
-│   │   ├── context/        # chat session, selected knowledge, toasts
-│   │   ├── config/         # Clerk theme
-│   │   └── utils/          # text helpers (Markdown stripping, dates)
-│   └── package.json
-├── docs/
-│   ├── ARCHITECTURE.md
-│   └── screenshots/
-├── docker-compose.yml
-└── README.md
-```
-
-`backend/` is a Go REST API organized in layers (handlers → services → repositories). `frontend/` is a React + Vite single-page app. `docs/` holds the full architecture write-up and the screenshots used in this README.
-
-## Getting Started
-
-### 1. Clone the repository
+### 1. Download
 
 ```bash
 git clone https://github.com/pitercoding/mindk-ai.git
 cd mindk-ai
 ```
 
-### 2. Environment variables
-
-Both apps read configuration from `.env` files, based on the committed examples:
+### 2. Set up the settings files
 
 ```bash
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-Backend (`backend/.env`):
+Then open both files and fill in your keys.
+
+**Backend (`backend/.env`)**
 
 | Variable | Required | Notes |
 | --- | --- | --- |
-| `OPENAI_API_KEY` | yes | your own OpenAI API key |
-| `CLERK_SECRET_KEY` | yes | your own Clerk secret key |
+| `OPENAI_API_KEY` | yes | your OpenAI key |
+| `CLERK_SECRET_KEY` | yes | your Clerk secret key |
 | `APP_ENV` | no | `development` (default) or `production` |
-| `PORT` | no | defaults to `8080` |
-| `FRONTEND_ORIGIN` | no in dev | defaults to `http://localhost:5173`; required in production |
-| `DATABASE_PATH` | no | SQLite file path, dev only, defaults to `./data/mindk.db` |
-| `DATABASE_URL` | yes in production | PostgreSQL connection string |
+| `PORT` | no | default `8080` |
+| `FRONTEND_ORIGIN` | no in development | default `http://localhost:5173`; required in production |
+| `DATABASE_PATH` | no | SQLite file, development only (default `./data/mindk.db`) |
+| `DATABASE_URL` | production only | PostgreSQL connection string |
 
-Frontend (`frontend/.env`):
+**Frontend (`frontend/.env`)**
 
 | Variable | Required | Notes |
 | --- | --- | --- |
-| `VITE_CLERK_PUBLISHABLE_KEY` | yes | your own Clerk publishable key (safe to expose to the browser) |
-| `VITE_API_URL` | no | defaults to `http://localhost:8080` |
-
-You'll need your own OpenAI and Clerk accounts/keys — none are provided here.
+| `VITE_CLERK_PUBLISHABLE_KEY` | yes | your Clerk publishable key (safe to expose) |
+| `VITE_API_URL` | no | default `http://localhost:8080` |
 
 ### 3. Start the backend
 
@@ -220,7 +114,7 @@ cd backend
 go run ./cmd/api
 ```
 
-The API starts on `http://localhost:8080`. In development it uses a local SQLite database and applies migrations automatically on startup — no manual database setup needed.
+It runs on `http://localhost:8080`. In development it creates its own SQLite database and tables automatically.
 
 ### 4. Start the frontend
 
@@ -230,83 +124,148 @@ npm install
 npm run dev
 ```
 
-The app runs on `http://localhost:5173`.
+Open `http://localhost:5173`.
 
-### 5. Database
+### Or use Docker
 
-In development, the backend defaults to a SQLite file (`backend/data/mindk.db`) and runs pending migrations automatically at startup. No PostgreSQL setup is required unless you want to run the backend in production mode (see Docker below).
-
-## Running with Docker
-
-`docker-compose.yml` runs the backend against a containerized PostgreSQL instance (production mode):
+`docker-compose.yml` starts the backend together with a PostgreSQL database (production mode):
 
 ```bash
 OPENAI_API_KEY=your_key CLERK_SECRET_KEY=your_key docker compose up
 ```
 
-This starts PostgreSQL and the backend API on `http://localhost:8080`. The frontend is not part of the compose setup and is run separately with `npm run dev` as shown above, pointed at `VITE_API_URL=http://localhost:8080`.
+The frontend is not included. Start it with `npm run dev` as shown above.
+
+## Tests and CI
+
+Run the tests locally:
+
+```bash
+# Backend
+cd backend
+go test ./...
+
+# Frontend
+cd frontend
+npm test
+```
+
+- **Backend:** unit tests next to the code, plus integration tests that run the whole API (login, rate limits, user isolation) on a real SQLite database. The AI is replaced by a fake, so tests never call OpenAI.
+- **Frontend:** Vitest + Testing Library tests for utilities, the API client, components and the Notes and Documents pages.
+- **PostgreSQL tests:** an extra suite runs only when `POSTGRES_TEST_URL` is set, and is skipped otherwise.
+
+**Automatic checks (GitHub Actions).** Every pull request and every push to `main` runs [`ci.yml`](.github/workflows/ci.yml):
+
+| Check | What it does |
+| --- | --- |
+| Backend | `go vet` and `go test -race` |
+| Backend (PostgreSQL) | integration tests against a real PostgreSQL 18 |
+| Frontend | lint, tests and production build |
+| Docker | builds the backend image |
+
+[Dependabot](.github/dependabot.yml) opens weekly pull requests to keep npm, Go, Docker and GitHub Actions dependencies up to date.
 
 ## Deployment
 
-| Component | Host | Notes |
-| --------- | ---- | ----- |
-| Backend (Go API) | Render — Docker web service, Frankfurt | Health check at `/health` |
-| Frontend (React) | Render — static site | Built with Vite — [live demo](https://mindk-ai-frontend.onrender.com/) |
-| Database | Neon — serverless PostgreSQL | Free tier |
+| Part | Host | Notes |
+| --- | --- | --- |
+| Backend (Go API) | Render, Docker web service | health check at `/health` |
+| Frontend (React) | Render, static site | built with Vite |
+| Database | Neon, serverless PostgreSQL | free tier |
 
-The backend runs with `APP_ENV=production`, which requires `DATABASE_URL` (the Neon connection string) and `FRONTEND_ORIGIN` to be set in the Render service's environment variables. Migrations are applied automatically on every startup, so pointing `DATABASE_URL` at an empty database is enough to create the full schema.
+In production the backend needs `APP_ENV=production`, `DATABASE_URL` and `FRONTEND_ORIGIN`. Tables are created automatically on startup, so an empty database is enough.
 
-Notes on the free tiers:
+Notes about the free tiers:
 
-- Use Neon's **direct** connection string (host without `-pooler`). The migration library takes advisory locks, which are not reliable behind a transaction-mode connection pooler.
-- Neon suspends idle databases and Render spins down idle free web services, so the first request after a period of inactivity can take a few seconds (database) to about a minute (backend) to respond.
-- The database was previously a Render PostgreSQL instance. Render's free PostgreSQL expires after 30 days, which is why it was moved to Neon. Never commit the real `DATABASE_URL`; set it only in the hosting dashboard.
+- Use Neon's **direct** connection string (the host without `-pooler`). The migration tool needs database locks that do not work reliably behind a pooler.
+- Idle services go to sleep, so the first request can take a few seconds (database) to about a minute (backend).
+- Never commit the real `DATABASE_URL`. Set it only in the hosting dashboard.
 
-## API Documentation
+### Quick checks if something fails
 
-The backend exposes a REST API. Interactive Swagger/OpenAPI documentation is served at `/swagger/` when running in the `development` environment (it is intentionally not registered in production).
+- **The page loads but nothing works for a while:** the backend is probably waking up. Wait about a minute and refresh.
+- **Chat errors:** the OpenAI key may have no credit, or you sent too many messages. Chat allows 10 messages per minute per user, and everything else 60 requests per minute.
+- **Upload is rejected:** only `.pdf`, `.md` and `.txt` files up to 10 MB are accepted.
+
+## API documentation
+
+The backend is a REST API. Interactive Swagger docs are available at `/swagger/` when running locally in development mode (they are turned off in production on purpose).
 
 ![Swagger UI](docs/screenshots/swagger.png)
 
-## Testing
+## Screenshots
 
-The backend has unit tests colocated with the code (handlers, services, repositories, middleware) and integration tests that exercise the full HTTP stack, including authentication and cross-user data isolation, against a real SQLite database.
+**Notes:** Markdown notes with clean previews.
 
-```bash
-cd backend
-go test ./...
+![Notes](docs/screenshots/notes.png)
+
+**Documents:** uploaded files with type and date.
+
+![Documents](docs/screenshots/documents.png)
+
+**Mobile:** the dashboard becomes Knowledge / Note / Chat tabs and the sidebar becomes a drawer.
+
+![Mobile layout](docs/screenshots/mobile.png)
+
+## Project structure
+
+```text
+mindk-ai/
+├── .github/
+│   ├── workflows/ci.yml        # automatic checks
+│   └── dependabot.yml          # weekly dependency updates
+├── backend/
+│   ├── cmd/api/                # entry point
+│   ├── internal/
+│   │   ├── handlers/           # HTTP endpoints
+│   │   ├── services/           # business logic (notes, chat, documents, RAG)
+│   │   ├── repository/         # database access
+│   │   ├── llm/                # OpenAI client
+│   │   ├── middleware/         # login, rate limit, security headers, logs
+│   │   ├── migrations/         # SQLite and PostgreSQL tables
+│   │   ├── integration/        # full-API tests
+│   │   └── testutil/           # test server and helpers
+│   ├── docs/                   # generated Swagger files
+│   └── Dockerfile
+├── frontend/
+│   └── src/
+│       ├── pages/              # Dashboard, Notes, Documents, Auth, NotFound
+│       ├── components/         # screen parts, grouped by feature
+│       ├── context/            # chat sessions, selection, toasts
+│       ├── services/           # calls to the API
+│       └── utils/              # text helpers
+│                               # tests (*.test.ts[x]) sit next to their code
+├── docs/
+│   ├── ARCHITECTURE.md
+│   └── screenshots/
+├── docker-compose.yml
+└── README.md
 ```
-
-A separate PostgreSQL-specific integration suite runs when `POSTGRES_TEST_URL` is set, and is skipped otherwise.
 
 ## Architecture
 
-MindK AI is a React frontend talking to a modular, layered Go backend (handlers → services → repositories) over a REST API, backed by SQLite in development and PostgreSQL in production, with a RAG pipeline (chunking → embeddings → semantic search → context assembly) powering document-grounded chat via OpenAI.
+A React app talks to a layered Go API (handlers, then services, then repositories). Data lives in SQLite (development) or PostgreSQL (production), and a RAG pipeline powers the document chat through OpenAI. Details on the pipeline, login, data ownership and security are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-For a detailed explanation of the application architecture, RAG pipeline, authentication, data ownership, and security decisions, see the [Architecture documentation](docs/ARCHITECTURE.md).
+## Project status
 
-## Project Status
+MindK AI is a portfolio project with automated tests and CI, deployed on Render with a Neon database. Because it runs on free tiers, the first request after inactivity can be slow.
 
-MindK AI is a portfolio/demo project. It has automated tests and a documented architecture, and is deployed on Render (backend and frontend) with a Neon PostgreSQL database. Live demo: [mindk-ai-frontend.onrender.com](https://mindk-ai-frontend.onrender.com/) — see [Deployment](#deployment). Because it runs on free tiers, the first request after inactivity may be slow.
+## Next improvements
 
-## Next Improvements
+- Keep the cited sources in the chat history (today they show only for live answers) and make them open the document.
+- Add a vector index (for example pgvector) if the number of documents per user grows a lot.
+- Split the frontend bundle (it is a single file above 500 kB) with route-based code splitting.
+- More frontend tests (dashboard and chat) and a test-coverage report in CI.
 
-- Frontend component tests (none currently exist)
-- CI pipeline (e.g. GitHub Actions) to run backend tests automatically
-- Persist cited sources with the chat history (today they are shown for live answers only) and make the source chips open the document
-- A vector index (e.g. pgvector) if per-user document volume grows large enough to make full-scan cosine similarity a bottleneck
-- Frontend performance work: the production bundle is a single chunk above 500 kB, so route-level code splitting and lazy-loading the syntax highlighter are next
+## Highlights
 
-## Portfolio / Engineering Highlights
-
-- A real RAG pipeline (chunking, embeddings, semantic search, cited sources) rather than a simple LLM wrapper
-- Authenticated, multi-user data isolation enforced in SQL and verified by integration tests
-- Layered Go backend with dependency-injected LLM client, testable without hitting OpenAI
-- A responsive, accessible React interface built on a small hand-written design system (tokens, button variants, SVG icons, toasts, dialogs, skeletons)
-- Automated backend unit and integration tests
-- Swagger/OpenAPI documentation generated from code
-- Docker support and a dev/production database strategy (SQLite → PostgreSQL)
+- A real RAG pipeline (chunking, embeddings, semantic search, cited sources), not just a chat wrapper.
+- Multi-user data isolation enforced in the database and verified by integration tests.
+- Layered backend where the AI client is injected, so everything is testable without OpenAI.
+- A responsive, accessible interface built on a small hand-written design system.
+- Automated tests and a CI pipeline on every pull request.
+- Swagger docs generated from the code.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
