@@ -4,7 +4,7 @@ import ChatPanel from "@/components/dashboard/ChatPanel";
 import CurrentNote from "@/components/dashboard/CurrentNote";
 import KnowledgeBase from "@/components/dashboard/KnowledgeBase";
 
-import { useSelectedKnowledge } from "@/context/SelectedKnowledgeContext";
+import { useSelectedKnowledge } from "@/context/selected-knowledge-context";
 
 import { getDocuments } from "@/services/documentService";
 import { getNotes } from "@/services/noteService";
@@ -36,10 +36,9 @@ export default function DashboardPage() {
     } = useSelectedKnowledge();
 
 
+    // Does not touch state before the first await, so it can run from an
+    // effect (isLoading starts as true). Use retryLoadKnowledgeBase for retries.
     async function loadKnowledgeBase() {
-
-        setIsLoading(true);
-        setError(null);
 
         try {
 
@@ -50,6 +49,7 @@ export default function DashboardPage() {
 
             setNotes(notesResponse);
             setDocuments(documentsResponse);
+            setError(null);
 
             if (selected?.type === "note") {
 
@@ -96,8 +96,19 @@ export default function DashboardPage() {
     }
 
 
+    function retryLoadKnowledgeBase() {
+        setIsLoading(true);
+        setError(null);
+
+        return loadKnowledgeBase();
+    }
+
+
     useEffect(() => {
-        loadKnowledgeBase();
+        // Deferred to a microtask: the loader sets state once its request
+        // resolves, and react-hooks/set-state-in-effect disallows a direct call.
+        Promise.resolve().then(loadKnowledgeBase);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
 
@@ -132,7 +143,7 @@ export default function DashboardPage() {
                     isLoading={isLoading}
                     error={error}
                     onItemSelected={() => setActiveTab("note")}
-                    onRetry={loadKnowledgeBase}
+                    onRetry={retryLoadKnowledgeBase}
                 />
 
                 <CurrentNote

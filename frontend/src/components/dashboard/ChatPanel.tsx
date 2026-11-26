@@ -2,8 +2,8 @@ import { useState } from "react";
 
 import Chat from "@/components/chat/Chat";
 
-import { useChatSession } from "@/context/ChatSessionContext";
-import { useSelectedKnowledge } from "@/context/SelectedKnowledgeContext";
+import { useChatSession } from "@/context/chat-session-context";
+import { useSelectedKnowledge } from "@/context/selected-knowledge-context";
 
 import type { ChatMode } from "@/types/chat-session";
 

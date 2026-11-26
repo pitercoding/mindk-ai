@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
 import type { Note } from "@/types/note";
 
@@ -18,14 +18,6 @@ export default function NoteForm({
 
     const [title, setTitle] = useState(selectedNote?.title ?? "");
     const [content, setContent] = useState(selectedNote?.content ?? "");
-
-    useEffect(() => {
-
-        setTitle(selectedNote?.title ?? "");
-
-        setContent(selectedNote?.content ?? "");
-
-    }, [selectedNote]);
 
     async function handleSubmit(
         event: FormEvent<HTMLFormElement>
