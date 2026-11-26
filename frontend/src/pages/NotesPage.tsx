@@ -26,30 +26,49 @@ export default function NotesPage() {
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
 
-    async function loadNotes() {
+    // Fetches the notes and stores the result. Returns nothing; failures are
+    // reported through loadError.
+    function fetchNotes(isCancelled: () => boolean = () => false) {
+
+        return getNotes()
+            .then((response) => {
+                if (isCancelled()) return;
+
+                setNotes(response);
+                setLoadError(null);
+            })
+            .catch((error) => {
+                if (isCancelled()) return;
+
+                console.error(
+                    "Failed to load notes:",
+                    error
+                );
+
+                setLoadError("Failed to load notes.");
+            })
+            .finally(() => {
+                if (isCancelled()) return;
+
+                setIsLoading(false);
+            });
+    }
+
+    function retryLoadNotes() {
         setIsLoading(true);
         setLoadError(null);
 
-        try {
-            const response = await getNotes();
-
-            setNotes(response);
-
-        } catch (error) {
-            console.error(
-                "Failed to load notes:",
-                error
-            );
-
-            setLoadError("Failed to load notes.");
-
-        } finally {
-            setIsLoading(false);
-        }
+        return fetchNotes();
     }
 
     useEffect(() => {
-        loadNotes();
+        let cancelled = false;
+
+        fetchNotes(() => cancelled);
+
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     async function handleCreateNote(
@@ -188,6 +207,7 @@ export default function NotesPage() {
             <section className="notes-form-section">
 
                 <NoteForm
+                    key={selectedNote?.id ?? "new"}
                     selectedNote={selectedNote}
                     isSaving={isSaving}
                     onCreated={handleCreateNote}
@@ -215,7 +235,7 @@ export default function NotesPage() {
                                 <button
                                     type="button"
                                     className="btn btn-secondary"
-                                    onClick={loadNotes}
+                                    onClick={retryLoadNotes}
                                 >
                                     Try again
                                 </button>

@@ -1,7 +1,5 @@
 import {
-    createContext,
     useCallback,
-    useContext,
     useEffect,
     useRef,
     useState,
@@ -17,34 +15,13 @@ import {
     updateSession as updateSessionRequest,
 } from "@/services/chatSessionService";
 
-import type { ChatMode, ChatSession } from "@/types/chat-session";
+import {
+    ChatSessionContext,
+    type NewSessionOptions,
+} from "@/context/chat-session-context";
+
+import type { ChatSession } from "@/types/chat-session";
 import type { Message } from "@/types/message";
-
-interface NewSessionOptions {
-    mode: ChatMode;
-    noteId?: number;
-    title?: string;
-}
-
-interface ChatSessionContextType {
-    sessions: ChatSession[];
-    isLoadingSessions: boolean;
-    sessionsError: string | null;
-    currentSessionId: number | null;
-    currentSession: ChatSession | null;
-    messages: Message[];
-    isSending: boolean;
-    isLoadingMessages: boolean;
-    selectSession: (id: number) => Promise<void>;
-    newChat: () => void;
-    sendMessage: (text: string, options?: NewSessionOptions) => Promise<void>;
-    renameSession: (id: number, title: string) => Promise<void>;
-    deleteSession: (id: number) => Promise<void>;
-}
-
-const ChatSessionContext = createContext<
-    ChatSessionContextType | undefined
->(undefined);
 
 interface ChatSessionProviderProps {
     children: ReactNode;
@@ -69,14 +46,14 @@ export function ChatSessionProvider({
     // so a slow response can't overwrite the messages of a session the user has since left.
     const activeContextRef = useRef(0);
 
-    const refreshSessions = useCallback(async () => {
-
-        setIsLoadingSessions(true);
-        setSessionsError(null);
+    // Fetches the conversations without touching state before the first await,
+    // so it is safe to call from an effect (isLoadingSessions starts as true).
+    const fetchSessions = useCallback(async () => {
 
         try {
             const result = await getSessions();
             setSessions(result ?? []);
+            setSessionsError(null);
         } catch (error) {
             console.error("Failed to load chat sessions:", error);
             setSessionsError("Unable to load conversations.");
@@ -86,12 +63,23 @@ export function ChatSessionProvider({
 
     }, []);
 
+    const refreshSessions = useCallback(async () => {
+
+        setIsLoadingSessions(true);
+        setSessionsError(null);
+
+        await fetchSessions();
+
+    }, [fetchSessions]);
+
     useEffect(() => {
         if (!isLoaded || !isSignedIn) {
             return;
         }
-        refreshSessions();
-    }, [isLoaded, isSignedIn, refreshSessions]);
+        // Deferred to a microtask: fetchSessions sets state once its request
+        // resolves, and react-hooks/set-state-in-effect disallows a direct call.
+        Promise.resolve().then(fetchSessions);
+    }, [isLoaded, isSignedIn, fetchSessions]);
 
     const currentSession =
         sessions.find(session => session.id === currentSessionId) ?? null;
@@ -274,19 +262,4 @@ export function ChatSessionProvider({
             {children}
         </ChatSessionContext.Provider>
     );
-}
-
-export function useChatSession() {
-
-    const context = useContext(
-        ChatSessionContext,
-    );
-
-    if (!context) {
-        throw new Error(
-            "useChatSession must be used inside ChatSessionProvider"
-        );
-    }
-
-    return context;
 }

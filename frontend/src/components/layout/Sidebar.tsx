@@ -16,7 +16,7 @@ import {
     UploadIcon,
 } from "@/components/common/icons";
 
-import { useChatSession } from "@/context/ChatSessionContext";
+import { useChatSession } from "@/context/chat-session-context";
 import { useToast } from "@/context/toast-context";
 
 const menuItems = [

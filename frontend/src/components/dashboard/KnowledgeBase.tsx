@@ -11,7 +11,7 @@ import {
 } from "@/components/common/icons";
 import { RowSkeletons } from "@/components/common/Skeleton";
 
-import { useSelectedKnowledge } from "@/context/SelectedKnowledgeContext";
+import { useSelectedKnowledge } from "@/context/selected-knowledge-context";
 
 import type { Document } from "@/types/document";
 import type { Note } from "@/types/note";

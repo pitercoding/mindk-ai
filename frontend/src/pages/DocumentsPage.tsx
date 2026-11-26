@@ -30,15 +30,16 @@ export default function DocumentsPage() {
     const [search, setSearch] = useState("");
 
 
+    // Does not touch state before the first await, so it can run from an
+    // effect (isLoading starts as true). Use reloadDocuments for manual reloads.
     async function loadDocuments() {
-        setIsLoading(true);
-        setError(null);
 
         try {
 
             const response = await getDocuments();
 
             setDocuments(response);
+            setError(null);
 
         } catch (error) {
 
@@ -56,6 +57,14 @@ export default function DocumentsPage() {
     }
 
 
+    function reloadDocuments() {
+        setIsLoading(true);
+        setError(null);
+
+        return loadDocuments();
+    }
+
+
     async function handleSearch(
         value: string,
     ) {
@@ -64,7 +73,7 @@ export default function DocumentsPage() {
 
         if (!value.trim()) {
 
-            loadDocuments();
+            reloadDocuments();
 
             return;
         }
@@ -129,8 +138,9 @@ export default function DocumentsPage() {
 
     useEffect(() => {
 
-        loadDocuments();
-
+        // Deferred to a microtask: the loader sets state once its request
+        // resolves, and react-hooks/set-state-in-effect disallows a direct call.
+        Promise.resolve().then(loadDocuments);
     }, []);
 
 
@@ -167,7 +177,7 @@ export default function DocumentsPage() {
 
 
             <DocumentUpload
-                onUploadSuccess={loadDocuments}
+                onUploadSuccess={reloadDocuments}
             />
 
             {
@@ -183,7 +193,7 @@ export default function DocumentsPage() {
                             <button
                                 type="button"
                                 className="btn btn-secondary"
-                                onClick={loadDocuments}
+                                onClick={reloadDocuments}
                             >
                                 Try again
                             </button>
