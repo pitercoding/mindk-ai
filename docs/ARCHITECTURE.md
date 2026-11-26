@@ -51,7 +51,7 @@ MindK AI is a **monolithic, modular Go backend** paired with a separate single-p
   - `layouts/` — `DashboardLayout` (sidebar + header + routed content).
   - `components/` grouped by domain: `chat/`, `documents/`, `notes/`, `dashboard/`, `layout/` (Sidebar, Header), `auth/`, and `common/` (shared building blocks: `icons`, `BrandMark`, `EmptyState`, `Skeleton`, `ConfirmDialog`, `ToastProvider`, `MarkdownViewer`).
   - `services/` — one file per backend resource, each a thin wrapper around `apiClient`.
-  - `context/` — `ChatSessionContext`, `SelectedKnowledgeContext` and the toast context (`toast-context.ts`): React Context + hooks, no external state library.
+  - `context/` — chat sessions, the selected note/document and toasts: React Context + hooks, no external state library. Each context object and its hook live in a plain `.ts` file (`chat-session-context.ts`, `selected-knowledge-context.ts`, `toast-context.ts`), while the `*Provider` components live in their own `.tsx` files, which keeps React Fast Refresh working and satisfies the `react-refresh/only-export-components` lint rule.
   - `config/` (Clerk theme), `utils/` (text helpers), `types/` (TypeScript mirrors of the backend JSON contracts).
 - **Data flow**: pages fetch data through services on mount, hold it in local `useState`, and pass it down as props; the contexts hold cross-page state (active chat session, currently-selected note/document, toast queue) that multiple components need without prop-drilling.
 
@@ -384,6 +384,8 @@ Beyond the middleware table above:
 - **Unit tests** are colocated with the code they test (`*_test.go` next to the source file) across handlers, services, repositories, middleware, config, and utilities. They use `stretchr/testify` and hand-written fakes in `backend/internal/services/mocks/` — one fake per consumer-defined interface (e.g. `FakeNoteProvider`, `FakeChatSessionService`, `FakeLLMClient`) rather than a mocking framework, made possible by the layered design's narrow interfaces.
 - **Integration tests** (`backend/internal/integration/`) spin up the *entire* real stack — real Clerk authentication (verified against a mock JWKS server, not bypassed), real CORS, real security headers, real per-user rate limiting, and a real, freshly migrated SQLite database — behind an `httptest.Server` (`backend/internal/testutil/server.go`). The only substitution is the LLM client, swapped for `FakeLLMClient` so no test suite run depends on or bills against the OpenAI API. Coverage includes health, notes, documents, chat, cross-user ownership isolation, and adversarial input (malformed JSON, non-numeric IDs, disallowed CORS origins, missing auth).
 - **PostgreSQL-specific integration tests** (`postgres_test.go`) reuse the same harness against a real PostgreSQL instance when the `POSTGRES_TEST_URL` environment variable is set, and are skipped otherwise — an opt-in check for dialect compatibility (placeholders, `RETURNING`, migrations) that doesn't slow down or complicate the default `go test ./...` run.
+- **Frontend tests** use Vitest with jsdom and Testing Library, colocated as `*.test.ts` / `*.test.tsx` next to the code (setup in `frontend/src/test/setup.ts`). They cover the text utilities, `apiClient` (token header, error and empty responses), shared components (`ConfirmDialog`, `EmptyState`) and the notes components, plus the Notes and Documents pages with their services mocked: loading, empty, error and retry, create/edit/delete, search and upload reload. The Vitest config uses the `vmThreads` pool because the default pools fail on Windows when the working directory has a lower-case drive letter.
+- **Continuous integration** (`.github/workflows/ci.yml`) runs on every pull request and every push to `main`: `go vet` and `go test -race` for the backend, the PostgreSQL integration suite against a `postgres:18` service container (`POSTGRES_TEST_URL`), lint + `npm test` + production build for the frontend, and a Docker build of the backend image. Dependabot (`.github/dependabot.yml`) opens weekly update PRs for npm, Go modules, Docker and GitHub Actions.
 - **Swagger/OpenAPI**: every handler carries `swaggo` annotations; `backend/docs/` contains the generated `docs.go`, `swagger.json`, and `swagger.yaml`. The UI is served at `/swagger/` only when `APP_ENV=development`.
 
 ## Issues Found (Recommendations — Not Implemented)
@@ -425,15 +427,21 @@ Recommendation: Lift the documents list into a shared context so a chip can
 ```
 
 ```text
-Issue:          The frontend has no automated tests, and ESLint reports
-                react-hooks/set-state-in-effect errors in several pages and
-                contexts (data-fetching effects call setState directly), plus
-                react-refresh/only-export-components in two context files.
-File:           frontend/src/pages/*.tsx, frontend/src/context/*.tsx
-Impact:         No functional bug observed; the lint rules flag patterns
-                that can cause extra renders.
-Recommendation: Move data fetching to a small query hook or a data library,
-                split context hooks from providers, and add component tests.
+Issue:          Frontend test coverage is partial. Vitest + Testing Library
+                cover utilities, the API client, shared components and the
+                Notes and Documents pages, but DashboardPage, the chat UI
+                and the two context providers have no tests.
+File:           frontend/src/pages/DashboardPage.tsx,
+                frontend/src/components/chat/,
+                frontend/src/context/*Provider.tsx
+Impact:         Regressions in the dashboard and chat flows would only be
+                caught manually. Initial data loading in the pages and in
+                ChatSessionProvider is started from a deferred microtask
+                (Promise.resolve().then(...)) to satisfy the
+                react-hooks/set-state-in-effect lint rule - correct, but a
+                workaround rather than a dedicated data-fetching layer.
+Recommendation: Add tests for the dashboard and chat flows, and consider a
+                small query hook or data library for loading and retrying.
 ```
 
 ```text
